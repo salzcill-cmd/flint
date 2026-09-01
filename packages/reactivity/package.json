@@ -1,0 +1,27 @@
+{
+  "name": "@flint/reactivity",
+  "version": "2.0.0",
+  "description": "Flint reactivity — fine-grained signals with debug mode",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "typescript": "^5.7.3"
+  },
+  "files": ["dist"],
+  "license": "MIT",
+  "keywords": ["signals", "reactivity", "state", "debug", "flint"]
+}

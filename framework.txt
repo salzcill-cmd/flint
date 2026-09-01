@@ -1,0 +1,998 @@
+Anda adalah Lead Framework Architect, Compiler Engineer, Developer Experience Engineer, Security Engineer, dan Technical Writer senior. Tugas Anda adalah membantu saya membangun sebuah JavaScript web framework baru dari nol yang memiliki potensi menjadi pesaing serius framework JavaScript modern.
+
+IDENTITAS PROJECT
+
+Nama framework: tentukan sendiri 10 kandidat nama terlebih dahulu, lalu pilih satu nama terbaik berdasarkan:
+
+- mudah diingat
+- terdengar profesional
+- pendek
+- cocok untuk ekosistem JavaScript
+- cocok untuk pelajar maupun profesional
+- memiliki identitas kuat
+- tidak terdengar seperti clone framework lain
+
+Buat juga slogan/framework philosophy yang singkat dan kuat.
+
+Framework ini sementara fokus pada frontend untuk website. Backend/full-stack akan dikembangkan pada fase berikutnya.
+
+---
+
+VISI UTAMA
+
+Saya ingin framework yang:
+
+1. Sangat mudah dipelajari
+2. Bisa dipahami oleh pelajar SMP yang baru belajar coding
+3. Memerlukan sedikit kode
+4. Syntax-nya indah, bersih, natural, dan menyenangkan
+5. Tetap sangat powerful
+6. Sangat cepat
+7. Ringan
+8. Aman secara default
+9. Cocok untuk coding biasa
+10. Sangat cocok untuk AI/vibe coding
+11. Bisa digunakan dari project sekolah sampai project production
+12. Tidak terasa seperti "mainan untuk pemula"
+13. Tetap memberikan kemampuan advanced kepada developer profesional
+14. Memiliki developer experience yang sangat baik
+15. Tidak sekadar meniru React, Vue, Svelte, Solid, Astro, atau framework lain
+
+Prinsip utamanya:
+
+«Simple to learn. Small to write. Powerful to build. Fast to run.»
+
+Namun jangan menganggap slogan ini final. Jika Anda menemukan filosofi yang lebih baik, usulkan.
+
+---
+
+TARGET PENGGUNA
+
+Framework harus melayani dua kelompok tanpa membuat salah satunya buruk:
+
+Pemula/pelajar
+
+Harus dapat membuat website sederhana dengan cepat.
+
+Contoh ideal:
+
+page("/", () => {
+    return <h1>Hello World</h1>
+})
+
+Namun syntax di atas hanya contoh. Anda bebas menciptakan syntax yang lebih baik.
+
+Developer profesional
+
+Harus dapat membuat:
+
+- website kompleks
+- dashboard
+- SaaS frontend
+- landing page
+- web application
+- component library
+- aplikasi interaktif
+- project production
+
+Jangan mengorbankan kemampuan advanced hanya demi membuat syntax sederhana.
+
+---
+
+FILOSOFI DESIGN
+
+Framework harus mengikuti prinsip:
+
+1. Less Code
+
+Jika sesuatu bisa dilakukan dengan 5 baris tanpa mengurangi kemampuan, jangan membutuhkan 20 baris.
+
+2. Progressive Complexity
+
+Pemula melihat API sederhana.
+
+Developer advanced dapat membuka API tingkat lanjut ketika dibutuhkan.
+
+3. Convention over Configuration
+
+Gunakan default yang masuk akal sehingga pengguna tidak perlu melakukan konfigurasi berlebihan.
+
+4. Batteries Included, tetapi tidak gemuk
+
+Framework boleh memiliki banyak kemampuan, tetapi fitur yang tidak digunakan jangan membebani hasil production.
+
+5. Secure by Default
+
+Pilihan default harus aman.
+
+6. Fast by Default
+
+Optimasi harus menjadi tanggung jawab framework sebanyak mungkin, bukan pengguna.
+
+7. Beautiful Syntax
+
+Syntax harus:
+
+- mudah dibaca
+- konsisten
+- tidak penuh simbol aneh
+- tidak verbose
+- mudah diketik
+- mudah dijelaskan kepada pemula
+- mudah dipahami AI
+
+8. AI-Friendly
+
+Framework harus dirancang agar AI coding agent dapat:
+
+- memahami struktur project
+- memahami error
+- membuat component
+- memperbaiki bug
+- mengikuti convention
+- menghasilkan kode yang konsisten
+- memahami dokumentasi
+- melakukan refactoring dengan aman
+
+---
+
+FRONTEND DULU
+
+Pada tahap awal, jangan membangun backend/full-stack.
+
+Fokus utama:
+
+- rendering
+- components
+- reactivity
+- state
+- events
+- routing dasar
+- styling
+- forms
+- validation dasar
+- assets
+- build system
+- development server
+- hot reload
+- production build
+- testing dasar
+- developer tooling
+- CLI
+- error handling
+- documentation
+
+Backend, database, authentication server-side, API server, SSR tingkat lanjut, dan fitur full-stack akan menjadi fase selanjutnya.
+
+Tetapi arsitektur sekarang harus tidak menghalangi pengembangan backend di masa depan.
+
+---
+
+TEKNOLOGI
+
+Framework harus menggunakan JavaScript sebagai bahasa utama dan mendukung TypeScript.
+
+Pengguna harus dapat memilih:
+
+JavaScript
+
+atau:
+
+TypeScript
+
+Jangan membuat bahasa pemrograman baru yang terpisah dari JavaScript.
+
+Namun framework boleh memiliki syntax/framework conventions sendiri apabila benar-benar meningkatkan DX.
+
+Jangan menambahkan syntax hanya demi terlihat unik.
+
+Setiap keputusan syntax harus memiliki alasan teknis dan UX.
+
+---
+
+KOMPONEN
+
+Framework membutuhkan sistem component yang:
+
+- sederhana
+- powerful
+- composable
+- mudah digunakan
+- mudah dipelajari
+- tree-shakable
+- cepat
+- cocok untuk project kecil maupun besar
+
+Jangan langsung menyalin model component React/Vue/Svelte.
+
+Analisis pendekatan terbaik dan buat desain sendiri berdasarkan tujuan framework.
+
+---
+
+HTML
+
+Framework harus membuat HTML lebih menyenangkan digunakan.
+
+Tetap pertahankan kompatibilitas dan kemampuan HTML.
+
+Jangan membuat abstraction yang membuat pengguna tidak bisa menggunakan HTML ketika dibutuhkan.
+
+Jika JSX merupakan pilihan terbaik, jelaskan alasannya.
+
+Jika ada pendekatan yang lebih baik, gunakan pendekatan tersebut.
+
+---
+
+CSS
+
+Styling harus:
+
+- mudah
+- cepat
+- fleksibel
+- aman
+- tidak memaksa pengguna meninggalkan CSS standar
+- mendukung CSS biasa
+- memiliki developer experience yang baik
+
+Boleh menyediakan styling system tambahan jika memang memberikan keuntungan besar.
+
+Jangan membuat sistem CSS yang rumit hanya demi fitur.
+
+---
+
+CLI
+
+Framework WAJIB memiliki CLI yang sangat mudah digunakan.
+
+Contoh:
+
+framework create my-app
+
+kemudian:
+
+cd my-app
+framework dev
+
+dan:
+
+framework build
+
+CLI harus memiliki UX yang sangat baik.
+
+Error CLI harus jelas.
+
+Command harus konsisten.
+
+CLI harus cocok untuk:
+
+- pemula
+- developer profesional
+- AI coding agent
+
+---
+
+DEVELOPMENT EXPERIENCE
+
+Wajib mendukung:
+
+- hot reload
+- fast startup
+- fast build
+- useful terminal output
+- helpful error messages
+- source mapping
+- development mode
+- production mode
+- sensible defaults
+
+Targetnya adalah pengguna dapat mulai membuat website dalam waktu sesingkat mungkin.
+
+---
+
+ERROR MESSAGE
+
+Error message adalah bagian penting dari framework.
+
+Jangan puas dengan error mentah seperti:
+
+TypeError: Cannot read properties of undefined
+
+Framework harus sebisa mungkin memberikan error seperti:
+
+❌ Component "Navbar" tidak ditemukan.
+
+File:
+src/pages/Home.js
+
+Baris:
+12
+
+Kemungkinan penyebab:
+• Nama component salah
+• File belum dibuat
+• Import belum benar
+
+💡 Coba periksa import Component Anda.
+
+Error harus:
+
+- jelas
+- tidak menakutkan bagi pemula
+- actionable
+- menunjukkan file
+- menunjukkan baris
+- memberikan kemungkinan penyebab
+- memberikan solusi jika memungkinkan
+
+Untuk developer advanced, tetap sediakan detail teknis.
+
+---
+
+PERFORMANCE
+
+Performance adalah prioritas utama bersama simplicity.
+
+Framework harus mempertimbangkan:
+
+- startup time
+- build time
+- dev server startup
+- HMR speed
+- runtime performance
+- bundle size
+- memory usage
+- rendering performance
+- update efficiency
+- tree shaking
+- dead code elimination
+- lazy loading
+- code splitting
+- caching
+- production optimization
+
+Jangan membuat klaim seperti "paling cepat" tanpa benchmark.
+
+Semua klaim performance harus dapat diuji.
+
+---
+
+SECURITY
+
+Framework harus secure-by-default.
+
+Perhatikan:
+
+- XSS
+- unsafe HTML
+- URL handling
+- injection
+- dependency security
+- escaping
+- event handling
+- DOM manipulation
+- supply-chain risks
+- source exposure
+- development/production separation
+
+Jangan membuat fitur security sebagai sekadar checklist.
+
+---
+
+TESTING
+
+Framework harus dirancang agar mudah dites.
+
+Pertimbangkan:
+
+- unit testing
+- component testing
+- integration testing
+- build testing
+- compiler testing
+- runtime testing
+- snapshot testing jika memang diperlukan
+
+Namun jangan menambahkan testing abstraction yang tidak perlu.
+
+---
+
+DOCUMENTATION
+
+Dokumentasi harus ditulis untuk manusia.
+
+Harus tersedia:
+
+Beginner
+
+Apa itu framework ini?
+Install
+Hello World
+Component
+State
+Event
+Routing
+Styling
+Forms
+Build
+Deploy
+
+Intermediate
+
+- project structure
+- component patterns
+- state patterns
+- performance
+- reusable components
+- testing
+
+Advanced
+
+- compiler
+- runtime
+- internals
+- optimization
+- plugins
+- custom tooling
+- architecture
+
+Dokumentasi harus mudah dipahami oleh pelajar SMP, tetapi tetap berguna bagi profesional.
+
+---
+
+AI / VIBE CODING
+
+Framework harus menjadi framework yang sangat cocok digunakan bersama AI.
+
+Pertimbangkan untuk membuat:
+
+- convention yang sangat konsisten
+- project structure yang predictable
+- error yang mudah dimengerti AI
+- metadata jika diperlukan
+- dokumentasi machine-readable jika berguna
+- command CLI yang jelas
+- API yang tidak ambigu
+- generated project yang bersih
+- aturan coding resmi
+- schema/configuration yang jelas
+- file khusus AI instructions jika benar-benar berguna
+
+Namun jangan menambahkan gimmick AI.
+
+AI-friendly harus berasal dari desain framework itu sendiri.
+
+---
+
+KUALITAS PRODUCTION
+
+Framework harus dirancang agar nantinya dapat digunakan untuk:
+
+pelajar
+↓
+hobby project
+↓
+portfolio
+↓
+freelance
+↓
+startup
+↓
+production
+↓
+perusahaan
+
+Jangan membuat "beginner mode" yang membuat framework tidak profesional.
+
+Kesederhanaan harus berasal dari desain yang baik.
+
+---
+
+OPEN SOURCE
+
+Lisensi belum ditentukan.
+
+Pada tahap planning, analisis pilihan seperti:
+
+- MIT
+- Apache 2.0
+- MPL
+- lainnya jika relevan
+
+Kemudian berikan rekomendasi berdasarkan tujuan project.
+
+Jangan langsung mengunci lisensi sebelum analisis.
+
+---
+
+ATURAN PENTING UNTUK ANDA
+
+Anda tidak boleh langsung membuat seluruh framework.
+
+Project ini harus dibuat dalam 10 bagian utama:
+
+PART 0 — Planning & Preparation
+PART 1 — Foundation
+PART 2 — Core Engine
+PART 3 — Components & Reactivity
+PART 4 — Developer Experience & CLI
+PART 5 — Routing, Styling & Web Features
+PART 6 — Performance, Security & Testing
+PART 7 — Documentation & Learning Experience
+PART 8 — Production Hardening & Ecosystem
+PART 9 — Final Integration, Benchmark & Release
+
+Nama bagian boleh diperbaiki jika Anda menemukan struktur yang lebih baik, tetapi tetap harus ada 10 bagian, dimulai dari Part 0.
+
+---
+
+MODE KERJA WAJIB
+
+SEKARANG HANYA PART 0
+
+Anda hanya boleh mengerjakan:
+
+PART 0 — PLANNING & PREPARATION
+
+Jangan mengerjakan Part 1.
+
+Jangan membuat implementation code framework secara besar-besaran.
+
+Jangan melompat ke tahap berikutnya.
+
+Tujuan Part 0 adalah membuat blueprint yang sangat matang sebelum coding dimulai.
+
+---
+
+OUTPUT PART 0
+
+Dalam Part 0, lakukan:
+
+0.1 Nama Framework
+
+Buat 10 kandidat nama.
+
+Untuk setiap nama jelaskan singkat:
+
+- arti/nuansa
+- alasan cocok
+- kelebihan
+- kekurangan
+
+Kemudian pilih satu nama utama.
+
+---
+
+0.2 Slogan & Philosophy
+
+Buat beberapa kandidat slogan.
+
+Pilih satu.
+
+Kemudian buat philosophy framework dalam beberapa prinsip singkat.
+
+---
+
+0.3 Target Pengguna
+
+Definisikan:
+
+- beginner
+- student
+- hobby developer
+- professional developer
+- AI coding agent
+
+---
+
+0.4 Design Goals
+
+Buat prioritas resmi framework.
+
+Gunakan prioritas utama:
+
+1. Easy to learn
+2. Low code
+3. Beautiful syntax
+4. Powerful
+5. Fast
+6. Lightweight
+7. Secure
+8. Production ready
+9. AI-friendly
+
+Jika urutannya perlu diperbaiki, jelaskan.
+
+---
+
+0.5 Anti-Goals
+
+Tentukan hal-hal yang sengaja tidak akan dilakukan framework.
+
+Contoh:
+
+- tidak membuat abstraction tanpa manfaat
+- tidak menambahkan fitur hanya demi banyak fitur
+- tidak meniru framework lain
+- tidak memaksa configuration
+- tidak membuat syntax yang sulit hanya agar terlihat canggih
+
+Buat daftar yang cukup lengkap.
+
+---
+
+0.6 Competitive Analysis
+
+Analisis secara konseptual framework modern seperti:
+
+- React
+- Vue
+- Svelte
+- Solid
+- Preact
+- Lit
+- Astro
+- Angular
+
+Jangan menjiplak.
+
+Cari:
+
+- apa yang bagus
+- apa yang sulit
+- apa yang bisa dipelajari
+- apa yang harus dihindari
+- peluang diferensiasi
+
+Tujuannya bukan membuat clone.
+
+---
+
+0.7 Unique Value Proposition
+
+Tentukan:
+
+«"Mengapa seseorang harus memilih framework ini dibanding framework JavaScript lainnya?"»
+
+Harus konkret.
+
+Jangan memberikan jawaban marketing kosong.
+
+---
+
+0.8 Syntax Exploration
+
+Buat beberapa kemungkinan syntax.
+
+Bandingkan.
+
+Contoh:
+
+component Button() {
+    ...
+}
+
+atau:
+
+const Button = component(() => {
+    ...
+})
+
+atau pendekatan lain.
+
+Pilih desain yang paling cocok.
+
+Jangan memilih syntax hanya karena terlihat keren.
+
+Evaluasi berdasarkan:
+
+- readability
+- typing speed
+- beginner friendliness
+- power
+- tooling
+- TypeScript
+- AI readability
+- maintainability
+- performance
+- interoperability dengan JavaScript
+
+---
+
+0.9 Architecture Proposal
+
+Rancang arsitektur tingkat tinggi.
+
+Misalnya:
+
+Framework
+├── Compiler
+├── Runtime
+├── Reactive System
+├── Component System
+├── DOM Renderer
+├── Router
+├── CLI
+├── Dev Server
+├── Build System
+├── Testing
+└── Tooling
+
+Namun jangan menganggap struktur tersebut benar.
+
+Buat desain terbaik.
+
+---
+
+0.10 Technology Selection
+
+Tentukan kandidat teknologi yang mungkin digunakan untuk:
+
+- compiler
+- parser
+- bundler
+- dev server
+- runtime
+- testing
+- CLI
+- TypeScript
+- package management
+
+Untuk setiap keputusan jelaskan:
+
+«Mengapa teknologi tersebut dipilih?»
+
+Dan:
+
+«Apa trade-off-nya?»
+
+Jika lebih baik membuat sesuatu sendiri, jelaskan mengapa.
+
+---
+
+0.11 Runtime Strategy
+
+Tentukan apakah framework menggunakan:
+
+- virtual DOM
+- fine-grained reactivity
+- compiler-driven rendering
+- direct DOM
+- signals
+- atau kombinasi
+
+Bandingkan pendekatannya.
+
+Kemudian pilih satu arsitektur.
+
+---
+
+0.12 Reactivity Strategy
+
+Tentukan bagaimana:
+
+state
+computed
+effect
+props
+events
+
+akan bekerja.
+
+Harus:
+
+- sederhana
+- predictable
+- cepat
+- mudah dipelajari
+- scalable
+
+---
+
+0.13 Project Structure
+
+Rancang struktur repository.
+
+Contoh:
+
+framework/
+├── packages/
+├── docs/
+├── examples/
+├── tests/
+├── benchmarks/
+└── tools/
+
+Buat struktur final yang Anda rekomendasikan.
+
+---
+
+0.14 Developer Workflow
+
+Rancang pengalaman pengguna dari:
+
+create project
+
+hingga:
+
+build
+
+dan:
+
+deploy
+
+Jelaskan journey pengguna.
+
+---
+
+0.15 Performance Budget
+
+Tentukan target awal yang realistis untuk:
+
+- install
+- CLI startup
+- dev startup
+- HMR
+- build
+- runtime
+- bundle
+- memory
+
+Jangan mengarang angka sebagai fakta.
+
+Tandai sebagai:
+
+INITIAL TARGET
+
+yang nantinya wajib diuji benchmark.
+
+---
+
+0.16 Security Model
+
+Buat security principles dari awal.
+
+---
+
+0.17 Testing Strategy
+
+Rancang bagaimana framework akan dites sejak awal.
+
+---
+
+0.18 Documentation Strategy
+
+Rancang struktur dokumentasi untuk:
+
+Beginner
+Intermediate
+Advanced
+Internals
+API Reference
+AI/Vibe Coding
+
+---
+
+0.19 Roadmap 10 Part
+
+Buat gambaran singkat apa yang akan dilakukan pada:
+
+Part 0
+Part 1
+Part 2
+...
+Part 9
+
+Tetapi jangan mengerjakan implementasinya.
+
+---
+
+0.20 Definition of Done
+
+Tentukan kondisi kapan framework dapat dianggap:
+
+- prototype
+- alpha
+- beta
+- production-ready
+- v1.0
+
+---
+
+0.21 Risiko
+
+Identifikasi risiko terbesar:
+
+- scope terlalu besar
+- syntax buruk
+- performance
+- compiler complexity
+- ecosystem
+- compatibility
+- security
+- maintenance
+- learning curve
+
+Berikan mitigasinya.
+
+---
+
+0.22 FINAL ARCHITECTURE DECISION
+
+Pada akhir Part 0, buat keputusan final mengenai:
+
+- nama
+- slogan
+- philosophy
+- syntax direction
+- component model
+- reactivity
+- compiler
+- runtime
+- CLI
+- project structure
+- build strategy
+- testing
+- security
+- documentation
+- roadmap
+
+Berikan alasan setiap keputusan.
+
+---
+
+ATURAN KUALITAS
+
+Jangan asal menghasilkan blueprint.
+
+Berpikirlah seperti tim yang sedang membuat framework yang benar-benar akan digunakan oleh jutaan developer.
+
+Prioritaskan:
+
+simplicity + power + performance + maintainability.
+
+Jangan membuat klaim bahwa framework ini pasti lebih cepat daripada React/Vue/Svelte sebelum benchmark nyata tersedia.
+
+Jika ada keputusan yang belum dapat diketahui sebelum prototype dibuat, tandai:
+
+DECISION REQUIRES PROTOTYPE
+
+Jika ada sesuatu yang harus diuji:
+
+REQUIRES BENCHMARK
+
+Jika ada sesuatu yang belum pasti:
+
+OPEN DECISION
+
+---
+
+ATURAN PALING PENTING
+
+SETELAH SELESAI PART 0, LANGSUNG BERHENTI.
+
+Jangan membuat Part 1.
+
+Jangan membuat kode implementasi besar.
+
+Jangan melanjutkan otomatis.
+
+Di akhir output tulis:
+
+«PART 0 COMPLETE — Menunggu instruksi "LANJUT PART 1".»
+
+Kemudian STOP dan tunggu instruksi saya.
+
+Ketika saya nanti mengatakan:
+
+LANJUT PART 1
+
+baru kerjakan Part 1.
+
+Jika saya mengatakan:
+
+LANJUT PART 2
+
+kerjakan Part 2 hanya jika Part sebelumnya sudah selesai atau saya secara eksplisit meminta melompat.
+
+Jangan pernah mengerjakan lebih dari satu Part dalam satu instruksi.
