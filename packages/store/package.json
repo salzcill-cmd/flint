@@ -27,6 +27,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@flint/reactivity": "workspace:*"
   },

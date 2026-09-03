@@ -16,6 +16,7 @@ export default defineConfig({
       ['packages/runtime/tests/seo.test.ts', 'happy-dom'],
       ['packages/runtime/tests/image.test.ts', 'happy-dom'],
       ['packages/runtime/tests/pwa.test.ts', 'happy-dom'],
+      ['packages/runtime/tests/a11y.test.ts', 'happy-dom'],
       ['packages/runtime/tests/animations.test.ts', 'happy-dom'],
       ['packages/runtime/tests/server-components.test.ts', 'happy-dom'],
       ['packages/runtime/tests/activity-effect-event.test.ts', 'happy-dom'],

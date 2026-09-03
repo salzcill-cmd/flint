@@ -21,5 +21,8 @@
   },
   "files": ["dist"],
   "keywords": ["flint", "scaffold", "create", "template", "starter"],
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

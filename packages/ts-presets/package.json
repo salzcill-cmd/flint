@@ -12,5 +12,8 @@
     "./jsx": "./jsx.json"
   },
   "files": ["*.json"],
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

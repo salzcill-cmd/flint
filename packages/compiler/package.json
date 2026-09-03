@@ -27,5 +27,8 @@
   },
   "files": ["dist"],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": ["compiler", "jsx", "tree-shaking", "flint"]
 }

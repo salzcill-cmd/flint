@@ -23,5 +23,8 @@
     "vite": "^6.0.0"
   },
   "files": ["dist"],
-  "license": "MIT"
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
 }

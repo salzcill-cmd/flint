@@ -27,6 +27,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "@playwright/test": ">=1.40.0"
   },

@@ -27,6 +27,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "eslint": ">=8.0.0"
   },

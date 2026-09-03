@@ -34,5 +34,8 @@
   },
   "files": ["dist"],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": ["runtime", "i18n", "pwa", "query", "seo", "a11y", "hooks", "flint"]
 }

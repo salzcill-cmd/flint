@@ -23,5 +23,8 @@
   },
   "files": ["dist"],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": ["signals", "reactivity", "state", "debug", "flint"]
 }
