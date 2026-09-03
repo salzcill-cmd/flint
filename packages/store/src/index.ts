@@ -62,7 +62,7 @@ class Store<T extends object> implements StoreApi<T> {
 
     const prevState = this._value
     const nextState = typeof partial === 'function'
-      ? (partial as (s: T) => T)(prevState)
+      ? { ...prevState, ...(partial as (s: T) => Partial<T>)(prevState) } as T
       : { ...prevState, ...partial } as T
 
     this._value = nextState

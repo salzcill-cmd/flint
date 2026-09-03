@@ -7,9 +7,9 @@
 A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual DOM.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-553%20passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-3.0.0-blue)]()
-[![Packages](https://img.shields.io/badge/Packages-12-blueviolet)]()
+[![Tests](https://img.shields.io/badge/Tests-614%20passing-brightgreen)]()
+[![Version](https://img.shields.io/badge/Version-3.1.0-blue)]()
+[![Packages](https://img.shields.io/badge/Packages-13-blueviolet)]()
 
 [Getting Started](#-getting-started) • [Examples](#-examples) • [API Reference](#-api-reference) • [Contributing](#-contributing)
 
@@ -60,6 +60,15 @@ Flint is a modern JavaScript framework designed for building fast, reactive user
 | **Form Actions** | Progressive enhancement for forms |
 | **Resource Preloading** | preload, preinit, prefetchDNS APIs |
 | **Metaframework** | FlintKit for full-stack apps |
+| **Built-in Store** | Zustand-compatible with middleware |
+| **Built-in i18n** | Internationalization in core |
+| **Built-in Security** | CSP, CSRF, rate limiting |
+| **Built-in a11y** | Focus trap, keyboard nav, ARIA |
+| **Built-in SEO** | Structured data, meta management |
+| **Built-in PWA** | Service worker, caching |
+| **Time-Travel Debugging** | Built into DevTools |
+| **Deep Reactivity** | Vue-style reactive objects |
+| **Effect Events** | Debounced, throttled, intersection |
 
 ---
 
@@ -77,6 +86,16 @@ Flint is a modern JavaScript framework designed for building fast, reactive user
 | Compiler Optimization | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
 | Server Components | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
 | Form Actions | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Built-in Store | ✅ Yes | ❌ No | ✅ Pinia | ❌ No | ❌ No |
+| Built-in i18n | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| Built-in Security | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| Built-in a11y | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| Built-in SEO | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| Built-in PWA | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
+| Optimistic Updates | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Effect Events | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Deep Reactivity | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| Time-Travel Debugging | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
 
 ---
 
@@ -416,6 +435,7 @@ Flint is organized as a monorepo with the following packages:
 | `@flint/devtools` | Browser DevTools integration |
 | `@flint/eslint-plugin` | ESLint rules for Flint |
 | `@flint/playwright-utils` | E2E testing utilities |
+| `@flint/ts-presets` | TypeScript configuration presets |
 | `flintkit` | Metaframework with SSR & file-based routing |
 | `create-flint` | Project scaffolding CLI |
 
@@ -1032,29 +1052,207 @@ export default function TodoPage({ todos }) {
 | `createRoot(fn)` | Create effect scope |
 | `onCleanup(fn)` | Register cleanup |
 
-### @flint/runtime
+### @flint/runtime — Components
+
+| Component | Description |
+|-----------|-------------|
+| `Show` | Conditional rendering with fallback |
+| `For` | Keyed list rendering |
+| `ForEach` | Fine-grained list with DOM-level reconciliation |
+| `Index` | List rendering with index tracking |
+| `Switch` / `Match` | Pattern-matching conditional |
+| `Portal` | Render to different DOM node |
+| `Suspense` | Async loading boundary |
+| `ErrorBoundary` | Error catching boundary |
+| `Activity` | Hide/restore UI (React 19) |
+| `KeepAlive` | Cache component instances (Vue) |
+| `memo` | Memoized rendering |
+| `lazy` | Lazy component loading |
+
+### @flint/runtime — Hooks
+
+| Hook | Description |
+|------|-------------|
+| `useTransition` | Mark updates as low-priority |
+| `useDeferredValue` | Defer value updates |
+| `useId` | Generate unique IDs |
+| `useImperativeHandle` | Customize ref handle |
+| `forwardRef` | Forward ref to child |
+| `useRef` | Mutable ref |
+| `useOptimistic` | Optimistic UI updates |
+| `useActionState` | Form action state (React 19) |
+| `useFormStatus` | Parent form status (React 19) |
+| `use` | Read Promise/Context in render (React 19) |
+
+### @flint/runtime — Effect Events
+
+| Hook | Description |
+|------|-------------|
+| `useEffectEvent(fn)` | Stable event handler (React 19) |
+| `useStableEvent(fn)` | Simplified effect event |
+| `useEffectEventDebounced(fn, ms)` | Debounced effect event |
+| `useEffectEventThrottled(fn, ms)` | Throttled effect event |
+| `useEffectAnimationFrame(fn)` | Effect on animation frame |
+| `useEffectEventIntersection(el, fn)` | IntersectionObserver event |
+
+### @flint/runtime — Utilities
 
 | Function | Description |
 |----------|-------------|
-| `render(fn, container)` | Render to DOM |
-| `h(tag, props, ...children)` | Create virtual node |
-| `component(fn)` | Create component |
-| `onMount(fn)` | Run on mount |
-| `onUpdate(fn)` | Run on update |
-| `onDestroy(fn)` | Run on destroy |
-| `ref()` | Create DOM ref |
-| `createRouter(options)` | Create router |
-| `renderToString(fn)` | Render to HTML |
-| `createStyles(styles)` | Create CSS-in-JS |
-| `createForm(options)` | Create form |
+| `reactive(obj)` | Deep reactive proxy (Vue-style) |
+| `shallowRef(value)` | Reference-change-only signal |
+| `readonly(obj)` | Immutable proxy |
+| `shallowReadonly(obj)` | Shallow immutable proxy |
+| `toRef(obj, key)` | Create ref from reactive property |
+| `toRefs(obj)` | Create refs from all properties |
+| `triggerRef(ref)` | Force-trigger effects |
+| `createRef()` | Create ref object (React 19) |
+| `assignRef(ref, value)` | Assign to ref |
+| `mergeRefs(...refs)` | Merge multiple refs |
+| `mergeProps(...props)` | Merge props (Solid-style) |
+| `splitProps(props, ...keys)` | Split props into groups |
+| `bindable(value)` | Two-way binding (Svelte 5) |
+| `cn(...classes)` | Class name utility (clsx-style) |
+
+### @flint/runtime — Transitions
+
+| Function | Description |
+|----------|-------------|
+| `useTransitionClasses(options)` | CSS transition class management |
+| `applyTransition(el, options)` | Apply transition classes |
+
+### @flint/runtime — SSR
+
+| Function | Description |
+|----------|-------------|
+| `renderToString(fn)` | Render to HTML string |
+| `renderToPipeableStream(fn)` | Render to Node.js stream |
+| `hydrate(fn, container)` | Hydrate server HTML |
+| `generateHTML(fn)` | Generate full HTML page |
+| `dataLoader(fn)` | Define route data loader |
+| `useTitle(title)` | Set page title (SSR) |
+| `useMeta(meta)` | Set meta tags (SSR) |
+
+### @flint/runtime — Server Components & Actions
+
+| Function | Description |
+|----------|-------------|
 | `createServerAction(fn)` | Create server action |
 | `createServerComponent(fn)` | Create server component |
-| `useOptimistic(initial, update)` | Optimistic updates |
-| `useActionState(action, init)` | Form action state |
+| `createUniversalComponent(fn)` | Universal component (SSR + CSR) |
+| `createFormActionHandler(fn)` | Form action handler |
+
+### @flint/runtime — Form Actions & Preloading
+
+| Function | Description |
+|----------|-------------|
+| `createFormAction(options)` | Create form action |
 | `preload(href, options)` | Preload resource |
 | `preinit(href, options)` | Preinitialize resource |
 | `prefetchDNS(origin)` | Prefetch DNS |
-| `preconnect(origin)` | Preconnect |
+| `preconnect(origin)` | Preconnect to server |
+
+### @flint/runtime — Styling
+
+| Function | Description |
+|----------|-------------|
+| `createStyles(styles)` | Create CSS-in-JS styles |
+| `createDynamicStyles(fn)` | Reactive dynamic styles |
+| `setTheme(theme)` | Set theme |
+| `getTheme()` | Get current theme |
+| `cssVariablesFromTheme(theme)` | Generate CSS variables |
+| `cx(...classes)` | Conditional class builder |
+| `mergeStyles(...styles)` | Merge style objects |
+
+### @flint/runtime — Animations
+
+| Function | Description |
+|----------|-------------|
+| `Transition` | Single element transition |
+| `TransitionGroup` | Group transition |
+| `animate(el, keyframes, options)` | Animate element |
+| `easings` | Easing functions library |
+
+### @flint/runtime — Security
+
+| Function | Description |
+|----------|-------------|
+| `escapeHtml(str)` | Escape HTML entities |
+| `sanitizeInput(input)` | Sanitize user input |
+| `generateCSP(rules)` | Generate Content Security Policy |
+| `generateCSRFToken()` | Generate CSRF token |
+| `validateCSRFToken(token)` | Validate CSRF token |
+| `createRateLimiter(options)` | API rate limiter |
+
+### @flint/runtime — Accessibility (a11y)
+
+| Hook | Description |
+|------|-------------|
+| `useFocusTrap(container)` | Trap focus within container |
+| `useFocusVisible()` | Detect keyboard vs mouse focus |
+| `useKeyboard(handlers)` | Keyboard event handler |
+| `useListNavigation(options)` | Arrow-key list navigation |
+| `useAriaLive(priority)` | ARIA live region management |
+| `useReducedMotion()` | Detect prefers-reduced-motion |
+| `useRovingTabindex(options)` | Roving tabindex pattern |
+
+### @flint/runtime — Performance
+
+| Function | Description |
+|----------|-------------|
+| `initPerformance()` | Initialize monitoring |
+| `trackRender(component)` | Track render time |
+| `trackApi(name)` | Track API call time |
+| `getWebVitals()` | Get CLS, FID, LCP metrics |
+
+### @flint/runtime — i18n
+
+| Function | Description |
+|----------|-------------|
+| `createI18n(options)` | Create i18n instance |
+| `formatNumber(num, locale)` | Format numbers |
+| `formatDate(date, locale)` | Format dates |
+| `formatRelativeTime(date, locale)` | Format relative time |
+
+### @flint/runtime — Data Fetching
+
+| Function | Description |
+|----------|-------------|
+| `createQueryManager()` | Create query cache |
+| `useQuery(options)` | Fetch data with caching |
+| `useMutation(options)` | Mutate data |
+| `invalidateQueries(key)` | Invalidate cached queries |
+
+### @flint/runtime — SEO
+
+| Function | Description |
+|----------|-------------|
+| `useSEO(meta)` | Set SEO meta tags |
+| `useStructuredData(data)` | Add JSON-LD structured data |
+| `createArticleSchema(data)` | Create Article schema |
+| `createProductSchema(data)` | Create Product schema |
+
+### @flint/runtime — PWA
+
+| Function | Description |
+|----------|-------------|
+| `initPWA(options)` | Initialize PWA features |
+| `isOnline()` | Check online status |
+| `ServiceWorkerManager` | Service worker lifecycle |
+| `CacheManager` | Cache storage management |
+
+### @flint/runtime — Router
+
+| Function | Description |
+|----------|-------------|
+| `createRouter(options)` | Create router |
+| `navigate(path)` | Programmatic navigation |
+| `useParams()` | Access route parameters |
+| `useQueryParams()` | Access query parameters |
+| `useLocation()` | Access current location |
+| `Link` | Navigation link component |
+| `Outlet` | Render child routes |
+| `createLazyRoute(fn)` | Lazy-loaded route |
 
 ### @flint/store
 
@@ -1065,6 +1263,7 @@ export default function TodoPage({ todos }) {
 | `persist(name, options?)` | Persistence middleware |
 | `devtools(options?)` | Redux DevTools middleware |
 | `immer()` | Immutable updates middleware |
+| `createSelector(selector, equalityFn?)` | Memoized selector |
 | `useStore(store, selector?)` | Use store in component |
 
 ### @flint/compiler
@@ -1076,6 +1275,8 @@ export default function TodoPage({ todos }) {
 | `cssScoping` | Compile-time CSS scoping |
 | `sourceMaps` | Generate source maps |
 | `deadCodeElimination` | Remove dead code |
+| `constantFolding` | Fold constants |
+| `functionInlining` | Inline small functions |
 
 ### @flint/eslint-plugin
 
@@ -1087,6 +1288,16 @@ export default function TodoPage({ todos }) {
 | `no-reassign-signal` | error |
 | `require-effect-cleanup` | warn |
 | `no-nested-effect` | error |
+
+### @flint/devtools
+
+| Function | Description |
+|----------|-------------|
+| `initDevTools(options)` | Initialize client DevTools |
+| `trackSignal(signal, name)` | Track signal changes |
+| `trackComponent(name, props)` | Track component lifecycle |
+| `trackPerformance(metric)` | Track performance metric |
+| `buildSignalGraph()` | Build dependency graph |
 
 ---
 
