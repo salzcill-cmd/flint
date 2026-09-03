@@ -268,10 +268,10 @@ export type {
   UseAnimateReturn,
 } from './animations/index.js'
 
-// useTransition from hooks (not animations)
-export {
-  useTransition,
-} from './hooks/index.js'
+// useTransition from hooks (not animations) — REMOVED: using optimistic.ts version
+// export {
+//   useTransition,
+// } from './hooks/index.js'
 
 // Code Splitting & Lazy Routes
 export {
@@ -493,7 +493,6 @@ export type {
 
 // useDeferredValue, useId, useImperativeHandle, forwardRef
 export {
-  useDeferredValue,
   useId,
   useImperativeHandle,
   forwardRef,
@@ -578,12 +577,12 @@ export {
   use,
   createContext,
   useProvider,
-  useDeferredValue as useDeferredValueNew,
-  useTransition as useTransitionNew,
-  useRef as useRefNew,
-  useCallback as useCallbackNew,
-  useMemo as useMemoNew,
-  useEffect as useEffectNew,
+  useDeferredValue,
+  useTransition,
+  useRef,
+  useCallback,
+  useMemo,
+  useEffect,
 } from './hooks/optimistic.js'
 export type {
   OptimisticState,

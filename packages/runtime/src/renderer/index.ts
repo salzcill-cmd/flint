@@ -3,6 +3,7 @@
 // No Virtual DOM — direct surgical DOM mutations
 
 import { effect, batch, type CleanupFn } from '@flint/reactivity'
+import { mountComponent, type ComponentInstance } from '../component/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -286,6 +287,14 @@ function createComponent(ComponentFn: Component, props: Props, children: Child[]
     // Call the component function
     const result = ComponentFn(componentProps)
 
+    // For Flint components (wrapped by component()), schedule mountComponent
+    const instance: ComponentInstance | undefined = (ComponentFn as any).__flint_instance
+    if (instance && !instance.mounted) {
+      queueMicrotask(() => {
+        mountComponent(instance)
+      })
+    }
+
     // If result is null/undefined, return empty fragment
     if (result == null) {
       return document.createDocumentFragment()
@@ -316,6 +325,13 @@ function createComponent(ComponentFn: Component, props: Props, children: Child[]
 
     // Fallback: convert to string
     return document.createTextNode(String(result))
+  } catch (error) {
+    // No error boundary found in this simple renderer — log and render fallback
+    console.error(`[Flint] Uncaught error in component ${(ComponentFn as any).displayName || ComponentFn.name || 'Unknown'}:`, error)
+    const errorContainer = document.createElement('div')
+    errorContainer.style.cssText = 'color: red; padding: 16px; border: 1px solid red; border-radius: 4px; background: #fee;'
+    errorContainer.textContent = `Error: ${error instanceof Error ? error.message : String(error)}`
+    return errorContainer
   } finally {
     currentOwner = owner.parent
   }
@@ -455,6 +471,14 @@ export function render(
     const result = ComponentFn({})
     currentNode = nodeify(result)
     target.appendChild(currentNode)
+
+    // For Flint components, schedule mountComponent after DOM insertion
+    const instance: ComponentInstance | undefined = (ComponentFn as any).__flint_instance
+    if (instance && !instance.mounted) {
+      queueMicrotask(() => {
+        mountComponent(instance)
+      })
+    }
   })
 
   // Also track the effect's lifecycle

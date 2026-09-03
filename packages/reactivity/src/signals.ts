@@ -62,12 +62,20 @@ function untrackAll(subscriber: Subscriber): void {
 
 // ─── Dirty Marking ──────────────────────────────────────────────
 
+// Track which computeds are currently being updated to detect cycles
+const updatingComputeds = new WeakSet<ComputedState<any>>()
+
 function markDirty(signal: SignalState<any> | ComputedState<any>): void {
   signal.version = writeVersion
 
   for (const observer of signal.observers) {
     if (observer.kind === 'computed') {
       if (!observer.dirty) {
+        // Cycle detection: if this computed is already being updated, skip
+        if (updatingComputeds.has(observer)) {
+          console.warn('[Flint] Circular computed dependency detected:', observer)
+          continue
+        }
         observer.dirty = true
         markDirty(observer)
       }
@@ -130,11 +138,18 @@ function flush(): void {
 // ─── Core Primitives ────────────────────────────────────────────
 
 function updateComputed<T>(computed: ComputedState<T>): void {
+  // Cycle detection
+  if (updatingComputeds.has(computed)) {
+    console.warn('[Flint] Circular computed dependency detected during update:', computed)
+    return
+  }
+
   // Use custom updater if available
   if ((computed as any).customUpdate) {
     return (computed as any).customUpdate(computed)
   }
 
+  updatingComputeds.add(computed)
   untrackAll(computed)
 
   const prevSubscriber = currentSubscriber
@@ -163,6 +178,7 @@ function updateComputed<T>(computed: ComputedState<T>): void {
   } finally {
     computed.tracking = false
     currentSubscriber = prevSubscriber
+    updatingComputeds.delete(computed)
   }
 }
 

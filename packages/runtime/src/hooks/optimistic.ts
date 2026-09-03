@@ -587,12 +587,35 @@ export function useTransition(): [boolean, (callback: () => void) => void] {
  * }
  * ```
  */
-export function useRef<T>(initialValue: T): { current: T } {
-  const ref = { current: initialValue }
+// Store refs per component instance to persist across renders
+const refStores = new WeakMap<object, Map<number, { current: any }>>()
+let currentRefSlot = 0
 
-  // In a real implementation, this would persist across renders
-  // For now, we return a stable object
-  return ref
+export function useRef<T>(initialValue: T): { current: T } {
+  // Use the current component instance as the store key
+  // Falls back to a module-level slot if no component context
+  const slot = currentRefSlot++
+  const g = globalThis as any
+  const storeKey = typeof g.__flint_current_component__ !== 'undefined'
+    ? g.__flint_current_component__
+    : globalThis
+
+  if (!refStores.has(storeKey)) {
+    refStores.set(storeKey, new Map())
+  }
+  const store = refStores.get(storeKey)!
+
+  if (!store.has(slot)) {
+    store.set(slot, { current: initialValue })
+  }
+  return store.get(slot)!
+}
+
+/**
+ * Reset ref slot counter (call at the start of each component render)
+ */
+export function _resetRefSlot(): void {
+  currentRefSlot = 0
 }
 
 // ─── useCallback Hook ───────────────────────────────────────────
@@ -613,12 +636,38 @@ export function useRef<T>(initialValue: T): { current: T } {
  * }
  * ```
  */
+const callbackCache = new WeakMap<object, Map<number, { callback: any; deps: any[] }>>()
+let currentCallbackSlot = 0
+
 export function useCallback<T extends (...args: any[]) => any>(
   callback: T,
   deps: any[]
 ): T {
-  // Simplified - in production, compare deps
+  const slot = currentCallbackSlot++
+  const g = globalThis as any
+  const storeKey = typeof g.__flint_current_component__ !== 'undefined'
+    ? g.__flint_current_component__
+    : globalThis
+
+  if (!callbackCache.has(storeKey)) {
+    callbackCache.set(storeKey, new Map())
+  }
+  const store = callbackCache.get(storeKey)!
+
+  const cached = store.get(slot)
+  if (cached && depsEqual(cached.deps, deps)) {
+    return cached.callback
+  }
+
+  store.set(slot, { callback, deps })
   return callback
+}
+
+/**
+ * Reset callback slot counter (call at the start of each component render)
+ */
+export function _resetCallbackSlot(): void {
+  currentCallbackSlot = 0
 }
 
 // ─── useMemo Hook ───────────────────────────────────────────────
@@ -637,9 +686,46 @@ export function useCallback<T extends (...args: any[]) => any>(
  * }
  * ```
  */
+const memoCache = new WeakMap<object, Map<number, { value: any; deps: any[] }>>()
+let currentMemoSlot = 0
+
 export function useMemo<T>(factory: () => T, deps: any[]): T {
-  // Simplified - in production, compare deps and cache
-  return factory()
+  const slot = currentMemoSlot++
+  const g = globalThis as any
+  const storeKey = typeof g.__flint_current_component__ !== 'undefined'
+    ? g.__flint_current_component__
+    : globalThis
+
+  if (!memoCache.has(storeKey)) {
+    memoCache.set(storeKey, new Map())
+  }
+  const store = memoCache.get(storeKey)!
+
+  const cached = store.get(slot)
+  if (cached && depsEqual(cached.deps, deps)) {
+    return cached.value
+  }
+
+  const value = factory()
+  store.set(slot, { value, deps })
+  return value
+}
+
+/**
+ * Reset memo slot counter (call at the start of each component render)
+ */
+export function _resetMemoSlot(): void {
+  currentMemoSlot = 0
+}
+
+// ─── Helper: deps comparison ────────────────────────────────────
+
+function depsEqual(a: any[], b: any[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (!Object.is(a[i], b[i])) return false
+  }
+  return true
 }
 
 // ─── useEffect Hook ─────────────────────────────────────────────

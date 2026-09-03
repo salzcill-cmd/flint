@@ -1,6 +1,8 @@
 // Flint Runtime — Form Actions & Resource Preloading
 // React 19 Form Actions, preinit, preload, prefetchDNS, preconnect
 
+import { state, type Signal } from '@flint/reactivity'
+
 // ─── Form Actions ───────────────────────────────────────────────
 
 export interface FormActionOptions {
@@ -61,14 +63,14 @@ export interface FormActionResult {
  * ```
  */
 export function createFormAction(options: FormActionOptions): FormActionResult {
-  let pending = false
-  let data: any = null
-  let error: Error | null = null
+  const pendingState = state(false)
+  const dataState = state<any>(null)
+  const errorState = state<Error | null>(null)
   let formElement: HTMLFormElement | null = null as HTMLFormElement | null
 
   const submit = async (formData: FormData): Promise<any> => {
-    pending = true
-    error = null
+    pendingState.set(true)
+    errorState.set(null)
 
     try {
       // Pre-submit hook
@@ -95,8 +97,8 @@ export function createFormAction(options: FormActionOptions): FormActionResult {
         result = await options.action(formData)
       }
 
-      data = result
-      pending = false
+      dataState.set(result)
+      pendingState.set(false)
 
       // Reset form if requested
       if (options.resetOnSuccess && formElement) {
@@ -108,26 +110,27 @@ export function createFormAction(options: FormActionOptions): FormActionResult {
 
       return result
     } catch (err) {
-      error = err instanceof Error ? err : new Error(String(err))
-      pending = false
+      const error = err instanceof Error ? err : new Error(String(err))
+      errorState.set(error)
+      pendingState.set(false)
       options.onError?.(error)
       throw error
     }
   }
 
   const reset = () => {
-    data = null
-    error = null
-    pending = false
+    dataState.set(null)
+    errorState.set(null)
+    pendingState.set(false)
     if (formElement) {
       formElement.reset()
     }
   }
 
   return {
-    get pending() { return pending },
-    get data() { return data },
-    get error() { return error },
+    get pending() { return pendingState() },
+    get data() { return dataState() },
+    get error() { return errorState() },
     submit,
     reset,
   }

@@ -626,7 +626,156 @@ export class Optimizer {
   }
 
   private generateCode(ast: ASTNode): string {
-    return JSON.stringify(ast, null, 2)
+    return this.astToCode(ast)
+  }
+
+  /**
+   * Convert AST node to JavaScript code string
+   */
+  private astToCode(node: ASTNode | null | undefined): string {
+    if (!node) return ''
+
+    switch (node.type) {
+      case 'Program':
+        return node.body.map((s: ASTNode) => this.astToCode(s)).join('\n')
+
+      case 'ExpressionStatement':
+        return this.astToCode(node.expression) + ';'
+
+      case 'Identifier':
+        return node.name
+
+      case 'Literal':
+        if (node.raw !== undefined) return node.raw
+        if (typeof node.value === 'string') return `"${node.value}"`
+        if (node.value === null) return 'null'
+        return String(node.value)
+
+      case 'BinaryExpression':
+        return `${this.astToCode(node.left)} ${node.operator} ${this.astToCode(node.right)}`
+
+      case 'LogicalExpression':
+        return `${this.astToCode(node.left)} ${node.operator} ${this.astToCode(node.right)}`
+
+      case 'UnaryExpression':
+        if (node.operator === 'typeof') return `typeof ${this.astToCode(node.argument)}`
+        if (node.operator === 'void') return `void ${this.astToCode(node.argument)}`
+        return `${node.operator}${this.astToCode(node.argument)}`
+
+      case 'UpdateExpression':
+        return node.prefix
+          ? `${node.operator}${this.astToCode(node.argument)}`
+          : `${this.astToCode(node.argument)}${node.operator}`
+
+      case 'AssignmentExpression':
+        return `${this.astToCode(node.left)} ${node.operator} ${this.astToCode(node.right)}`
+
+      case 'CallExpression':
+        const callee = this.astToCode(node.callee)
+        const args = node.arguments.map((a: ASTNode) => this.astToCode(a)).join(', ')
+        return `${callee}(${args})`
+
+      case 'MemberExpression':
+        const obj = this.astToCode(node.object)
+        if (node.computed) {
+          return `${obj}[${this.astToCode(node.property)}]`
+        }
+        return `${obj}.${this.astToCode(node.property)}`
+
+      case 'ArrowFunctionExpression':
+        const arrowParams = node.params.map((p: ASTNode) => this.astToCode(p)).join(', ')
+        if (node.body.type === 'BlockStatement') {
+          return `(${arrowParams}) => ${this.astToCode(node.body)}`
+        }
+        return `(${arrowParams}) => ${this.astToCode(node.body)}`
+
+      case 'FunctionExpression':
+        const funcParams = node.params.map((p: ASTNode) => this.astToCode(p)).join(', ')
+        return `function(${funcParams}) ${this.astToCode(node.body)}`
+
+      case 'FunctionDeclaration':
+        const declParams = node.params.map((p: ASTNode) => this.astToCode(p)).join(', ')
+        return `function ${this.astToCode(node.id)}(${declParams}) ${this.astToCode(node.body)}`
+
+      case 'BlockStatement':
+        return `{\n${node.body.map((s: ASTNode) => '  ' + this.astToCode(s)).join('\n')}\n}`
+
+      case 'ReturnStatement':
+        return `return ${this.astToCode(node.argument)};`
+
+      case 'IfStatement':
+        let code = `if (${this.astToCode(node.test)}) ${this.astToCode(node.consequent)}`
+        if (node.alternate) {
+          code += ` else ${this.astToCode(node.alternate)}`
+        }
+        return code
+
+      case 'VariableDeclaration':
+        const kind = node.kind
+        const declarations = node.declarations.map((d: ASTNode) => {
+          if (d.type === 'VariableDeclarator') {
+            if (d.init) {
+              return `${this.astToCode(d.id)} = ${this.astToCode(d.init)}`
+            }
+            return this.astToCode(d.id)
+          }
+          return ''
+        }).join(', ')
+        return `${kind} ${declarations};`
+
+      case 'VariableDeclarator':
+        if (node.init) {
+          return `${this.astToCode(node.id)} = ${this.astToCode(node.init)}`
+        }
+        return this.astToCode(node.id)
+
+      case 'Property':
+        if (node.computed) {
+          return `${this.astToCode(node.key)}: ${this.astToCode(node.value)}`
+        }
+        if (node.key.type === 'Identifier') {
+          return `${node.key.name}: ${this.astToCode(node.value)}`
+        }
+        return `${this.astToCode(node.key)}: ${this.astToCode(node.value)}`
+
+      case 'ObjectExpression':
+        if (!node.properties || node.properties.length === 0) return '{}'
+        return `{\n${node.properties.map((p: ASTNode) => '  ' + this.astToCode(p)).join(',\n')}\n}`
+
+      case 'ArrayExpression':
+        return `[${node.elements.map((e: ASTNode) => this.astToCode(e)).join(', ')}]`
+
+      case 'SpreadElement':
+        return `...${this.astToCode(node.argument)}`
+
+      case 'TemplateLiteral':
+        let template = '`'
+        for (let i = 0; i < node.expressions.length; i++) {
+          template += node.quasis[i].value.raw
+          template += '${' + this.astToCode(node.expressions[i]) + '}'
+        }
+        template += node.quasis[node.quasis.length - 1].value.raw + '`'
+        return template
+
+      case 'TaggedTemplateExpression':
+        return `${this.astToCode(node.tag)}${this.astToCode(node.quasi)}`
+
+      case 'ConditionalExpression':
+        return `${this.astToCode(node.test)} ? ${this.astToCode(node.consequent)} : ${this.astToCode(node.alternate)}`
+
+      case 'ParenthesizedExpression':
+        return `(${this.astToCode(node.expression)})`
+
+      case 'EmptyStatement':
+        return ';'
+
+      case 'DebuggerStatement':
+        return 'debugger;'
+
+      default:
+        // Fallback: return a placeholder
+        return `/* unknown: ${node.type} */`
+    }
   }
 
   // ─── Auto-Memoization (React Compiler-like) ────────────────────

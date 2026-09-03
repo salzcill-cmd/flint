@@ -29,6 +29,7 @@ export interface ComponentContext {
 
 export interface ComponentInstance {
   id: number
+  mountCallbacks: Array<() => void | CleanupFn>
   mountCleanups: CleanupFn[]
   updateCleanups: CleanupFn[]
   destroyCallbacks: (() => void)[]
@@ -55,14 +56,18 @@ export function getCurrentInstance(): ComponentContext | null {
   return createPublicContext(currentInstance)
 }
 
+/**
+ * Get a component instance by its ID.
+ */
+export function getComponentInstance(id: number): ComponentInstance | undefined {
+  return componentInstances.get(id)
+}
+
 function createPublicContext(instance: ComponentInstance): ComponentContext {
   return {
     onMount(fn: () => void | CleanupFn) {
       if (!instance.mounted) {
-        const cleanup = fn()
-        if (typeof cleanup === 'function') {
-          instance.mountCleanups.push(cleanup)
-        }
+        instance.mountCallbacks.push(fn)
       }
     },
 
@@ -129,6 +134,7 @@ export function component<P extends Record<string, any>>(
   const wrappedFn = (props: P) => {
     const instance: ComponentInstance = {
       id: nextComponentId++,
+      mountCallbacks: [],
       mountCleanups: [],
       updateCleanups: [],
       destroyCallbacks: [],
@@ -154,6 +160,10 @@ export function component<P extends Record<string, any>>(
 
     try {
       const result = fn(props)
+
+      // Store instance on wrapper so renderer can access it after render
+      ;(wrappedFn as any).__flint_instance = instance
+
       return result
     } finally {
       currentInstance = prevInstance
@@ -177,9 +187,12 @@ export function component<P extends Record<string, any>>(
 export function mountComponent(instance: ComponentInstance): void {
   instance.mounted = true
 
-  // Run mount cleanups (these were queued during render)
-  for (const cleanup of instance.mountCleanups) {
-    cleanup()
+  // Run mount callbacks and collect cleanups
+  for (const callback of instance.mountCallbacks) {
+    const cleanup = callback()
+    if (typeof cleanup === 'function') {
+      instance.mountCleanups.push(cleanup)
+    }
   }
 }
 
@@ -236,9 +249,8 @@ export function onMount(fn: () => void | CleanupFn): void {
     return
   }
 
-  const cleanup = fn()
-  if (typeof cleanup === 'function') {
-    currentInstance.mountCleanups.push(cleanup)
+  if (!currentInstance.mounted) {
+    currentInstance.mountCallbacks.push(fn)
   }
 }
 

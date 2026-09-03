@@ -178,6 +178,5 @@ export function forwardRef<T, P = {}>(
  * const inputRef = useRef(null)
  * inputRef.current.focus()
  */
-export function useRef<T>(initialValue: T): { current: T } {
-  return { current: initialValue }
-}
+// Re-export from optimistic.ts for consistent behavior
+export { useRef } from './optimistic.js'

@@ -109,13 +109,24 @@ function generateHydrationId(): string {
 
 // ─── HTML Escaping ──────────────────────────────────────────────
 
+const ESCAPE_MAP: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#039;',
+}
+
 function escapeHTML(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
+  // Use a single regex for performance
+  return str.replace(/[&<>"']/g, (char) => ESCAPE_MAP[char])
+}
+
+/**
+ * Escape attribute value specifically (handles quotes)
+ */
+function escapeAttr(str: string): string {
+  return str.replace(/[&"']/g, (char) => ESCAPE_MAP[char])
 }
 
 // ─── Render to String ───────────────────────────────────────────
@@ -338,7 +349,7 @@ function buildAttributes(props: Record<string, any>): string {
 
       // Class handling
       if (key === 'class' && Array.isArray(value)) {
-        return ` class="${escapeHTML(value.filter(Boolean).join(' '))}"`
+        return ` class="${escapeAttr(value.filter(Boolean).join(' '))}"`
       }
 
       // Style object
@@ -346,7 +357,7 @@ function buildAttributes(props: Record<string, any>): string {
         const styleStr = Object.entries(value)
           .map(([k, v]) => `${k}:${v}`)
           .join(';')
-        return ` style="${escapeHTML(styleStr)}"`
+        return ` style="${escapeAttr(styleStr)}"`
       }
 
       // Event handlers - skip in SSR
@@ -355,7 +366,7 @@ function buildAttributes(props: Record<string, any>): string {
       }
 
       // Regular attribute
-      return ` ${key}="${escapeHTML(String(value))}"`
+      return ` ${key}="${escapeAttr(String(value))}"`
     })
     .filter(Boolean)
     .join('')
