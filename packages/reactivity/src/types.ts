@@ -73,3 +73,36 @@ export interface WatchState<T> {
   lastValue: T | undefined
   effect: EffectState
 }
+
+// Selector — efficient keyed list tracking
+export interface Selector<T> {
+  /** Check if a key is selected (reads current value) */
+  (key: T): boolean
+  /** Set the selected key */
+  setSelected(key: T): void
+  /** Set multiple selected keys */
+  setSelected(keys: Set<T>): void
+  /** Get all selected keys */
+  getSelected(): Set<T>
+  /** Check if a key is selected without tracking */
+  isSelected(key: T): boolean
+  /** Dispose the selector */
+  dispose(): void
+}
+
+// Scope — grouped effect lifecycle
+export interface Scope {
+  /** Dispose all effects in this scope */
+  dispose(): void
+  /** Track a cleanup function */
+  onCleanup(fn: CleanupFn): void
+  /** Check if scope is disposed */
+  get disposed(): boolean
+}
+
+export interface ScopeState {
+  kind: 'scope'
+  disposables: CleanupFn[]
+  disposed: boolean
+  parent: ScopeState | null
+}

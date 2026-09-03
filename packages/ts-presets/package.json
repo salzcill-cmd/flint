@@ -1,0 +1,16 @@
+{
+  "name": "@flint/ts-presets",
+  "version": "3.0.0",
+  "description": "TypeScript configuration presets for Flint projects",
+  "type": "module",
+  "main": "index.json",
+  "exports": {
+    ".": "./index.json",
+    "./base": "./base.json",
+    "./strict": "./strict.json",
+    "./recommended": "./recommended.json",
+    "./jsx": "./jsx.json"
+  },
+  "files": ["*.json"],
+  "license": "MIT"
+}

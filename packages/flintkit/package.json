@@ -1,0 +1,40 @@
+{
+  "name": "flintkit",
+  "version": "0.1.0",
+  "description": "FlintKit — Metaframework for Flint with file-based routing, SSR, and full-stack features",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "flint",
+    "metaframework",
+    "ssr",
+    "file-based-routing",
+    "reactivity"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@flint/compiler": "workspace:*",
+    "@flint/reactivity": "workspace:*",
+    "@flint/runtime": "workspace:*",
+    "@flint/vite-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

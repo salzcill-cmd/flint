@@ -7,10 +7,11 @@ import flint from '@flint/vite-plugin'
 export interface DevOptions {
   port: number
   host: string
+  open: boolean
 }
 
 export async function startDev(options: DevOptions): Promise<void> {
-  console.log(`\n🔥 Starting Flint dev server...\n`)
+  console.log(`\n  Starting Flint dev server...\n`)
 
   const server = await createServer({
     root: process.cwd(),
@@ -18,18 +19,19 @@ export async function startDev(options: DevOptions): Promise<void> {
     server: {
       port: options.port,
       host: options.host,
+      open: options.open,
     },
   })
 
   await server.listen()
 
   const info = server.resolvedUrls
-  console.log(`  🌐 Dev server running at:\n`)
+  console.log(`  Dev server running at:\n`)
   if (info?.local) {
-    console.log(`     ${info.local}`)
+    console.log(`    ${info.local}`)
   }
   if (info?.network) {
-    console.log(`     ${info.network}`)
+    console.log(`    ${info.network}`)
   }
   console.log(`\n  Press Ctrl+C to stop.\n`)
 

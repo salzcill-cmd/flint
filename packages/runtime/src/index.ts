@@ -33,19 +33,24 @@ export type { InjectionKey, InjectionContext } from './inject/index.js'
 export {
   Show,
   For,
+  ForEach,
   Index,
   Switch,
   Match,
   Portal,
   Suspense,
+  SuspenseBoundary,
   memo,
+  cloneElement,
+  createMemo,
+  createEffect,
+  trackPromise,
 } from './components/index.js'
 
 // Lazy Loading & Error Boundaries
 export {
   ErrorBoundary,
   lazy,
-  Suspense as SuspenseBoundary,
   createResource,
   createAsyncComponent,
   catchError,
@@ -62,10 +67,6 @@ export type {
 // Refs
 export { ref, useSignal } from './ref/index.js'
 export type { Ref } from './ref/index.js'
-
-// Store
-export { createStore } from './store/index.js'
-export type { Store, StoreOptions, StoreMiddleware } from './store/index.js'
 
 // Styling
 export {
@@ -115,7 +116,7 @@ export {
   getRouter,
   navigate,
   useParams,
-  useQuery,
+  useQueryParams,
   useLocation,
   Link,
   Outlet,
@@ -230,7 +231,6 @@ export {
   AnimationEngine,
   Transition,
   TransitionGroup,
-  useTransition,
   useAnimate,
   easings,
   presets,
@@ -245,19 +245,247 @@ export type {
   Keyframe,
   Animation,
   EasingFunction,
-  UseTransitionReturn,
   UseAnimateReturn,
 } from './animations/index.js'
+
+// useTransition from hooks (not animations)
+export {
+  useTransition,
+} from './hooks/index.js'
+
+// Code Splitting & Lazy Routes
+export {
+  createLazyRoute,
+  RoutePreloader,
+  getRoutePreloader,
+  defineSplitPoint,
+} from './router/code-splitting.js'
+export type {
+  LazyRouteConfig,
+  LazyRouteLoader,
+  PreloadOptions,
+  SplitPoint,
+} from './router/code-splitting.js'
+
+// Middleware System
+export {
+  MiddlewareStack,
+  MiddlewareManager,
+  authMiddleware,
+  logMiddleware,
+  guardMiddleware,
+  progressMiddleware,
+  validateMiddleware,
+  cacheMiddleware,
+} from './router/middleware.js'
+export type {
+  MiddlewareContext,
+  MiddlewareFunction,
+  RouteWithMiddleware,
+} from './router/middleware.js'
+
+// File-based Routing
+export {
+  generateRoutesFromFiles,
+  buildRouteTree,
+  filePathToRoutePath,
+  routePathToFilePath,
+  isDynamicRoute,
+  extractSegments,
+  detectLayouts,
+  createFileRoutes,
+  ROUTE_PATTERNS,
+} from './router/file-based.js'
+export type {
+  FileRouteConfig,
+  FileRoute,
+  FileRouterOptions,
+  LayoutRoute,
+} from './router/file-based.js'
+
+// Internationalization (i18n)
+export {
+  I18n,
+  createI18n,
+  LOCALES,
+  formatNumber,
+  formatDate,
+  formatRelativeTime,
+} from './i18n/index.js'
+export type {
+  TranslationKeys,
+  I18nOptions,
+  I18nContext,
+} from './i18n/index.js'
+
+// Query/Data Fetching
+export {
+  QueryManager,
+  MutationManager,
+  createQueryManager,
+  getQueryManager,
+  useQuery,
+  useMutation,
+  invalidateQueries,
+  getQueryData,
+} from './query/index.js'
+export type {
+  QueryKey,
+  QueryOptions,
+  QueryResult,
+  MutationOptions,
+  MutationResult,
+} from './query/index.js'
+
+// SEO Utilities
+export {
+  MetaManager,
+  useSEO,
+  useStructuredData,
+  createArticleSchema,
+  createProductSchema,
+  createBreadcrumbSchema,
+} from './seo/index.js'
+export type {
+  MetaTag,
+  SEOMeta,
+  StructuredData,
+} from './seo/index.js'
+
+// PWA Support
+export {
+  ServiceWorkerManager,
+  CacheManager,
+  initPWA,
+  getPWA,
+  isOnline,
+  onOnline,
+  onOffline,
+  injectManifest,
+} from './pwa/index.js'
+export type {
+  ServiceWorkerConfig,
+  CacheConfig,
+  ManifestConfig,
+} from './pwa/index.js'
+
+// Image Component
+export {
+  Image,
+  ResponsiveImage,
+  preloadImage,
+  preloadImages,
+  createImageFallback,
+} from './image/index.js'
+export type {
+  ImageOptions,
+  ResponsiveImageOptions,
+  ImageState,
+} from './image/index.js'
 
 // Errors
 export {
   createFlintError,
   formatFlintError,
+  formatFlintErrorTerminal,
   throwFlintError,
+  fromNativeError,
   ErrorMessages,
   withErrorHandling,
+  parseStackTrace,
+  useErrorBoundary,
+  onError,
+  reportError,
+  safeRender,
 } from './errors/index.js'
-export type { FlintError, ErrorCode } from './errors/index.js'
+export type {
+  FlintError,
+  ErrorCode,
+  ErrorBoundaryState,
+  ErrorInfo,
+} from './errors/index.js'
+
+// Security Utilities
+export {
+  escapeHtml,
+  sanitizeInput,
+  isSafeUrl,
+  isValidUrl,
+  generateCSP,
+  generateCSRFToken,
+  validateCSRFToken,
+  validateInput,
+  createRateLimiter,
+  secureSet,
+  secureGet,
+  secureRemove,
+} from './security/index.js'
+export type {
+  SanitizeOptions,
+  CSPConfig,
+  ValidationRule,
+  ValidationResult,
+  RateLimiterConfig,
+} from './security/index.js'
+
+// Performance Monitoring
+export {
+  initPerformance,
+  performanceStart,
+  performanceEnd,
+  recordMetric,
+  getEntries,
+  getEntriesByType,
+  getAverageDuration,
+  getSummary,
+  clearEntries,
+  trackRender,
+  trackApi,
+  trackEffect,
+  trackNavigation,
+  getResourceTimings,
+  getWebVitals,
+} from './performance/index.js'
+export type {
+  PerformanceEntry as PerfEntry,
+  PerformanceConfig,
+} from './performance/index.js'
+
+// Accessibility (a11y)
+export {
+  useFocusTrap,
+  useFocusVisible,
+  useFocusRestore,
+  useKeyboard,
+  useListNavigation,
+  useAriaLive,
+  useReducedMotion,
+  useAriaId,
+  createAriaProps,
+  useRovingTabindex,
+} from './a11y/index.js'
+export type {
+  FocusTrapOptions,
+  KeyboardOptions,
+  AriaLiveOptions,
+  ReducedMotionOptions,
+} from './a11y/index.js'
+
+// useDeferredValue, useId, useImperativeHandle, forwardRef
+export {
+  useDeferredValue,
+  useId,
+  useImperativeHandle,
+  forwardRef,
+} from './hooks/index.js'
+export type {
+  ImperativeHandle,
+  ForwardRefRenderFunction,
+} from './hooks/index.js'
+
+// Class Name Utility
+export { cn } from './utils/classnames.js'
+export type { ClassValue } from './utils/classnames.js'
 
 // Re-export reactivity
 export {
@@ -266,10 +494,136 @@ export {
   effect,
   watch,
   batch,
+  untrack,
+  createSelector,
+  createRoot,
+  onCleanup,
 } from '@flint/reactivity'
 export type {
   Signal,
   Computed,
   Effect,
   CleanupFn,
+  Selector,
+  Scope,
 } from '@flint/reactivity'
+
+// Developer Experience
+export {
+  createDevError,
+  devPerf,
+  devAssert,
+  devDeprecated,
+  setDisplayName,
+  getDisplayName,
+  recordPerf,
+  getPerfEntries,
+  clearPerfEntries,
+  getAvgPerf,
+  formatMessage,
+} from './devtools/devx.js'
+
+// Server Components & Server Actions (RSC)
+export {
+  createServerAction,
+  createServerComponent,
+  createUniversalComponent,
+  getServerActionRegistry,
+  configureServerTransport,
+  handleServerAction,
+  createFormActionHandler,
+  addServerActionMiddleware,
+  setServerComponentContext,
+  clearServerComponentContext,
+  RedirectError,
+  NotFoundError,
+} from './ssr/server-components.js'
+export type {
+  ServerComponent,
+  ServerActionOptions,
+  ServerActionResult,
+  ServerComponentMeta,
+  ServerComponentContext,
+  ServerActionRegistry,
+  ServerActionHandler,
+  ServerActionMiddleware,
+} from './ssr/server-components.js'
+
+// Optimistic Updates & use() API
+export {
+  useOptimistic,
+  useOptimisticAction,
+  useActionState,
+  useFormStatus,
+  use,
+  createContext,
+  useProvider,
+  useDeferredValue as useDeferredValueNew,
+  useTransition as useTransitionNew,
+  useRef as useRefNew,
+  useCallback as useCallbackNew,
+  useMemo as useMemoNew,
+  useEffect as useEffectNew,
+} from './hooks/optimistic.js'
+export type {
+  OptimisticState,
+  UseOptimisticOptions,
+  ActionState,
+  FormStatus,
+  UseFormStatusOptions,
+  Context,
+} from './hooks/optimistic.js'
+
+// Form Actions & Resource Preloading
+export {
+  createFormAction,
+  preload,
+  preinit,
+  prefetchDNS,
+  preconnect,
+  usePreload,
+  usePrefetchDNS,
+  usePreconnect,
+  getServerPreloads,
+  getServerPreinits,
+  getServerPrefetchDNSs,
+  getServerPreconnects,
+  generateResourceHintsHTML,
+  clearServerResources,
+} from './hooks/form-actions.js'
+export type {
+  FormActionOptions,
+  FormActionResult,
+  ResourcePreloadOptions,
+  PrefetchDNSOptions,
+  PreconnectOptions,
+} from './hooks/form-actions.js'
+
+// Activity / KeepAlive
+export {
+  Activity,
+  KeepAlive,
+  useActivity,
+  clearActivityCache,
+  getActivityCacheStats,
+} from './components/activity.js'
+export type {
+  ActivityProps,
+  KeepAliveProps,
+  ActivityInstance,
+} from './components/activity.js'
+
+// useEffectEvent
+export {
+  useEffectEvent,
+  useStableEvent,
+  useEffectEventWithCleanup,
+  useEffectEventDebounced,
+  useEffectEventThrottled,
+  useEffectAnimationFrame,
+  useEffectEventIntersection,
+} from './hooks/effect-event.js'
+export type {
+  EffectEventOptions,
+  EffectEventReturn,
+} from './hooks/effect-event.js'

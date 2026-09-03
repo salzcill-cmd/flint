@@ -1,0 +1,25 @@
+{
+  "name": "create-flint",
+  "version": "3.0.0",
+  "description": "Scaffold a new Flint project with npx create-flint",
+  "type": "module",
+  "bin": {
+    "create-flint": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "files": ["dist"],
+  "keywords": ["flint", "scaffold", "create", "template", "starter"],
+  "license": "MIT"
+}

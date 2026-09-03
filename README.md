@@ -7,8 +7,9 @@
 A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual DOM.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-301%20passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-2.0.0-blue)]()
+[![Tests](https://img.shields.io/badge/Tests-553%20passing-brightgreen)]()
+[![Version](https://img.shields.io/badge/Version-3.0.0-blue)]()
+[![Packages](https://img.shields.io/badge/Packages-12-blueviolet)]()
 
 [Getting Started](#-getting-started) • [Examples](#-examples) • [API Reference](#-api-reference) • [Contributing](#-contributing)
 
@@ -22,19 +23,17 @@ A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual D
 - [Why Flint?](#-why-flint)
 - [Getting Started](#-getting-started)
 - [Core Concepts](#-core-concepts)
-  - [Signals (Reactivity)](#signals-reactivity)
-  - [Components](#components)
-  - [JSX](#jsx)
-  - [Rendering](#rendering)
-- [Built-in Components](#-built-in-components)
-- [Styling](#-styling)
-- [Forms & Validation](#-forms--validation)
-- [Router](#-router)
-- [State Management](#-state-management)
+- [Packages](#-packages)
+- [Metaframework (FlintKit)](#-metaframework-flintkit)
+- [State Management (Store)](#-state-management-store)
 - [Server-Side Rendering](#-server-side-rendering)
-- [Animations](#-animations)
-- [Testing](#-testing)
+- [Server Components & Actions](#-server-components--actions)
+- [Optimistic Updates](#-optimistic-updates)
+- [Form Actions & Resource Preloading](#-form-actions--resource-preloading)
+- [Compiler Auto-Memoization](#-compiler-auto-memoization)
 - [DevTools](#-devtools)
+- [ESLint Plugin](#-eslint-plugin)
+- [Testing](#-testing)
 - [Examples](#-examples)
 - [API Reference](#-api-reference)
 - [Contributing](#-contributing)
@@ -56,6 +55,11 @@ Flint is a modern JavaScript framework designed for building fast, reactive user
 | **Compiler-Optimized** | Automatic optimizations at build time |
 | **TypeScript First** | Full TypeScript support with inference |
 | **Small Bundle** | ~5KB gzipped core |
+| **Server Components** | React 19-compatible RSC support |
+| **Optimistic Updates** | Instant UI feedback with useOptimistic |
+| **Form Actions** | Progressive enhancement for forms |
+| **Resource Preloading** | preload, preinit, prefetchDNS APIs |
+| **Metaframework** | FlintKit for full-stack apps |
 
 ---
 
@@ -63,14 +67,16 @@ Flint is a modern JavaScript framework designed for building fast, reactive user
 
 ### Comparison with Other Frameworks
 
-| Feature | Flint | React | Vue | Svelte |
-|---------|-------|-------|-----|--------|
-| Virtual DOM | ❌ None | ✅ Yes | ✅ Yes | ❌ None |
-| Fine-Grained Reactivity | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
-| Bundle Size (gzip) | ~5KB | ~40KB | ~30KB | ~3KB |
-| Learning Curve | Easy | Medium | Easy | Easy |
-| TypeScript Support | First-Class | Good | Good | Good |
-| Compiler Optimization | ✅ Yes | ❌ No | ❌ No | ✅ Yes |
+| Feature | Flint | React | Vue | Svelte | Solid |
+|---------|-------|-------|-----|--------|-------|
+| Virtual DOM | ❌ None | ✅ Yes | ✅ Yes | ❌ None | ❌ None |
+| Fine-Grained Reactivity | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
+| Bundle Size (gzip) | ~5KB | ~40KB | ~30KB | ~3KB | ~7KB |
+| Learning Curve | Easy | Medium | Easy | Easy | Medium |
+| TypeScript Support | First-Class | Good | Good | Good | Good |
+| Compiler Optimization | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
+| Server Components | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
+| Form Actions | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
 
 ---
 
@@ -395,520 +401,129 @@ dispose.dispose()
 
 ---
 
-## Built-in Components
+## Packages
 
-### Show
+Flint is organized as a monorepo with the following packages:
 
-Conditional rendering.
+| Package | Description |
+|---------|-------------|
+| `@flint/reactivity` | Fine-grained signals, computed, effects |
+| `@flint/runtime` | Runtime, renderer, components, hooks |
+| `@flint/compiler` | JSX compiler with optimizations |
+| `@flint/vite-plugin` | Vite integration |
+| `@flint/cli` | CLI tools (generate, preview, doctor) |
+| `@flint/store` | Zustand-compatible state management |
+| `@flint/devtools` | Browser DevTools integration |
+| `@flint/eslint-plugin` | ESLint rules for Flint |
+| `@flint/playwright-utils` | E2E testing utilities |
+| `flintkit` | Metaframework with SSR & file-based routing |
+| `create-flint` | Project scaffolding CLI |
 
-```jsx
-import { Show } from '@flint/runtime'
+---
 
-<Show
-  when={isLoggedIn()}
-  fallback={<LoginButton />}
->
-  <Dashboard />
-</Show>
+## Metaframework (FlintKit)
+
+FlintKit is a full-stack metaframework for Flint, similar to Next.js or Nuxt.
+
+### File-Based Routing
+
+```
+pages/
+├── index.tsx          → /
+├── about.tsx          → /about
+├── blog/
+│   ├── index.tsx      → /blog
+│   └── [slug].tsx     → /blog/:slug
+├── _layout.tsx        → Root layout
+└── _error.tsx         → Error boundary
 ```
 
-### For
+### Data Loading
 
-List rendering.
+```tsx
+// pages/blog/[slug].loader.ts
+export async function loader({ params }) {
+  const post = await fetchPost(params.slug)
+  return { post }
+}
 
-```jsx
-import { For } from '@flint/runtime'
-
-const items = state(['Apple', 'Banana', 'Cherry'])
-
-<For each={items()}>
-  {(item, index) => (
-    <li>{index()}: {item}</li>
-  )}
-</For>
+// pages/blog/[slug].tsx
+export default function BlogPost({ post }) {
+  return <article>{post.title}</article>
+}
 ```
 
-### Index
+### Form Actions
 
-List rendering with index.
-
-```jsx
-import { Index } from '@flint/runtime'
-
-<Index each={items()}>
-  {(item, index) => (
-    <li>{index}: {item()}</li>
-  )}
-</Index>
+```tsx
+// pages/contact.action.ts
+export async function action({ request }) {
+  const formData = await request.formData()
+  await sendEmail(formData)
+  return { success: true }
+}
 ```
 
-### Switch
+### Configuration
 
-Multi-condition rendering.
+```ts
+// flintkit.config.ts
+import { defineConfig } from 'flintkit'
 
-```jsx
-import { Switch, Match } from '@flint/runtime'
-
-<Switch>
-  <Match when={status() === 'loading'}>
-    <Spinner />
-  </Match>
-  <Match when={status() === 'error'}>
-    <ErrorMessage />
-  </Match>
-  <Match when={status() === 'success'}>
-    <Content />
-  </Match>
-</Switch>
-```
-
-### Portal
-
-Render content in a different DOM node.
-
-```jsx
-import { Portal } from '@flint/runtime'
-
-<Portal mount={document.body}>
-  <Modal>Content</Modal>
-</Portal>
-```
-
-### Suspense
-
-Handle async loading.
-
-```jsx
-import { Suspense } from '@flint/runtime'
-
-<Suspense fallback={<Spinner />}>
-  <AsyncComponent />
-</Suspense>
-```
-
-### Memo
-
-Optimize expensive computations.
-
-```jsx
-import { memo } from '@flint/runtime'
-
-const expensiveValue = memo(() => {
-  return heavyComputation(data())
+export default defineConfig({
+  name: 'my-app',
+  ssr: true,
+  fileRoutes: true,
+  routesDir: 'pages',
 })
 ```
 
 ---
 
-## Styling
+## State Management Store
 
-### CSS-in-JS
+Flint provides a Zustand-compatible store with reactive signals.
 
-```jsx
-import { createStyles } from '@flint/runtime'
+### Basic Usage
 
-const styles = createStyles({
-  container: {
-    padding: '20px',
-    backgroundColor: '#f0f0f0',
-  },
-  title: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-  },
-})
+```tsx
+import { create } from '@flint/store'
 
-function MyComponent() {
-  return (
-    <div class={styles.container}>
-      <h1 class={styles.title}>Hello</h1>
-    </div>
-  )
-}
-```
+const useStore = create((set, get) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 })),
+}))
 
-### Dynamic Styles
-
-```jsx
-import { createDynamicStyles } from '@flint/runtime'
-
-const styles = createDynamicStyles({
-  button: (color) => ({
-    backgroundColor: color,
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-  }),
-})
-
-function ColoredButton({ color, children }) {
-  return (
-    <button class={styles.button(color)}>
-      {children}
-    </button>
-  )
-}
-```
-
-### Theming
-
-```jsx
-import { setTheme, getTheme, cssVariablesFromTheme } from '@flint/runtime'
-
-// Set theme
-setTheme({
-  primary: '#3498db',
-  secondary: '#2ecc71',
-  background: '#ffffff',
-})
-
-// Get current theme
-const theme = getTheme()
-
-// Apply as CSS variables
-cssVariablesFromTheme(theme, document.documentElement)
-```
-
-### Responsive Design
-
-```jsx
-import { responsive, mediaQuery } from '@flint/runtime'
-
-// Responsive styles
-const styles = responsive({
-  mobile: {
-    padding: '10px',
-    fontSize: '14px',
-  },
-  tablet: {
-    padding: '20px',
-    fontSize: '16px',
-  },
-  desktop: {
-    padding: '40px',
-    fontSize: '18px',
-  },
-})
-
-// Media query helper
-const isMobile = mediaQuery('(max-width: 768px)')
-```
-
-### Keyframes
-
-```jsx
-import { createKeyframes } from '@flint/runtime'
-
-const animations = createKeyframes({
-  fadeIn: {
-    from: { opacity: 0 },
-    to: { opacity: 1 },
-  },
-  slideUp: {
-    from: { transform: 'translateY(20px)' },
-    to: { transform: 'translateY(0)' },
-  },
-})
-
-function AnimatedComponent() {
-  return (
-    <div style={{ animation: `${animations.fadeIn} 0.3s ease` }}>
-      Animated content
-    </div>
-  )
-}
-```
-
----
-
-## Forms & Validation
-
-### Basic Form
-
-```jsx
-import { createForm, validators } from '@flint/runtime'
-
-function LoginForm() {
-  const form = createForm({
-    initialValues: {
-      email: '',
-      password: '',
-    },
-    validation: {
-      email: [validators.required(), validators.email()],
-      password: [validators.required(), validators.minLength(8)],
-    },
-    onSubmit: async (values) => {
-      await login(values)
-    },
-  })
-
-  return (
-    <form onSubmit={form.handleSubmit}>
-      <div>
-        <input
-          type="email"
-          {...form.bind('email')}
-          placeholder="Email"
-        />
-        {form.errors.email && (
-          <span>{form.errors.email}</span>
-        )}
-      </div>
-      <div>
-        <input
-          type="password"
-          {...form.bind('password')}
-          placeholder="Password"
-        />
-        {form.errors.password && (
-          <span>{form.errors.password}</span>
-        )}
-      </div>
-      <button type="submit" disabled={!form.isValid()}>
-        Login
-      </button>
-    </form>
-  )
-}
-```
-
-### Built-in Validators
-
-```javascript
-import { validators } from '@flint/runtime'
-
-// Required
-validators.required()
-
-// Email
-validators.email()
-
-// Min/Max Length
-validators.minLength(8)
-validators.maxLength(100)
-
-// Min/Max Value
-validators.min(0)
-validators.max(100)
-
-// Pattern (Regex)
-validators.pattern(/^[A-Z]/)
-
-// URL
-validators.url()
-
-// Phone
-validators.phone()
-
-// Custom validator
-validators.custom((value) => {
-  return value.includes('@') ? true : 'Must contain @'
-})
-
-// Match (password confirmation)
-validators.password('password')
-```
-
-### Async Validation
-
-```javascript
-const form = createForm({
-  initialValues: {
-    username: '',
-  },
-  validation: {
-    username: [
-      validators.required(),
-      validators.custom(async (value) => {
-        const exists = await checkUsernameExists(value)
-        return exists ? 'Username taken' : true
-      }),
-    ],
-  },
-})
-```
-
----
-
-## Router
-
-### Basic Setup
-
-```jsx
-import { createRouter, Link, Outlet } from '@flint/runtime'
-
-const router = createRouter({
-  routes: [
-    { path: '/', component: () => <Home /> },
-    { path: '/about', component: () => <About /> },
-    { path: '/users/:id', component: () => <UserProfile /> },
-  ],
-})
-
-function App() {
-  return (
-    <div>
-      <nav>
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
-      </nav>
-      <Outlet />
-    </div>
-  )
-}
-
-router.start()
-```
-
-### Route Parameters
-
-```jsx
-// Access params in component
-function UserProfile() {
-  const params = useParams()
-  
-  return <div>User ID: {params().id}</div>
-}
-```
-
-### Query Parameters
-
-```jsx
-function SearchPage() {
-  const query = useQuery()
-  
-  return <div>Search: {query().q}</div>
-}
-```
-
-### Navigation
-
-```jsx
-import { navigate } from '@flint/runtime'
-
-// Programmatic navigation
-const goToUser = (id) => {
-  navigate(`/users/${id}`)
-}
-
-// Replace current history
-navigate('/login', { replace: true })
-```
-
-### Route Guards
-
-```jsx
-const router = createRouter({
-  routes: [
-    {
-      path: '/dashboard',
-      component: () => <Dashboard />,
-      guard: (to, from) => {
-        // Return true to allow, false to block, or string to redirect
-        return isLoggedIn() ? true : '/login'
-      },
-    },
-  ],
-})
-```
-
-### Nested Routes
-
-```jsx
-const router = createRouter({
-  routes: [
-    {
-      path: '/dashboard',
-      component: () => <DashboardLayout />,
-      children: [
-        { path: 'settings', component: () => <Settings /> },
-        { path: 'profile', component: () => <Profile /> },
-      ],
-    },
-  ],
-})
-```
-
----
-
-## State Management
-
-### Local State (Signals)
-
-```jsx
+// In component
 function Counter() {
-  const count = state(0)
-  
-  return (
-    <div>
-      <p>{count()}</p>
-      <button onClick={() => count.set(prev => prev + 1)}>
-        +
-      </button>
-    </div>
-  )
+  const { count, increment } = useStore()
+  return <button onClick={increment}>{count}</button>
 }
 ```
 
-### Global State (Store)
+### Middleware
 
-```jsx
-import { createStore } from '@flint/runtime'
+```tsx
+import { create, logger, persist, devtools } from '@flint/store'
 
-// Create global store
-const useStore = createStore({
-  state: {
-    user: null,
-    theme: 'light',
-    notifications: [],
-  },
-  actions: {
-    setUser(state, user) {
-      state.user = user
-    },
-    toggleTheme(state) {
-      state.theme = state.theme === 'light' ? 'dark' : 'light'
-    },
-    addNotification(state, notification) {
-      state.notifications.push(notification)
-    },
-  },
-})
-
-// Usage in component
-function Header() {
-  const { user, theme } = useStore()
-  
-  return (
-    <header class={theme()}>
-      Welcome, {user()?.name}
-    </header>
-  )
-}
+const useStore = create(
+  (set) => ({
+    todos: [],
+    addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
+  }),
+  [logger(), persist('todos'), devtools({ name: 'TodoStore' })]
+)
 ```
 
-### Provide/Inject
+### Selectors
 
-```jsx
-import { provide, inject, createInjectionKey } from '@flint/runtime'
+```tsx
+import { useStore } from '@flint/store'
 
-// Create injection key
-const ThemeKey = createInjectionKey('theme')
-
-// Provider (parent)
-function App() {
-  provide(ThemeKey, () => state('light'))
-  
-  return <Child />
-}
-
-// Consumer (child)
-function Child() {
-  const theme = inject(ThemeKey)
-  
-  return <div class={theme()}>Themed content</div>
+function TodoCount() {
+  const count = useStore((state) => state.todos.length)
+  return <span>{count} todos</span>
 }
 ```
 
@@ -918,7 +533,7 @@ function Child() {
 
 ### Basic SSR
 
-```jsx
+```tsx
 import { renderToString } from '@flint/runtime'
 
 const html = await renderToString(() => <App />)
@@ -926,36 +541,31 @@ const html = await renderToString(() => <App />)
 
 ### Streaming SSR
 
-```jsx
+```tsx
 import { renderToPipeableStream } from '@flint/runtime'
 
 const stream = renderToPipeableStream(() => <App />)
-
-// Pipe to response
 stream.pipe(res)
 ```
 
 ### Hydration
 
-```jsx
+```tsx
 import { hydrate } from '@flint/runtime'
 
-// Hydrate server-rendered HTML
 hydrate(() => <App />, document.getElementById('app'))
 ```
 
 ### Data Loading
 
-```jsx
+```tsx
 import { dataLoader } from '@flint/runtime'
 
-// Define data loader
 const userDataLoader = dataLoader(async ({ params }) => {
   const user = await fetchUser(params.id)
   return { user }
 })
 
-// Use in route
 const router = createRouter({
   routes: [
     {
@@ -969,90 +579,259 @@ const router = createRouter({
 
 ---
 
-## Animations
+## Server Components & Actions
 
-### Transitions
+### Server Components
 
-```jsx
-import { Transition } from '@flint/runtime'
+```tsx
+import { createServerComponent } from '@flint/runtime'
 
-function Modal({ isOpen, onClose }) {
-  return (
-    <Transition
-      show={isOpen()}
-      options={{
-        enter: { duration: 300 },
-        exit: { duration: 200 },
-      }}
-    >
-      <div class="modal">
-        <h2>Modal Title</h2>
-        <p>Modal content</p>
-        <button onClick={onClose}>Close</button>
-      </div>
-    </Transition>
-  )
-}
+const ServerGreeting = createServerComponent(async ({ name }) => {
+  // This runs on the server only
+  const data = await fetchFromDatabase()
+  return <div>Hello {name}! Data: {data}</div>
+})
 ```
 
-### Element Animation
+### Server Actions
 
-```jsx
-import { useAnimate, easings } from '@flint/runtime'
+```tsx
+import { createServerAction } from '@flint/runtime'
 
-function AnimatedBox() {
-  const { animate, isAnimating } = useAnimate()
-  
-  const handleClick = () => {
-    animate(
-      [
-        { transform: 'scale(1)', opacity: 1 },
-        { transform: 'scale(1.1)', opacity: 0.8 },
-        { transform: 'scale(1)', opacity: 1 },
-      ],
-      {
-        duration: 300,
-        easing: easings.easeInOutCubic,
-      }
-    )
+const saveTodo = createServerAction(async (title: string) => {
+  // This runs on the server when called from client
+  await db.todos.create({ title })
+  return { success: true }
+}, { revalidate: ['todos'] })
+
+// In client component
+function TodoForm() {
+  const handleSubmit = async (title: string) => {
+    const result = await saveTodo(title)
+    console.log(result)
   }
-  
+}
+```
+
+### Universal Components
+
+```tsx
+import { createUniversalComponent } from '@flint/runtime'
+
+const UserCard = createUniversalComponent(
+  async (props) => {
+    // Server: fetch data
+    const user = await fetchUser(props.id)
+    return <Card user={user} />
+  },
+  (props) => {
+    // Client: render with data
+    return <Card user={props.user} />
+  }
+)
+```
+
+---
+
+## Optimistic Updates
+
+### useOptimistic
+
+```tsx
+import { useOptimistic } from '@flint/runtime'
+
+function TodoList({ todos }) {
+  const [optimisticTodos, setOptimisticTodos] = useOptimistic(todos)
+
+  const addTodo = async (text: string) => {
+    // Optimistically add
+    setOptimisticTodos(prev => [...prev, { text, done: false }])
+    
+    // Then save to server
+    await saveTodo(text)
+  }
+
   return (
-    <div
-      class="box"
-      onClick={handleClick}
-      style={{
-        transform: isAnimating() ? 'scale(1.1)' : 'scale(1)',
-      }}
-    >
-      Click me!
-    </div>
+    <ul>
+      {optimisticTodos.map(todo => <li>{todo.text}</li>)}
+    </ul>
   )
 }
 ```
 
-### Preset Animations
+### useOptimisticAction
+
+```tsx
+import { useOptimisticAction } from '@flint/runtime'
+
+function LikeButton({ likes, postId }) {
+  const { optimisticState, execute } = useOptimisticAction(
+    likes,
+    (current) => current + 1,
+    async () => {
+      await fetch(`/api/posts/${postId}/like`, { method: 'POST' })
+    }
+  )
+
+  return <button onClick={execute}>👍 {optimisticState}</button>
+}
+```
+
+---
+
+## Form Actions & Resource Preloading
+
+### Form Actions
+
+```tsx
+import { createFormAction } from '@flint/runtime'
+
+const submitForm = createFormAction({
+  action: async (formData) => {
+    await saveData(formData)
+    return { success: true }
+  },
+  onSubmit: (result) => console.log('Submitted:', result),
+  onError: (error) => console.error('Error:', error),
+})
+
+// In component
+<form action={submitForm}>
+  <input name="title" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+### Resource Preloading
+
+```tsx
+import { preload, preinit, prefetchDNS, preconnect } from '@flint/runtime'
+
+function App() {
+  // Preload a font
+  preload('/fonts/inter.woff2', { as: 'font' })
+  
+  // Preinitialize a script
+  preinit('/analytics.js', { as: 'script' })
+  
+  // Prefetch DNS for an API
+  prefetchDNS('https://api.example.com')
+  
+  // Preconnect to a CDN
+  preconnect('https://cdn.example.com')
+  
+  return <div>App</div>
+}
+```
+
+---
+
+## Compiler Auto-Memoization
+
+The Flint compiler automatically memoizes pure expressions, eliminating the need for manual `useMemo`.
+
+### Automatic
 
 ```jsx
-import { presets } from '@flint/runtime'
+// Before compilation
+const doubled = count() * 2
+const fullName = firstName() + ' ' + lastName()
 
-// Available presets:
-// - fadeIn / fadeOut
-// - slideUp / slideDown
-// - scale
-// - bounce
-// - flip
-
-<Transition show={visible()} options={presets.fadeIn}>
-  <div>Fading content</div>
-</Transition>
+// After compilation (automatic memoization)
+const doubled = _memo(() => count() * 2)
+const fullName = _memo(() => firstName() + ' ' + lastName())
 ```
+
+### Configuration
+
+```ts
+// vite.config.ts
+import flint from '@flint/vite-plugin'
+
+export default defineConfig({
+  plugins: [
+    flint({
+      autoMemoization: true, // Enable auto-memoization
+    })
+  ]
+})
+```
+
+---
+
+## DevTools
+
+### Browser Extension
+
+```tsx
+import { initDevTools, trackSignal, trackComponent } from '@flint/devtools'
+
+// Initialize devtools
+initDevTools({
+  appName: 'My App',
+  logLevel: 'debug',
+})
+
+// Track signals
+const count = state(0)
+trackSignal(count, 'count', 'state')
+
+// Track components
+function MyComponent() {
+  trackComponent('MyComponent', { prop: 'value' })
+  return <div>Component</div>
+}
+```
+
+### Redux DevTools Integration
+
+```tsx
+import { create, devtools } from '@flint/store'
+
+const useStore = create(
+  (set) => ({ count: 0 }),
+  [devtools({ name: 'CounterStore' })]
+)
+
+// Opens in Redux DevTools extension
+```
+
+---
+
+## ESLint Plugin
+
+### Installation
+
+```bash
+pnpm add -D @flint/eslint-plugin eslint
+```
+
+### Configuration
+
+```js
+// .eslintrc.js
+module.exports = {
+  plugins: ['@flint'],
+  extends: ['plugin:@flint/recommended'],
+}
+```
+
+### Available Rules
+
+| Rule | Description |
+|------|-------------|
+| `no-state-outside-effect` | Prevents state() in effects/callbacks |
+| `no-computed-in-render` | Prevents computed() in JSX |
+| `prefer-signal-over-value` | Suggests signal() over .value |
+| `no-reassign-signal` | Prevents direct signal assignment |
+| `require-effect-cleanup` | Requires cleanup in effects |
+| `no-nested-effect` | Prevents nested effects |
 
 ---
 
 ## Testing
 
-### Setup
+### Unit Testing
 
 ```bash
 pnpm add -D vitest happy-dom
@@ -1093,79 +872,33 @@ describe('Counter', () => {
 })
 ```
 
-### Testing Async
+### E2E Testing
 
-```jsx
-import { testRender, flushPromises } from '@flint/runtime'
+```bash
+pnpm add -D @playwright/test @flint/playwright-utils
+```
 
-it('loads data', async () => {
-  const { querySelector } = testRender(() => <DataComponent />)
+```tsx
+import { test, expect } from '@flint/playwright-utils'
+
+test('counter works', async ({ flint, page }) => {
+  await page.goto('/')
   
-  await flushPromises()
+  // Wait for hydration
+  await flint.waitForHydration()
   
-  expect(querySelector('.data')).toBeDefined()
+  // Check initial state
+  await expect(page.locator('p')).toHaveText('0')
+  
+  // Click button
+  await page.click('button')
+  
+  // Wait for signal update
+  await flint.waitForSignal('count', 1)
+  
+  // Verify
+  await expect(page.locator('p')).toHaveText('1')
 })
-```
-
-### Mocking
-
-```jsx
-import { createMockFetch, createSpy } from '@flint/runtime'
-
-// Mock fetch
-const mockFetch = createMockFetch({
-  '/api/users': [{ id: 1, name: 'John' }],
-})
-
-// Mock functions
-const spy = createSpy()
-component.onClick = spy
-```
-
----
-
-## DevTools
-
-### Enable DevTools
-
-```jsx
-import { enableDebug, trackSignal } from '@flint/reactivity'
-
-// Enable debug mode
-enableDebug()
-
-// Track signals
-const count = state(0)
-const tracked = trackSignal('count', count)
-
-tracked.set(1)
-// Console: [Flint Debug] Signal "count" changed: 0 -> 1
-```
-
-### State Inspector
-
-```jsx
-import { 
-  calculateStateDiff, 
-  recordState, 
-  undo, 
-  redo 
-} from '@flint/runtime'
-
-// Record state changes
-recordState({ count: 1 }, 'increment')
-recordState({ count: 2 }, 'increment')
-
-// Undo/Redo
-const prevState = undo() // { count: 1 }
-const nextState = redo() // { count: 2 }
-
-// Compare states
-const diff = calculateStateDiff(
-  { count: 1, name: 'John' },
-  { count: 2, name: 'John', age: 30 }
-)
-// { added: { age: 30 }, removed: {}, changed: { count: { old: 1, new: 2 } } }
 ```
 
 ---
@@ -1197,42 +930,41 @@ function Counter() {
 render(() => <Counter />, document.getElementById('app'))
 ```
 
-### Todo App
+### Todo App with Store
 
-```jsx
-import { state, computed } from '@flint/reactivity'
+```tsx
+import { create } from '@flint/store'
 import { For } from '@flint/runtime'
 
-function TodoApp() {
-  const todos = state([])
-  const newTodo = state('')
-  const remaining = computed(() => todos().filter(t => !t.done).length)
-  
-  const addTodo = () => {
-    if (newTodo()) {
-      todos.set(prev => [...prev, { text: newTodo(), done: false }])
-      newTodo.set('')
-    }
-  }
-  
-  const toggleTodo = (index) => {
-    todos.set(prev => prev.map((t, i) => 
+const useTodoStore = create((set) => ({
+  todos: [],
+  addTodo: (text) => set((state) => ({
+    todos: [...state.todos, { text, done: false }]
+  })),
+  toggleTodo: (index) => set((state) => ({
+    todos: state.todos.map((t, i) => 
       i === index ? { ...t, done: !t.done } : t
-    ))
-  }
-  
+    )
+  })),
+}))
+
+function TodoApp() {
+  const { todos, addTodo, toggleTodo } = useTodoStore()
+  const newTodo = state('')
+
   return (
     <div>
       <h1>Todo App</h1>
-      <p>Remaining: {remaining()}</p>
       <input
         value={newTodo()}
         onInput={(e) => newTodo.set(e.target.value)}
-        placeholder="Add todo..."
       />
-      <button onClick={addTodo}>Add</button>
+      <button onClick={() => {
+        addTodo(newTodo())
+        newTodo.set('')
+      }}>Add</button>
       <ul>
-        <For each={todos()}>
+        <For each={todos}>
           {(todo, index) => (
             <li
               style={{ textDecoration: todo().done ? 'line-through' : 'none' }}
@@ -1248,37 +980,36 @@ function TodoApp() {
 }
 ```
 
-### Fetch Data
+### Server-Side Todo App with FlintKit
 
-```jsx
-import { state, onMount } from '@flint/runtime'
+```tsx
+// pages/index.tsx
+import { createServerAction } from '@flint/runtime'
 
-function UserList() {
-  const users = state([])
-  const loading = state(true)
-  const error = state(null)
-  
-  onMount(async () => {
-    try {
-      const res = await fetch('/api/users')
-      const data = await res.json()
-      users.set(data)
-    } catch (err) {
-      error.set(err.message)
-    } finally {
-      loading.set(false)
-    }
-  })
-  
-  if (loading()) return <p>Loading...</p>
-  if (error()) return <p>Error: {error()}</p>
-  
+const addTodo = createServerAction(async (title: string) => {
+  await db.todos.create({ title })
+  return { success: true }
+}, { revalidate: ['todos'] })
+
+export async function loader() {
+  const todos = await db.todos.findMany()
+  return { todos }
+}
+
+export default function TodoPage({ todos }) {
   return (
-    <ul>
-      {users().map(user => (
-        <li key={user.id}>{user.name}</li>
-      ))}
-    </ul>
+    <div>
+      <h1>Todos</h1>
+      <form action={async (formData) => {
+        await addTodo(formData.get('title'))
+      }}>
+        <input name="title" />
+        <button type="submit">Add</button>
+      </form>
+      <ul>
+        {todos.map(todo => <li key={todo.id}>{todo.title}</li>)}
+      </ul>
+    </div>
   )
 }
 ```
@@ -1296,40 +1027,66 @@ function UserList() {
 | `effect(fn)` | Run on dependency changes |
 | `watch(source, callback)` | Watch specific signals |
 | `batch(fn)` | Batch multiple updates |
-| `enableDebug()` | Enable debug mode |
-| `trackSignal(name, signal)` | Track signal changes |
+| `untrack(fn)` | Read without tracking |
+| `createSelector()` | Efficient list updates |
+| `createRoot(fn)` | Create effect scope |
+| `onCleanup(fn)` | Register cleanup |
 
 ### @flint/runtime
 
 | Function | Description |
 |----------|-------------|
-| `render(fn, container)` | Render component to DOM |
+| `render(fn, container)` | Render to DOM |
 | `h(tag, props, ...children)` | Create virtual node |
 | `component(fn)` | Create component |
 | `onMount(fn)` | Run on mount |
 | `onUpdate(fn)` | Run on update |
 | `onDestroy(fn)` | Run on destroy |
 | `ref()` | Create DOM ref |
-| `provide(key, value)` | Provide value to children |
-| `inject(key)` | Inject value from parent |
-| `createStore(options)` | Create global store |
 | `createRouter(options)` | Create router |
-| `renderToString(fn)` | Render to HTML string |
-| `createStyles(styles)` | Create CSS-in-JS styles |
-| `createForm(options)` | Create form with validation |
+| `renderToString(fn)` | Render to HTML |
+| `createStyles(styles)` | Create CSS-in-JS |
+| `createForm(options)` | Create form |
+| `createServerAction(fn)` | Create server action |
+| `createServerComponent(fn)` | Create server component |
+| `useOptimistic(initial, update)` | Optimistic updates |
+| `useActionState(action, init)` | Form action state |
+| `preload(href, options)` | Preload resource |
+| `preinit(href, options)` | Preinitialize resource |
+| `prefetchDNS(origin)` | Prefetch DNS |
+| `preconnect(origin)` | Preconnect |
 
-### Built-in Components
+### @flint/store
 
-| Component | Description |
-|-----------|-------------|
-| `<Show when={condition}>` | Conditional rendering |
-| `<For each={array}>` | List rendering |
-| `<Switch>/<Match>` | Multi-condition rendering |
-| `<Portal>` | Render in different DOM node |
-| `<Suspense>` | Handle async loading |
-| `<Transition>` | Enter/leave animations |
-| `<Link to={path}>` | Navigation link |
-| `<Outlet>` | Nested route outlet |
+| Function | Description |
+|----------|-------------|
+| `create(creator, middlewares?)` | Create store |
+| `logger()` | Logger middleware |
+| `persist(name, options?)` | Persistence middleware |
+| `devtools(options?)` | Redux DevTools middleware |
+| `immer()` | Immutable updates middleware |
+| `useStore(store, selector?)` | Use store in component |
+
+### @flint/compiler
+
+| Option | Description |
+|--------|-------------|
+| `autoMemoization` | Auto-memoize pure expressions |
+| `staticHoisting` | Hoist static subtrees |
+| `cssScoping` | Compile-time CSS scoping |
+| `sourceMaps` | Generate source maps |
+| `deadCodeElimination` | Remove dead code |
+
+### @flint/eslint-plugin
+
+| Rule | Severity |
+|------|----------|
+| `no-state-outside-effect` | warn |
+| `no-computed-in-render` | error |
+| `prefer-signal-over-value` | warn |
+| `no-reassign-signal` | error |
+| `require-effect-cleanup` | warn |
+| `no-nested-effect` | error |
 
 ---
 

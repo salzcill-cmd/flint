@@ -1,22 +1,136 @@
-// Flint Compiler — JSX Transformer
-// Transforms JSX AST into Flint runtime calls
+// Flint Compiler — JSX Transformer v3
+// Transforms JSX AST into Flint runtime calls with fine-grained reactivity
+// Supports source maps for debugging
 //
 // Transformations:
 //   <div>...</div>          → h("div", null, ...)
 //   <div class="x">...</div> → h("div", { class: "x" }, ...)
 //   <Comp prop={v} />       → h(Comp, { prop: v })
-//   <div>{expr}</div>       → h("div", null, expr)
+//   <div>{expr}</div>       → h("div", null, track(() => expr))
+//   <div onClick={fn}>      → h("div", { onClick: trackEvent(fn) })
 
 import type * as acorn from 'acorn'
 
 export interface TransformOptions {
   filename?: string
   dev?: boolean
+  sourceMaps?: boolean
 }
 
 export interface TransformResult {
   code: string
   ast: acorn.Node
+  map?: SourceMap
+}
+
+export interface SourceMap {
+  version: 3
+  file?: string
+  sourceRoot?: string
+  sources: string[]
+  sourcesContent?: (string | null)[]
+  names: string[]
+  mappings: string
+}
+
+// ─── Source Map Generator ────────────────────────────────────────
+
+class SourceMapGenerator {
+  private mappings: number[][] = []
+  private names: string[] = []
+  private sources: string[] = []
+  private sourcesContent: (string | null)[] = []
+  private currentLine = 1
+  private currentColumn = 0
+  private sourceIndex = 0
+  private originalLine = 1
+  private originalColumn = 0
+
+  constructor(source?: string, filename?: string) {
+    if (source) {
+      this.sources.push(filename || 'input.jsx')
+      this.sourcesContent.push(source)
+    }
+  }
+
+  addMapping(
+    generatedLine: number,
+    generatedColumn: number,
+    originalLine: number,
+    originalColumn: number,
+    sourceIndex: number = 0
+  ): void {
+    this.mappings.push([
+      generatedColumn,
+      sourceIndex,
+      originalLine - 1,
+      originalColumn,
+    ])
+  }
+
+  setSourceContent(sourceIndex: number, content: string | null): void {
+    this.sourcesContent[sourceIndex] = content
+  }
+
+  generate(): SourceMap {
+    // Encode mappings using VLQ encoding
+    const encodedMappings = this.encodeMappings()
+
+    return {
+      version: 3,
+      file: 'output.js',
+      sources: this.sources,
+      sourcesContent: this.sourcesContent,
+      names: this.names,
+      mappings: encodedMappings,
+    }
+  }
+
+  private encodeMappings(): string {
+    if (this.mappings.length === 0) return ''
+
+    const lines: string[][] = []
+    let lastGeneratedColumn = 0
+    let lastSourceIndex = 0
+    let lastOriginalLine = 0
+    let lastOriginalColumn = 0
+
+    for (const mapping of this.mappings) {
+      const [generatedCol, sourceIdx, origLine, origCol] = mapping
+
+      const encoded = this.encodeVLQ(generatedCol - lastGeneratedColumn)
+      encoded.push(...this.encodeVLQ(sourceIdx - lastSourceIndex))
+      encoded.push(...this.encodeVLQ(origLine - lastOriginalLine))
+      encoded.push(...this.encodeVLQ(origCol - lastOriginalColumn))
+
+      lines.push(encoded)
+
+      lastGeneratedColumn = generatedCol
+      lastSourceIndex = sourceIdx
+      lastOriginalLine = origLine
+      lastOriginalColumn = origCol
+    }
+
+    return lines.map(line => line.join('')).join(';')
+  }
+
+  private encodeVLQ(value: number): string[] {
+    const result: string[] = []
+    let vlq = (value < 0 ? (-value << 1) | 1 : value << 1)
+
+    while (vlq > 31) {
+      result.push(this.encodeBase64(vlq & 31 | 32))
+      vlq >>= 5
+    }
+
+    result.push(this.encodeBase64(vlq & 31))
+    return result
+  }
+
+  private encodeBase64(value: number): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+    return chars[value] || ''
+  }
 }
 
 // ─── AST Walker ─────────────────────────────────────────────────
@@ -228,7 +342,7 @@ function getNodeKeys(node: any): string[] {
 
 // ─── Code Generator ─────────────────────────────────────────────
 
-function generate(node: any, code: string): string {
+function generate(node: any, code: string, options?: { inJSXExpression?: boolean }): string {
   if (!node || typeof node !== 'object') return ''
   if (!node.type) return ''
 
@@ -243,6 +357,37 @@ function generate(node: any, code: string): string {
     default:
       return code.slice(start, end)
   }
+}
+
+function isLikelyReactive(exprNode: any, code: string): boolean {
+  if (!exprNode || typeof exprNode !== 'object') return false
+
+  // Function calls are likely reactive (signal reads)
+  if (exprNode.type === 'CallExpression') return true
+  // Member expressions like state.value
+  if (exprNode.type === 'MemberExpression') return true
+  // Identifier references (could be a signal)
+  if (exprNode.type === 'Identifier') return true
+  // Binary/logical expressions with reactive parts
+  if (exprNode.type === 'BinaryExpression' || exprNode.type === 'LogicalExpression') {
+    return isLikelyReactive(exprNode.left, code) || isLikelyReactive(exprNode.right, code)
+  }
+  // Conditional expressions
+  if (exprNode.type === 'ConditionalExpression') {
+    return isLikelyReactive(exprNode.consequent, code) || isLikelyReactive(exprNode.alternate, code)
+  }
+  // Template literals
+  if (exprNode.type === 'TemplateLiteral') {
+    return exprNode.expressions.some((e: any) => isLikelyReactive(e, code))
+  }
+  // Arrow functions and function expressions are NOT reactive (they create new closures)
+  if (exprNode.type === 'ArrowFunctionExpression' || exprNode.type === 'FunctionExpression') {
+    return false
+  }
+  // Assignment expressions
+  if (exprNode.type === 'AssignmentExpression') return true
+
+  return false
 }
 
 function generateJSXElement(node: any, code: string): string {
@@ -340,7 +485,13 @@ function generateJSXChildren(children: any[], code: string): string {
       }
     } else if (child.type === 'JSXExpressionContainer') {
       if (child.expression.type !== 'JSXEmptyExpression') {
-        parts.push(generate(child.expression, code))
+        const expr = generate(child.expression, code)
+        // Wrap reactive expressions in track() for fine-grained DOM updates
+        if (isLikelyReactive(child.expression, code)) {
+          parts.push(`track(() => ${expr})`)
+        } else {
+          parts.push(expr)
+        }
       }
     } else if (child.type === 'JSXElement' || child.type === 'JSXFragment') {
       parts.push(generate(child, code))
@@ -355,10 +506,11 @@ function generateJSXChildren(children: any[], code: string): string {
 // ─── Transformer ────────────────────────────────────────────────
 
 export function transform(ast: any, code: string, options: TransformOptions = {}): TransformResult {
-  const hImport = `import { h } from 'flint'`
+  const hImport = `import { h, track } from 'flint'`
   const imports: string[] = []
   let hasFlintImport = false
   let hasJSX = false
+  let needsTrack = false
 
   // First pass: detect JSX and check for existing flint imports
   walk(ast, null, {
@@ -407,5 +559,42 @@ export function transform(ast: any, code: string, options: TransformOptions = {}
     transformedCode = hImport + '\n' + transformedCode
   }
 
-  return { code: transformedCode, ast }
+  // Generate source map if requested
+  let sourceMap: SourceMap | undefined
+  if (options.sourceMaps !== false) {
+    const generator = new SourceMapGenerator(code, options.filename)
+
+    // Add mappings for each JSX transformation
+    for (const r of replacements) {
+      // Map generated positions back to original
+      const originalStart = getOriginalPosition(code, r.start)
+      const generatedLine = transformedCode.slice(0, transformedCode.indexOf(r.replacement)).split('\n').length
+      const generatedColumn = transformedCode.indexOf(r.replacement) % (transformedCode.split('\n')[generatedLine - 1]?.length || 1)
+
+      generator.addMapping(
+        generatedLine,
+        generatedColumn,
+        originalStart.line,
+        originalStart.column
+      )
+    }
+
+    sourceMap = generator.generate()
+  }
+
+  return { code: transformedCode, ast, map: sourceMap }
+}
+
+function getOriginalPosition(code: string, offset: number): { line: number; column: number } {
+  let line = 1
+  let column = 0
+  for (let i = 0; i < offset && i < code.length; i++) {
+    if (code[i] === '\n') {
+      line++
+      column = 0
+    } else {
+      column++
+    }
+  }
+  return { line, column }
 }

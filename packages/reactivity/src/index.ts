@@ -1,8 +1,25 @@
 // Flint Reactivity — Fine-grained signals system
 // Inspired by Solid.js, Svelte 5 Runes, and Angular Signals
 
-export { state, computed, effect, watch, batch } from './signals.js'
-export type { Signal, Computed, Effect, CleanupFn } from './types.js'
+export {
+  state,
+  computed,
+  effect,
+  watch,
+  batch,
+  untrack,
+  createSelector,
+  createRoot,
+  onCleanup,
+} from './signals.js'
+export type {
+  Signal,
+  Computed,
+  Effect,
+  CleanupFn,
+  Selector,
+  Scope,
+} from './types.js'
 
 // Debug mode v2
 export {

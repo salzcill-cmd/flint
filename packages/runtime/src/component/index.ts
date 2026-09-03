@@ -1,4 +1,4 @@
-// Flint Runtime — Component System
+// Flint Runtime — Component System v2
 // Lifecycle hooks, context, and component management
 
 import { effect, type CleanupFn, type Signal } from '@flint/reactivity'
@@ -8,9 +8,22 @@ import { effect, type CleanupFn, type Signal } from '@flint/reactivity'
 export type ComponentFunction<P = {}> = (props: P) => any
 
 export interface ComponentContext {
+  /** Called after the component is mounted to the DOM */
   onMount(fn: () => void | CleanupFn): void
+  /** Called after each re-render */
   onUpdate(fn: () => void | CleanupFn): void
+  /** Called before the component is destroyed */
   onDestroy(fn: () => void): void
+  /** Called before the component is mounted */
+  onBeforeMount(fn: () => void): void
+  /** Called before each re-render */
+  onBeforeUpdate(fn: () => void): void
+  /** Called when the component is activated (keep-alive) */
+  onActivated(fn: () => void | CleanupFn): void
+  /** Called when the component is deactivated (keep-alive) */
+  onDeactivated(fn: () => void | CleanupFn): void
+  /** Called when a child component throws an error */
+  onErrorCaptured(fn: (error: Error, info: { componentStack: string }) => boolean | void): void
 }
 
 export interface ComponentInstance {
@@ -18,8 +31,14 @@ export interface ComponentInstance {
   mountCleanups: CleanupFn[]
   updateCleanups: CleanupFn[]
   destroyCallbacks: (() => void)[]
+  beforeMountCallbacks: (() => void)[]
+  beforeUpdateCallbacks: (() => void)[]
+  activatedCallbacks: (() => void | CleanupFn)[]
+  deactivatedCallbacks: (() => void | CleanupFn)[]
+  errorCapturedCallbacks: ((error: Error, info: { componentStack: string }) => boolean | void)[]
   mounted: boolean
   disposed: boolean
+  active: boolean
 }
 
 // ─── Component Instance Management ──────────────────────────────
@@ -39,7 +58,6 @@ function createPublicContext(instance: ComponentInstance): ComponentContext {
   return {
     onMount(fn: () => void | CleanupFn) {
       if (!instance.mounted) {
-        // Queue for after mount
         const cleanup = fn()
         if (typeof cleanup === 'function') {
           instance.mountCleanups.push(cleanup)
@@ -56,6 +74,28 @@ function createPublicContext(instance: ComponentInstance): ComponentContext {
 
     onDestroy(fn: () => void) {
       instance.destroyCallbacks.push(fn)
+    },
+
+    onBeforeMount(fn: () => void) {
+      if (!instance.mounted) {
+        instance.beforeMountCallbacks.push(fn)
+      }
+    },
+
+    onBeforeUpdate(fn: () => void) {
+      instance.beforeUpdateCallbacks.push(fn)
+    },
+
+    onActivated(fn: () => void | CleanupFn) {
+      instance.activatedCallbacks.push(fn)
+    },
+
+    onDeactivated(fn: () => void | CleanupFn) {
+      instance.deactivatedCallbacks.push(fn)
+    },
+
+    onErrorCaptured(fn: (error: Error, info: { componentStack: string }) => boolean | void) {
+      instance.errorCapturedCallbacks.push(fn)
     },
   }
 }
@@ -91,8 +131,14 @@ export function component<P extends Record<string, any>>(
       mountCleanups: [],
       updateCleanups: [],
       destroyCallbacks: [],
+      beforeMountCallbacks: [],
+      beforeUpdateCallbacks: [],
+      activatedCallbacks: [],
+      deactivatedCallbacks: [],
+      errorCapturedCallbacks: [],
       mounted: false,
       disposed: false,
+      active: true,
     }
 
     // Set current instance for lifecycle hook registration

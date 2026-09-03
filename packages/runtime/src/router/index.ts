@@ -1,5 +1,5 @@
-// Flint Runtime — Router v2
-// Enhanced router with scroll restoration, lazy routes, and navigation guards
+// Flint Runtime — Router v3
+// Enhanced router with lazy loading, guards, middleware, and navigation events
 
 import { state, computed, effect } from '@flint/reactivity'
 import type { Signal, Computed } from '@flint/reactivity'
@@ -46,6 +46,13 @@ export interface NavigateOptions {
 
 export type RouteGuard = (to: Location, from: Location | null) => boolean | Promise<boolean> | string | Promise<string>
 
+export type NavigationMiddleware = {
+  beforeEnter?: (to: Location, from: Location | null) => boolean | Promise<boolean> | void
+  afterEnter?: (to: Location, from: Location | null) => void
+  beforeLeave?: (to: Location, from: Location | null) => boolean | Promise<boolean> | void
+  afterLeave?: (to: Location, from: Location | null) => void
+}
+
 export interface ScrollPosition {
   x: number
   y: number
@@ -58,12 +65,23 @@ export interface RouterOptions {
   scrollBehavior?: ScrollBehavior
   /** Base path */
   basePath?: string
+  /** Global navigation middleware */
+  middleware?: NavigationMiddleware[]
+  /** Not found route */
+  notFound?: Route
 }
 
 export interface RouteMatch {
   route: Route
   params: RouteParams
   path: string
+}
+
+export interface NavigationEvent {
+  type: 'beforeEnter' | 'afterEnter' | 'beforeLeave' | 'afterLeave'
+  to: Location
+  from: Location | null
+  preventDefault?: () => void
 }
 
 // ─── Route Pattern Matching ─────────────────────────────────────
@@ -160,6 +178,10 @@ export class Router {
   private _scrollRestoration!: boolean
   private _scrollBehavior!: ScrollBehavior
   private _basePath!: string
+  private _middleware: NavigationMiddleware[] = []
+  private _listeners: Set<(event: NavigationEvent) => void> = new Set()
+  private _notFoundRoute?: Route
+  private _componentCache = new Map<string, Child>()
 
   constructor(options: RouterOptions = {}) {
     if (routerInstance) {
@@ -169,6 +191,8 @@ export class Router {
     this._scrollRestoration = options.scrollRestoration ?? true
     this._scrollBehavior = options.scrollBehavior ?? 'smooth'
     this._basePath = options.basePath ?? ''
+    this._middleware = options.middleware ?? []
+    this._notFoundRoute = options.notFound
 
     const initialLocation = this.getLocationFromBrowser()
     this._location = state<Location>(initialLocation)
@@ -206,6 +230,32 @@ export class Router {
     return this
   }
 
+  addMiddleware(middleware: NavigationMiddleware): this {
+    this._middleware.push(middleware)
+    return this
+  }
+
+  removeMiddleware(middleware: NavigationMiddleware): this {
+    const idx = this._middleware.indexOf(middleware)
+    if (idx !== -1) this._middleware.splice(idx, 1)
+    return this
+  }
+
+  on(listener: (event: NavigationEvent) => void): () => void {
+    this._listeners.add(listener)
+    return () => this._listeners.delete(listener)
+  }
+
+  private emit(event: NavigationEvent): void {
+    for (const listener of this._listeners) {
+      try {
+        listener(event)
+      } catch (e) {
+        console.error('[Flint Router] Navigation listener error:', e)
+      }
+    }
+  }
+
   start(): void {
     if (this._popstateHandler) return
 
@@ -241,41 +291,97 @@ export class Router {
     const { replace = false, scrollToTop = true } = options
 
     const match = matchRoute(path, this.routes)
-    if (match) {
-      const currentLocation = this._location()
-      const toLocation = this.createLocation(path)
+    const currentLocation = this._location()
+    const toLocation = this.createLocation(path)
 
-      if (match.route.guard) {
-        this._isNavigating.set(true)
-        try {
-          const canProceed = await match.route.guard(toLocation, currentLocation)
-          if (canProceed !== true) {
-            if (typeof canProceed === 'string') {
-              return this.navigate(canProceed)
-            }
-            return
-          }
-        } finally {
-          this._isNavigating.set(false)
+    // Handle 404
+    if (!match) {
+      if (this._notFoundRoute) {
+        // Use not found route
+        const notFoundMatch: RouteMatch = {
+          route: this._notFoundRoute,
+          params: {},
+          path: this._notFoundRoute.path,
         }
+        return this.performNavigation(notFoundMatch, currentLocation, toLocation, replace, scrollToTop)
+      }
+      console.warn(`[Flint Router] No route matched: ${path}`)
+      return
+    }
+
+    return this.performNavigation(match, currentLocation, toLocation, replace, scrollToTop)
+  }
+
+  private async performNavigation(
+    match: RouteMatch,
+    fromLocation: Location,
+    toLocation: Location,
+    replace: boolean,
+    scrollToTop: boolean
+  ): Promise<void> {
+    // Run global middleware beforeLeave
+    for (const mw of this._middleware) {
+      if (mw.beforeLeave) {
+        const result = await mw.beforeLeave(toLocation, fromLocation)
+        if (result === false) return
       }
     }
 
+    // Run route guard
+    if (match.route.guard) {
+      this._isNavigating.set(true)
+      try {
+        const canProceed = await match.route.guard(toLocation, fromLocation)
+        if (canProceed !== true) {
+          if (typeof canProceed === 'string') {
+            return this.navigate(canProceed)
+          }
+          return
+        }
+      } finally {
+        this._isNavigating.set(false)
+      }
+    }
+
+    // Run global middleware beforeEnter
+    for (const mw of this._middleware) {
+      if (mw.beforeEnter) {
+        const result = await mw.beforeEnter(toLocation, fromLocation)
+        if (result === false) return
+      }
+    }
+
+    // Emit beforeLeave event
+    this.emit({ type: 'beforeLeave', to: toLocation, from: fromLocation })
+
     // Save scroll position
     if (this._scrollRestoration) {
-      saveScrollPosition(this._location().pathname)
+      saveScrollPosition(fromLocation.pathname)
     }
 
     // Update browser history
     if (replace) {
-      window.history.replaceState(null, '', path)
+      window.history.replaceState(null, '', toLocation.pathname + toLocation.search)
     } else {
-      window.history.pushState(null, '', path)
+      window.history.pushState(null, '', toLocation.pathname + toLocation.search)
     }
 
-    // Update state
-    const location = this.getLocationFromBrowser()
-    this._location.set(location)
+    // Update state with matched params
+    const locationWithParams: Location = {
+      ...toLocation,
+      params: match.params,
+    }
+    this._location.set(locationWithParams)
+
+    // Run global middleware afterEnter
+    for (const mw of this._middleware) {
+      if (mw.afterEnter) {
+        mw.afterEnter(toLocation, fromLocation)
+      }
+    }
+
+    // Emit afterEnter event
+    this.emit({ type: 'afterEnter', to: toLocation, from: fromLocation })
 
     // Scroll behavior
     if (scrollToTop) {
@@ -320,7 +426,6 @@ export class Router {
   private scrollToSavedPosition(pathname: string): void {
     const position = restoreScrollPosition(pathname)
     if (position) {
-      // Use setTimeout to ensure DOM is ready
       setTimeout(() => {
         this.scrollTo(position)
       }, 0)
@@ -337,6 +442,35 @@ export class Router {
   getCurrentRoute(): Route | null {
     const match = this.resolve()
     return match?.route ?? null
+  }
+
+  // ─── Lazy Loading ─────────────────────────────────────────
+
+  async loadComponent(route: Route): Promise<Child> {
+    const cacheKey = route.path
+    if (this._componentCache.has(cacheKey)) {
+      return this._componentCache.get(cacheKey)!
+    }
+
+    let component: Child | undefined
+
+    if (route.lazy) {
+      const module = await route.lazy()
+      component = module.default()
+    } else if (route.component) {
+      const result = route.component()
+      component = result instanceof Promise ? await result : result
+    }
+
+    if (component !== undefined) {
+      this._componentCache.set(cacheKey, component)
+    }
+
+    return component ?? null
+  }
+
+  clearCache(): void {
+    this._componentCache.clear()
   }
 
   // ─── Helpers ────────────────────────────────────────────────
@@ -394,7 +528,7 @@ export function useParams(): Computed<RouteParams> {
   return routerInstance.params
 }
 
-export function useQuery(): Computed<QueryParams> {
+export function useQueryParams(): Computed<QueryParams> {
   if (!routerInstance) {
     throw new Error('[Flint] Router not initialized.')
   }

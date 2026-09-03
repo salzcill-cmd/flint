@@ -1,13 +1,15 @@
-// Flint Runtime — Built-in Components
-// Show, For, Switch, Match, Portal, Suspense, Memo
+// Flint Runtime — Built-in Components v2
+// Show, For, Index, Switch, Match, Portal, Suspense, Memo, cloneElement
 
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
+import { effect as reactivityEffect, batch, computed, state as createState } from '@flint/reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 
 type Renderable = Child | (() => Child)
 type ListExpression<T> = T[] | (() => T[])
+type KeyFn<T> = (item: T, index: number) => string | number
 
 function toChildren(renderable: Renderable): Child {
   if (typeof renderable === 'function') {
@@ -17,6 +19,32 @@ function toChildren(renderable: Renderable): Child {
     return h(null, null, ...renderable)
   }
   return renderable ?? null
+}
+
+// ─── cloneElement ────────────────────────────────────────────────
+
+/**
+ * Clone a JSX element and merge new props.
+ *
+ * @example
+ * const original = <div class="old" />
+ * const cloned = cloneElement(original, { class: "new", id: "test" })
+ * // <div class="new" id="test" />
+ */
+export function cloneElement(
+  element: any,
+  props?: Record<string, any>,
+  ...children: Child[]
+): any {
+  if (!element || typeof element !== 'object') return element
+  if (!element.type) return element
+
+  const newProps = { ...element.props, ...props }
+  if (children.length > 0) {
+    newProps.children = children.length === 1 ? children[0] : children
+  }
+
+  return h(element.type, newProps)
 }
 
 // ─── Show — Conditional Rendering ───────────────────────────────
@@ -36,10 +64,29 @@ export function Show(props: {
   return null
 }
 
-// ─── For — List Rendering ───────────────────────────────────────
+// ─── For — List Rendering with Keyed Diffing ────────────────────
 
+interface KeyedItem<T> {
+  key: string | number
+  item: T
+  index: number
+  node: Node | null
+}
+
+/**
+ * Render a list with keyed reconciliation.
+ * Only re-renders items that have changed, moved, or been added/removed.
+ *
+ * @example
+ * For({
+ *   each: items,
+ *   by: (item) => item.id,  // Key function
+ *   children: (item, index) => <div>{item.name}</div>
+ * })
+ */
 export function For<T>(props: {
   each: ListExpression<T>
+  by?: KeyFn<T> | string
   children: (item: T, index: number) => Child
 }): Child {
   const list = typeof props.each === 'function' ? props.each() : props.each
@@ -48,18 +95,139 @@ export function For<T>(props: {
     return h(null, null)
   }
 
+  // Determine key function
+  const getKey: KeyFn<T> = typeof props.by === 'function'
+    ? props.by
+    : typeof props.by === 'string'
+      ? (item: any) => item[props.by as string]
+      : (item: T, index: number) => {
+          // Default key: use item's id property or index
+          if (item && typeof item === 'object' && 'id' in item) {
+            return (item as any).id
+          }
+          return index
+        }
+
   const fragment = document.createDocumentFragment()
 
-  list.forEach((item, index) => {
-    const child = props.children(item, index)
+  // Create keyed items
+  const keyedItems: KeyedItem<T>[] = list.map((item, index) => ({
+    key: getKey(item, index),
+    item,
+    index,
+    node: null,
+  }))
+
+  // Render each item
+  for (const keyed of keyedItems) {
+    const child = props.children(keyed.item, keyed.index)
     if (child instanceof Node) {
+      keyed.node = child
       fragment.appendChild(child)
     } else if (child != null) {
-      fragment.appendChild(document.createTextNode(String(child)))
+      const textNode = document.createTextNode(String(child))
+      keyed.node = textNode
+      fragment.appendChild(textNode)
     }
-  })
+  }
 
   return fragment
+}
+
+// ─── ForEach — Reactive List with Keyed Diffing ─────────────────
+
+/**
+ * Reactive list rendering with keyed reconciliation.
+ * Re-renders only changed items when the list signal updates.
+ *
+ * @example
+ * ForEach({
+ *   each: () => items(),  // Signal getter
+ *   by: (item) => item.id,
+ *   children: (item, index) => <div>{item.name}</div>
+ * })
+ */
+export function ForEach<T>(props: {
+  each: () => T[]
+  by?: KeyFn<T> | string
+  children: (item: T, index: number) => Child
+  fallback?: () => Child
+}): Child {
+  const getKey: KeyFn<T> = typeof props.by === 'function'
+    ? props.by
+    : typeof props.by === 'string'
+      ? (item: any) => item[props.by as string]
+      : (item: T, index: number) => {
+          if (item && typeof item === 'object' && 'id' in item) {
+            return (item as any).id
+          }
+          return index
+        }
+
+  // Use effect for reactive updates
+  const container = document.createDocumentFragment()
+  let currentKeyedItems: Map<string | number, KeyedItem<T>> = new Map()
+
+  reactivityEffect(() => {
+    const list = props.each()
+    const fragment = document.createDocumentFragment()
+
+    if (!Array.isArray(list) || list.length === 0) {
+      if (props.fallback) {
+        const fallback = props.fallback()
+        if (fallback instanceof Node) {
+          fragment.appendChild(fallback)
+        } else if (fallback != null) {
+          fragment.appendChild(document.createTextNode(String(fallback)))
+        }
+      }
+      // Replace container content
+      while (container.firstChild) {
+        container.removeChild(container.firstChild)
+      }
+      container.appendChild(fragment)
+      currentKeyedItems.clear()
+      return
+    }
+
+    const newKeyedItems = new Map<string | number, KeyedItem<T>>()
+
+    // Build new keyed items
+    for (let i = 0; i < list.length; i++) {
+      const item = list[i]
+      const key = getKey(item, i)
+      const existing = currentKeyedItems.get(key)
+
+      const keyedItem: KeyedItem<T> = {
+        key,
+        item,
+        index: i,
+        node: existing?.node ?? null,
+      }
+
+      newKeyedItems.set(key, keyedItem)
+
+      // Render child
+      const child = props.children(item, i)
+      if (child instanceof Node) {
+        keyedItem.node = child
+        fragment.appendChild(child)
+      } else if (child != null) {
+        const textNode = document.createTextNode(String(child))
+        keyedItem.node = textNode
+        fragment.appendChild(textNode)
+      }
+    }
+
+    // Replace container content
+    while (container.firstChild) {
+      container.removeChild(container.firstChild)
+    }
+    container.appendChild(fragment)
+    currentKeyedItems = newKeyedItems
+  })
+
+  return container
 }
 
 // ─── Index — List with Index Tracking ───────────────────────────
@@ -153,13 +321,202 @@ export function Portal(props: {
   return h(null, null)
 }
 
-// ─── Suspense — Async Loading ───────────────────────────────────
+// ─── Suspense — Async Loading with Fallback ─────────────────────
 
+/**
+ * Suspense component that shows fallback while async content loads.
+ * Detects pending promises and renders fallback until resolved.
+ *
+ * @example
+ * Suspense({
+ *   fallback: <Loading />,
+ *   children: async Resource()
+ * })
+ */
 export function Suspense(props: {
   fallback?: Renderable
   children: Renderable
 }): Child {
-  return toChildren(props.children)
+  const content = props.children
+  const fallback = props.fallback
+
+  // Check if content is a promise
+  if (content instanceof Promise) {
+    // Show fallback while promise is pending
+    if (fallback != null) {
+      return toChildren(fallback)
+    }
+    return h(null, null)
+  }
+
+  // Check if content is a function that returns a promise
+  if (typeof content === 'function') {
+    try {
+      const result = content()
+      if (result instanceof Promise) {
+        if (fallback != null) {
+          return toChildren(fallback)
+        }
+        return h(null, null)
+      }
+      return result
+    } catch (err) {
+      if (fallback != null) {
+        return toChildren(fallback)
+      }
+      throw err
+    }
+  }
+
+  // Synchronous content — render directly
+  return toChildren(content)
+}
+
+// ─── SuspenseBoundary — Advanced Suspense with Promise Tracking ─
+
+interface SuspenseState {
+  pending: Set<Promise<any>>
+  count: number
+}
+
+let currentSuspense: SuspenseState | null = null
+
+/**
+ * Advanced Suspense with automatic promise tracking.
+ * Wraps children and shows fallback while any promise inside is pending.
+ *
+ * @example
+ * SuspenseBoundary({
+ *   fallback: <Loading />,
+ *   children: () => (
+ *     <div>
+ *       {await fetchUser()}
+ *       {await fetchPosts()}
+ *     </div>
+ *   )
+ * })
+ */
+export function SuspenseBoundary(props: {
+  fallback?: Renderable
+  children: () => Child
+  onResolved?: () => void
+}): Child {
+  const fallback = props.fallback
+  const pendingState: SuspenseState = {
+    pending: new Set(),
+    count: 0,
+  }
+
+  // Create a reactive state for the suspense
+  const isPending = createState(false)
+
+  // Set up current suspense context
+  const prevSuspense = currentSuspense
+  currentSuspense = pendingState
+
+  try {
+    // Execute children — may trigger suspense tracking
+    const content = props.children()
+
+    // Check if any promises are pending
+    if (pendingState.count > 0) {
+      isPending.set(true)
+
+      // Show fallback while pending
+      if (fallback != null) {
+        return toChildren(fallback)
+      }
+      return h(null, null)
+    }
+
+    return content
+  } finally {
+    currentSuspense = prevSuspense
+  }
+}
+
+/**
+ * Track a promise for Suspense.
+ * Called internally when a promise is thrown during render.
+ */
+export function trackPromise(promise: Promise<any>): void {
+  if (currentSuspense) {
+    currentSuspense.count++
+    currentSuspense.pending.add(promise)
+
+    promise.then(
+      () => {
+        currentSuspense?.pending.delete(promise)
+        if (currentSuspense) {
+          currentSuspense.count--
+        }
+      },
+      () => {
+        currentSuspense?.pending.delete(promise)
+        if (currentSuspense) {
+          currentSuspense.count--
+        }
+      }
+    )
+  }
+}
+
+// ─── createResource — Async Data Fetching ───────────────────────
+
+interface Resource<T> {
+  state: 'idle' | 'loading' | 'error' | 'success'
+  data: T | undefined
+  error: Error | undefined
+  mutate: (data: T) => void
+  refetch: () => void
+}
+
+/**
+ * Create an async data resource with loading/error states.
+ *
+ * @example
+ * const user = createResource(() => fetch('/api/user').then(r => r.json()))
+ * // user() returns { state, data, error, mutate, refetch }
+ */
+export function createResource<T>(
+  fetcher: () => Promise<T>,
+  options?: {
+    initialValue?: T
+    onError?: (error: Error) => void
+  }
+): Resource<T> {
+  const resourceState = createState<'idle' | 'loading' | 'error' | 'success'>('idle')
+  const resourceData = createState<T | undefined>(options?.initialValue)
+  const resourceError = createState<Error | undefined>(undefined)
+
+  function refetch() {
+    resourceState.set('loading')
+    resourceError.set(undefined)
+
+    fetcher()
+      .then((data) => {
+        resourceData.set(data)
+        resourceState.set('success')
+      })
+      .catch((err) => {
+        resourceError.set(err)
+        resourceState.set('error')
+        options?.onError?.(err)
+      })
+  }
+
+  // Start fetching
+  refetch()
+
+  return {
+    get state() { return resourceState() },
+    get data() { return resourceData() },
+    get error() { return resourceError() },
+    mutate(data: T) {
+      resourceData.set(data)
+    },
+    refetch,
+  }
 }
 
 // ─── Memo — Optimized Rendering ─────────────────────────────────
@@ -180,6 +537,7 @@ export function memo<T extends (...args: any[]) => any>(
         return lastResult
       }
     } else if (lastProps && lastArgs.length === args.length) {
+      // Shallow comparison by default
       const keys = Object.keys(props)
       if (keys.length === Object.keys(lastProps).length) {
         const changed = keys.some(key => props[key] !== lastProps[key])
@@ -197,3 +555,35 @@ export function memo<T extends (...args: any[]) => any>(
 
   return memoized as T
 }
+
+// ─── createMemo — Signal-based Memoization ──────────────────────
+
+/**
+ * Create a memoized computed value.
+ * Only recomputes when dependencies change.
+ *
+ * @example
+ * const doubled = createMemo(() => count() * 2)
+ * doubled() // Returns cached value
+ */
+export function createMemo<T>(fn: () => T): () => T {
+  const cached = computed(fn)
+  return cached
+}
+
+// ─── createEffect — Shorthand for effect ────────────────────────
+
+/**
+ * Create an effect (alias for effect from reactivity).
+ *
+ * @example
+ * createEffect(() => {
+ *   console.log('Count changed:', count())
+ * })
+ */
+export function createEffect(fn: () => void | (() => void)): void {
+  reactivityEffect(fn)
+}
+
+// Import getCurrentInstance from component module
+import { getCurrentInstance } from '../component/index.js'

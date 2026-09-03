@@ -61,7 +61,7 @@ describe('Transformer', () => {
     const code = 'const el = <div>{count()}</div>'
     const { ast } = parse(code)
     const result = transform(ast, code)
-    expect(result.code).toContain('h("div", null, count())')
+    expect(result.code).toContain('h("div", null, track(() => count()))')
   })
 
   it('transforms component JSX', () => {
@@ -98,7 +98,7 @@ describe('Transformer', () => {
     const code = 'const el = <div>Hello</div>'
     const { ast } = parse(code)
     const result = transform(ast, code)
-    expect(result.code).toContain("import { h } from 'flint'")
+    expect(result.code).toContain("import { h, track } from 'flint'")
   })
 
   it('does not add duplicate h import', () => {

@@ -1,6 +1,6 @@
 {
   "name": "@flint/compiler",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Flint compiler — JSX with tree-shaking and optimizations",
   "type": "module",
   "main": "dist/index.js",

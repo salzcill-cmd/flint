@@ -1,0 +1,40 @@
+{
+  "name": "@flint/devtools",
+  "version": "0.1.0",
+  "description": "Flint DevTools — Browser extension and dev server integration for debugging Flint applications",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "flint",
+    "devtools",
+    "debug",
+    "browser-extension"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@flint/reactivity": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

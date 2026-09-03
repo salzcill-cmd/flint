@@ -5,7 +5,7 @@ import {
   getRouter,
   navigate,
   useParams,
-  useQuery,
+  useQueryParams,
   useLocation,
   Link,
   Outlet,
@@ -335,7 +335,7 @@ describe('Router v2', () => {
         ],
       })
 
-      const query = useQuery()
+      const query = useQueryParams()
       expect(query).toBeDefined()
     })
 

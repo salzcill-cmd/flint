@@ -1,0 +1,6 @@
+{
+  "base": "./base.json",
+  "strict": "./strict.json",
+  "recommended": "./recommended.json",
+  "jsx": "./jsx.json"
+}
