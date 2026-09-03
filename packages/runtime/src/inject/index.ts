@@ -1,24 +1,57 @@
-// Flint Runtime — Provide/Inject
-// Dependency injection for component trees
+// Flint Runtime — Provide/Inject (Tree-Scoped)
+// Dependency injection for component trees with proper tree traversal
 
-import { state, type Signal } from '@flint/reactivity'
+import { type Signal } from '@flint/reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
-
-export interface InjectionContext {
-  <T>(key: InjectionKey<T> | string): T
-}
 
 export interface InjectionKey<T> {
   readonly __flint_injection_key: unique symbol
   readonly defaultValue?: T
 }
 
-// ─── Context Storage ────────────────────────────────────────────
+export interface InjectionContext {
+  <T>(key: InjectionKey<T> | string): T
+}
 
-// Store for provided values, keyed by component ID
-const provideMap = new Map<string, Map<InjectionKey<any> | string, any>>()
+// ─── Component Tree ─────────────────────────────────────────────
+
+interface TreeNode {
+  id: number
+  parentId: number | null
+  provides: Map<InjectionKey<any> | string, any>
+}
+
+const tree = new Map<number, TreeNode>()
 let currentComponentId = 0
+
+/**
+ * Register a component in the tree (called by component())
+ */
+export function registerComponent(id: number, parentId: number | null): void {
+  tree.set(id, { id, parentId, provides: new Map() })
+}
+
+/**
+ * Unregister a component from the tree
+ */
+export function unregisterComponent(id: number): void {
+  tree.delete(id)
+}
+
+/**
+ * Get current component ID
+ */
+export function getCurrentComponentId(): number {
+  return currentComponentId
+}
+
+/**
+ * Set current component ID (called during render)
+ */
+export function setCurrentComponentId(id: number): void {
+  currentComponentId = id
+}
 
 // ─── createInjectionKey ─────────────────────────────────────────
 
@@ -64,19 +97,25 @@ export function provide<T>(
   key: InjectionKey<T> | string,
   value: T
 ): void {
-  const componentId = String(currentComponentId)
-
-  if (!provideMap.has(componentId)) {
-    provideMap.set(componentId, new Map())
+  const node = tree.get(currentComponentId)
+  if (node) {
+    node.provides.set(key, value)
+  } else {
+    // Fallback: create node if not registered
+    const newNode: TreeNode = {
+      id: currentComponentId,
+      parentId: null,
+      provides: new Map([[key, value]]),
+    }
+    tree.set(currentComponentId, newNode)
   }
-
-  provideMap.get(componentId)!.set(key, value)
 }
 
 // ─── inject() ───────────────────────────────────────────────────
 
 /**
  * Inject a value provided by an ancestor component.
+ * Traverses up the component tree to find the nearest provider.
  *
  * @example
  * const ThemeKey = createInjectionKey<{ color: string }>()
@@ -90,12 +129,16 @@ export function inject<T>(
   key: InjectionKey<T> | string,
   defaultValue?: T
 ): T {
-  // Search up the component tree
-  // For now, use a simple approach: search all provided values
-  for (const [componentId, values] of provideMap) {
-    if (values.has(key)) {
-      return values.get(key) as T
+  // Traverse up the component tree
+  let nodeId: number | null = currentComponentId
+
+  while (nodeId !== null) {
+    const node = tree.get(nodeId)
+    if (node && node.provides.has(key)) {
+      return node.provides.get(key) as T
     }
+    // Move to parent
+    nodeId = node?.parentId ?? null
   }
 
   // Use default value
@@ -117,11 +160,16 @@ export function inject<T>(
  * Check if a value is provided for a given key.
  */
 export function hasInjection(key: InjectionKey<any> | string): boolean {
-  for (const [, values] of provideMap) {
-    if (values.has(key)) {
+  let nodeId: number | null = currentComponentId
+
+  while (nodeId !== null) {
+    const node = tree.get(nodeId)
+    if (node && node.provides.has(key)) {
       return true
     }
+    nodeId = node?.parentId ?? null
   }
+
   return false
 }
 
@@ -131,5 +179,6 @@ export function hasInjection(key: InjectionKey<any> | string): boolean {
  * Clear all injection contexts. Used for testing.
  */
 export function clearInjectionContext(): void {
-  provideMap.clear()
+  tree.clear()
+  currentComponentId = 0
 }

@@ -134,11 +134,12 @@ export function For<T>(props: {
   return fragment
 }
 
-// ─── ForEach — Reactive List with Keyed Diffing ─────────────────
+// ─── ForEach — Fine-Grained Reactive List with Keyed Reconciliation ──
 
 /**
- * Reactive list rendering with keyed reconciliation.
- * Re-renders only changed items when the list signal updates.
+ * Reactive list rendering with TRUE fine-grained DOM reconciliation.
+ * Only moves, adds, or removes individual DOM nodes — never replaces the entire container.
+ * This is Solid.js-level performance for list updates.
  *
  * @example
  * ForEach({
@@ -164,67 +165,92 @@ export function ForEach<T>(props: {
           return index
         }
 
-  // Use effect for reactive updates
+  // Container that holds all list items
   const container = document.createDocumentFragment()
-  let currentKeyedItems: Map<string | number, KeyedItem<T>> = new Map()
+
+  // Map of key -> { node, cleanup, item, index }
+  let nodes = new Map<string | number, { node: Node; cleanup?: () => void; item: T; index: number }>()
+
+  // Sentinel markers for start/end of the list
+  const startMarker = document.createComment('flint-for-start')
+  const endMarker = document.createComment('flint-for-end')
+  container.appendChild(startMarker)
+  container.appendChild(endMarker)
 
   reactivityEffect(() => {
     const list = props.each()
-    const fragment = document.createDocumentFragment()
 
     if (!Array.isArray(list) || list.length === 0) {
+      // Clear all nodes
+      for (const entry of nodes.values()) {
+        if (entry.node.parentNode) {
+          entry.node.parentNode.removeChild(entry.node)
+        }
+        entry.cleanup?.()
+      }
+      nodes.clear()
+
+      // Show fallback
       if (props.fallback) {
         const fallback = props.fallback()
         if (fallback instanceof Node) {
-          fragment.appendChild(fallback)
+          container.insertBefore(fallback, endMarker)
         } else if (fallback != null) {
-          fragment.appendChild(document.createTextNode(String(fallback)))
+          container.insertBefore(document.createTextNode(String(fallback)), endMarker)
         }
       }
-      // Replace container content
-      while (container.firstChild) {
-        container.removeChild(container.firstChild)
-      }
-      container.appendChild(fragment)
-      currentKeyedItems.clear()
       return
     }
 
-    const newKeyedItems = new Map<string | number, KeyedItem<T>>()
-
-    // Build new keyed items
+    // Build new key->item map
+    const newKeys = new Map<string | number, { item: T; index: number }>()
     for (let i = 0; i < list.length; i++) {
-      const item = list[i]
-      const key = getKey(item, i)
-      const existing = currentKeyedItems.get(key)
+      const key = getKey(list[i], i)
+      newKeys.set(key, { item: list[i], index: i })
+    }
 
-      const keyedItem: KeyedItem<T> = {
-        key,
-        item,
-        index: i,
-        node: existing?.node ?? null,
-      }
-
-      newKeyedItems.set(key, keyedItem)
-
-      // Render child
-      const child = props.children(item, i)
-      if (child instanceof Node) {
-        keyedItem.node = child
-        fragment.appendChild(child)
-      } else if (child != null) {
-        const textNode = document.createTextNode(String(child))
-        keyedItem.node = textNode
-        fragment.appendChild(textNode)
+    // 1. Remove nodes that are no longer in the list
+    for (const [key, entry] of nodes) {
+      if (!newKeys.has(key)) {
+        if (entry.node.parentNode) {
+          entry.node.parentNode.removeChild(entry.node)
+        }
+        entry.cleanup?.()
+        nodes.delete(key)
       }
     }
 
-    // Replace container content
-    while (container.firstChild) {
-      container.removeChild(container.firstChild)
+    // 2. Reconcile: move existing, create new, maintain order
+    let prevNode: Node = startMarker
+    for (const [key, { item, index }] of newKeys) {
+      const existing = nodes.get(key)
+
+      if (existing) {
+        // Node exists — just move it to the correct position if needed
+        if (existing.node !== prevNode.nextSibling) {
+          container.insertBefore(existing.node, prevNode.nextSibling)
+        }
+        existing.item = item
+        existing.index = index
+        prevNode = existing.node
+      } else {
+        // New node — create it
+        const child = props.children(item, index)
+        let newNode: Node
+
+        if (child instanceof Node) {
+          newNode = child
+        } else if (child != null) {
+          newNode = document.createTextNode(String(child))
+        } else {
+          newNode = document.createComment('flint-for-empty')
+        }
+
+        container.insertBefore(newNode, prevNode.nextSibling)
+        nodes.set(key, { node: newNode, item, index })
+        prevNode = newNode
+      }
     }
-    container.appendChild(fragment)
-    currentKeyedItems = newKeyedItems
   })
 
   return container

@@ -33,6 +33,7 @@ class Store<T extends object> implements StoreApi<T> {
   private _value: T
   private _listeners: Set<StateListener<T>> = new Set()
   private _signal: Signal<T>
+  private _destroyed = false
 
   constructor(initialState: T) {
     this._value = initialState
@@ -48,10 +49,17 @@ class Store<T extends object> implements StoreApi<T> {
   }
 
   getState(): T {
+    if (this._destroyed) {
+      throw new Error('[Flint Store] Store has been destroyed')
+    }
     return this._value
   }
 
   setState(partial: SetState<T>): void {
+    if (this._destroyed) {
+      throw new Error('[Flint Store] Store has been destroyed')
+    }
+
     const prevState = this._value
     const nextState = typeof partial === 'function'
       ? (partial as (s: T) => T)(prevState)
@@ -70,6 +78,7 @@ class Store<T extends object> implements StoreApi<T> {
   }
 
   destroy(): void {
+    this._destroyed = true
     this._listeners.clear()
   }
 

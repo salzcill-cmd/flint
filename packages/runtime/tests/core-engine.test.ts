@@ -9,12 +9,12 @@ import {
   onDestroy,
   getCurrentInstance,
   ref,
-  createStore,
   formatFlintError,
   ErrorMessages,
 } from '../src/index.js'
 import { state, effect } from '@flint/reactivity'
 import { h, render } from '../src/renderer/index.js'
+import { create as createStore } from '@flint/store'
 
 describe('component()', () => {
   it('wraps a function as a Flint component', () => {
@@ -94,58 +94,65 @@ describe('ref()', () => {
 
 describe('createStore()', () => {
   it('creates a store with initial state', () => {
-    const store = createStore({ count: 0, name: 'Flint' })
+    const store = createStore(() => ({ count: 0, name: 'Flint' }))
     const state = store.getState()
     expect(state.count).toBe(0)
     expect(state.name).toBe('Flint')
   })
 
-  it('gets a signal for a key', () => {
-    const store = createStore({ count: 0 })
-    const countSignal = store.getSignal('count')
-    expect(countSignal()).toBe(0)
+  it('gets a signal from store', () => {
+    const store = createStore(() => ({ count: 0 }))
+    const sig = store.signal()
+    expect(typeof sig).toBe('function')
+    expect(sig()).toEqual({ count: 0 })
   })
 
   it('updates state', () => {
-    const store = createStore({ count: 0 })
-    store.setState({ count: 5 })
+    const store = createStore((set) => ({
+      count: 0,
+      setCount: (v: number) => set({ count: v }),
+    }))
+    store.getState().setCount(5)
     expect(store.getState().count).toBe(5)
   })
 
   it('updates state with function', () => {
-    const store = createStore({ count: 0 })
-    store.setState(prev => ({ count: prev.count + 1 }))
+    const store = createStore((set) => ({
+      count: 0,
+      increment: () => set((prev) => ({ count: prev.count + 1 })),
+    }))
+    store.getState().increment()
     expect(store.getState().count).toBe(1)
   })
 
   it('subscribes to changes', () => {
-    const store = createStore({ count: 0 })
+    const store = createStore(() => ({ count: 0 }))
     const callback = vi.fn()
-    store.subscribe('count', callback)
+    store.subscribe(callback)
 
     store.setState({ count: 5 })
-    expect(callback).toHaveBeenCalledWith(5, 0)
+    expect(callback).toHaveBeenCalledWith(
+      { count: 5 },
+      { count: 0 }
+    )
   })
 
   it('unsubscribes correctly', () => {
-    const store = createStore({ count: 0 })
+    const store = createStore(() => ({ count: 0 }))
     const callback = vi.fn()
-    const unsubscribe = store.subscribe('count', callback)
+    const unsubscribe = store.subscribe(callback)
 
     unsubscribe()
     store.setState({ count: 5 })
     expect(callback).not.toHaveBeenCalled()
   })
 
-  it('throws for non-existent key', () => {
-    const store = createStore({ count: 0 })
-    expect(() => store.getSignal('nonexistent')).toThrow()
-  })
-
   it('destroys store', () => {
-    const store = createStore({ count: 0 })
+    const store = createStore(() => ({ count: 0 }))
     store.destroy()
+    // After destroy, getState and setState throw
     expect(() => store.getState()).toThrow()
+    expect(() => store.setState({ count: 1 })).toThrow()
   })
 })
 

@@ -2,6 +2,7 @@
 // Lifecycle hooks, context, and component management
 
 import { effect, type CleanupFn, type Signal } from '@flint/reactivity'
+import { registerComponent, unregisterComponent, setCurrentComponentId, getCurrentComponentId as getParentComponentId } from '../inject/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -141,16 +142,22 @@ export function component<P extends Record<string, any>>(
       active: true,
     }
 
+    // Register in component tree for provide/inject
+    const parentComponentId = getParentComponentId()
+    registerComponent(instance.id, parentComponentId)
+
     // Set current instance for lifecycle hook registration
     const prevInstance = currentInstance
     currentInstance = instance
     componentInstances.set(instance.id, instance)
+    setCurrentComponentId(instance.id)
 
     try {
       const result = fn(props)
       return result
     } finally {
       currentInstance = prevInstance
+      setCurrentComponentId(parentComponentId)
     }
   }
 
@@ -206,6 +213,7 @@ export function destroyComponent(instance: ComponentInstance): void {
 
   // Remove from tracking
   componentInstances.delete(instance.id)
+  unregisterComponent(instance.id)
 }
 
 // ─── Lifecycle Hooks ────────────────────────────────────────────

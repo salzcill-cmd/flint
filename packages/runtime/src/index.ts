@@ -29,6 +29,26 @@ export {
 } from './inject/index.js'
 export type { InjectionKey, InjectionContext } from './inject/index.js'
 
+// React 19+ Utilities
+export {
+  createRef,
+  assignRef,
+  mergeRefs,
+  reactive,
+  shallowRef,
+  readonly,
+  shallowReadonly,
+  toRef,
+  toRefs,
+  triggerRef,
+  mergeProps,
+  splitProps,
+  bindable,
+  twoWayBinding,
+  useTransitionClasses,
+  applyTransition,
+} from './hooks/utilities.js'
+
 // Built-in Components
 export {
   Show,

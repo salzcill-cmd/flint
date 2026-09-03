@@ -32,6 +32,7 @@ export default defineConfig({
       '@flint/compiler': path.resolve(__dirname, 'packages/compiler/src'),
       '@flint/runtime': path.resolve(__dirname, 'packages/runtime/src'),
       '@flint/reactivity': path.resolve(__dirname, 'packages/reactivity/src'),
+      '@flint/store': path.resolve(__dirname, 'packages/store/src'),
     },
   },
 })
