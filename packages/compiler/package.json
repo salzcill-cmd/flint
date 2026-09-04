@@ -19,13 +19,16 @@
   },
   "dependencies": {
     "acorn": "^8.14.1",
-    "acorn-jsx": "^5.3.2"
+    "acorn-jsx": "^5.3.2",
+    "esbuild": "^0.28.2"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
     "typescript": "^5.7.3"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/salzcill-cmd/flint.git",
@@ -42,5 +45,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["compiler", "jsx", "tree-shaking", "flint"]
+  "keywords": [
+    "compiler",
+    "jsx",
+    "tree-shaking",
+    "flint"
+  ]
 }

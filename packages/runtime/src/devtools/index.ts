@@ -131,6 +131,55 @@ export class DevTools {
         version: '0.1.0',
       }
     }
+
+    // Set up message listener for browser extension communication
+    this.setupMessageListener()
+  }
+
+  /**
+   * Set up postMessage listener for communication with Flint DevTools browser extension.
+   * Protocol: messages have { source: 'flint-devtools-extension', type: string, payload?: any }
+   */
+  private setupMessageListener(): void {
+    window.addEventListener('message', (event: MessageEvent) => {
+      // Only accept messages from the extension
+      if (event.data?.source !== 'flint-devtools-extension') return
+
+      const { type, payload } = event.data
+
+      switch (type) {
+        case 'get-components':
+          this.postMessage('components-list', Array.from(this.components.values()))
+          break
+        case 'get-signals':
+          this.postMessage('signals-list', Array.from(this.signals.values()))
+          break
+        case 'get-stores':
+          this.postMessage('stores-list', Array.from(this.stores.values()))
+          break
+        case 'get-events':
+          this.postMessage('events-list', this.events.slice(-100))
+          break
+        case 'get-performance':
+          this.postMessage('performance-list', this.performance)
+          break
+        case 'ping':
+          this.postMessage('pong', { version: '0.1.0' })
+          break
+      }
+    })
+  }
+
+  /**
+   * Send a message to the Flint DevTools browser extension.
+   */
+  postMessage(type: string, payload?: any): void {
+    if (typeof window === 'undefined') return
+    window.postMessage({
+      source: 'flint-devtools-runtime',
+      type,
+      payload,
+    }, '*')
   }
 
   // ─── Event System ─────────────────────────────────────────
@@ -166,13 +215,16 @@ export class DevTools {
       this.events.shift()
     }
 
-    // Notify listeners
+    // Notify local listeners
     const listeners = this.listeners.get(type)
     if (listeners) {
       for (const listener of listeners) {
         listener(event)
       }
     }
+
+    // Broadcast to browser extension
+    this.postMessage('event', event)
 
     // Log to console in development
     if (this.options.enabled && typeof console !== 'undefined') {

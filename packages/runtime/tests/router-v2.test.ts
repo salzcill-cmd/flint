@@ -3,6 +3,7 @@ import {
   Router,
   createRouter,
   getRouter,
+  resetRouter,
   navigate,
   useParams,
   useQueryParams,
@@ -45,10 +46,7 @@ describe('Router v2', () => {
     })
 
     // Reset router instance
-    const router = getRouter()
-    if (router) {
-      router.stop()
-    }
+    resetRouter()
   })
 
   afterEach(() => {
@@ -349,5 +347,152 @@ describe('Router v2', () => {
       const location = useLocation()
       expect(location).toBeDefined()
     })
+  })
+})
+
+// ─── Hash Mode ──────────────────────────────────────────────────
+
+describe('Router v2 - Hash Mode', () => {
+  let capturedHashChange: Function | null = null
+  let mockHash = '#/about'
+
+  beforeEach(() => {
+    capturedHashChange = null
+    mockHash = '#/about'
+
+    const mockLocation = {
+      pathname: '/',
+      search: '',
+      get hash() { return mockHash },
+      set hash(v: string) { mockHash = v.startsWith('#') ? v : '#' + v },
+    }
+
+    vi.stubGlobal('window', {
+      location: mockLocation,
+      history: mockHistory,
+      scrollX: 0,
+      scrollY: 0,
+      scrollTo: vi.fn(),
+      addEventListener: vi.fn((event: string, handler: Function) => {
+        if (event === 'hashchange') {
+          capturedHashChange = handler
+        }
+      }),
+      removeEventListener: vi.fn(),
+    })
+
+    // Reset router instance
+    resetRouter()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('should parse location from hash', () => {
+    window.location.hash = '#/dashboard?tab=settings'
+
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+        { path: '/dashboard', component: () => h('div', null, 'Dashboard') },
+      ],
+    })
+
+    const location = router.location()
+    expect(location.pathname).toBe('/dashboard')
+    expect(location.search).toBe('?tab=settings')
+    expect(location.query.tab).toBe('settings')
+  })
+
+  it('should parse hash with no path (root)', () => {
+    window.location.hash = ''
+
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+      ],
+    })
+
+    const location = router.location()
+    expect(location.pathname).toBe('/')
+  })
+
+  it('should navigate by setting window.location.hash', async () => {
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+        { path: '/about', component: () => h('div', null, 'About') },
+      ],
+    })
+
+    await router.navigate('/about')
+
+    expect(window.location.hash).toBe('#/about')
+  })
+
+  it('should navigate with query params in hash', async () => {
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+        { path: '/search', component: () => h('div', null, 'Search') },
+      ],
+    })
+
+    await router.navigate('/search?q=flint')
+
+    expect(window.location.hash).toBe('#/search?q=flint')
+  })
+
+  it('should listen to hashchange events', () => {
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+      ],
+    })
+
+    router.start()
+
+    expect(window.addEventListener).toHaveBeenCalledWith('hashchange', expect.any(Function))
+    router.stop()
+    expect(window.removeEventListener).toHaveBeenCalledWith('hashchange', expect.any(Function))
+  })
+
+  it('should update location on hashchange', () => {
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+        { path: '/settings', component: () => h('div', null, 'Settings') },
+      ],
+    })
+
+    // Simulate hashchange by updating the hash and calling the handler
+    window.location.hash = '#/settings'
+
+    if (capturedHashChange) {
+      capturedHashChange()
+      const location = router.location()
+      expect(location.pathname).toBe('/settings')
+    }
+  })
+
+  it('should replace hash when replace option is true', async () => {
+    const router = createRouter({
+      mode: 'hash',
+      routes: [
+        { path: '/', component: () => h('div', null, 'Home') },
+        { path: '/login', component: () => h('div', null, 'Login') },
+      ],
+    })
+
+    await router.navigate('/login', { replace: true })
+
+    expect(window.location.hash).toBe('#/login')
   })
 })

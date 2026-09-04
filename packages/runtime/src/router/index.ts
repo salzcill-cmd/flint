@@ -112,8 +112,10 @@ function extractParams(pattern: string, path: string): RouteParams | null {
 }
 
 function matchRoute(path: string, routes: Route[]): RouteMatch | null {
+  // Strip query params before matching
+  const pathname = path.split('?')[0]
   for (const route of routes) {
-    const params = extractParams(route.path, path)
+    const params = extractParams(route.path, pathname)
     if (params !== null) {
       return { route, params, path: route.path }
     }
@@ -121,7 +123,7 @@ function matchRoute(path: string, routes: Route[]): RouteMatch | null {
     if (route.children) {
       for (const child of route.children) {
         const childPath = `${route.path}/${child.path}`.replace(/\/+/g, '/')
-        const childParams = extractParams(childPath, path)
+        const childParams = extractParams(childPath, pathname)
         if (childParams !== null) {
           return { route: child, params: childParams, path: childPath }
         }
@@ -553,6 +555,16 @@ export function createRouter(options?: { routes?: Route[] } & RouterOptions): Ro
 
 export function getRouter(): Router | null {
   return routerInstance
+}
+
+/**
+ * Reset the router singleton (for testing).
+ */
+export function resetRouter(): void {
+  if (routerInstance) {
+    routerInstance.stop()
+    routerInstance = null
+  }
 }
 
 export async function navigate(path: string, options?: NavigateOptions): Promise<void> {

@@ -461,7 +461,13 @@ export function renderToPipeableStream(
     }
   }
 
-  render()
+  // Add .catch() to prevent unhandled rejection
+  render().catch((err) => {
+    if (onError && !aborted) {
+      onError(err as Error)
+    }
+    resolveReady()
+  })
 
   return {
     pipe(writable: WritableStream<Uint8Array>) {
@@ -597,6 +603,46 @@ function validateHydration(
   }
 }
 
+// ─── Handler Registry (safe alternative to new Function) ─────────
+
+/**
+ * Registry for event handlers that need to be re-attached after hydration.
+ * Instead of using `new Function()` (which is an XSS risk), the SSR renderer
+ * stores handler IDs. The client registers handlers via `registerHydrationHandler()`
+ * before calling `hydrateApp()`.
+ */
+const handlerRegistry = new Map<string, EventListener>()
+
+/**
+ * Register a handler for hydration. Call this BEFORE hydrateApp().
+ *
+ * @example
+ * registerHydrationHandler('onClick:counter', (e) => {
+ *   setState(prev => ({ count: prev.count + 1 }))
+ * })
+ */
+export function registerHydrationHandler(id: string, handler: EventListener): void {
+  handlerRegistry.set(id, handler)
+}
+
+/**
+ * Register multiple handlers at once.
+ */
+export function registerHydrationHandlers(
+  handlers: Record<string, EventListener>
+): void {
+  for (const [id, handler] of Object.entries(handlers)) {
+    handlerRegistry.set(id, handler)
+  }
+}
+
+/**
+ * Get a registered handler by ID. Returns undefined if not found.
+ */
+export function getHydrationHandler(id: string): EventListener | undefined {
+  return handlerRegistry.get(id)
+}
+
 function attachHydration(
   root: HTMLElement,
   hydrationData: Record<string, any>,
@@ -623,14 +669,20 @@ function attachHydration(
       }
     }
 
-    // Re-attach click handlers from component data
-    if (data.handlers) {
-      for (const [event, handlerCode] of Object.entries(data.handlers)) {
+    // Re-attach event handlers from handler registry (NOT via new Function)
+    if (data.handlerIds) {
+      for (const [event, handlerId] of Object.entries(data.handlerIds)) {
         try {
-          // Safely evaluate handler code
-          const handler = new Function('state', `return ${handlerCode}`) as EventListener
-          el.addEventListener(event.slice(2).toLowerCase(), handler)
-          effectsCount++
+          const handler = handlerRegistry.get(handlerId as string)
+          if (handler) {
+            el.addEventListener(event.slice(2).toLowerCase(), handler)
+            effectsCount++
+          } else {
+            warnings.push(
+              `No registered handler for ${event} (id: ${handlerId}). ` +
+              `Call registerHydrationHandler() before hydrateApp().`
+            )
+          }
         } catch (e) {
           warnings.push(`Failed to attach handler for ${event}: ${e}`)
         }
@@ -758,10 +810,11 @@ function hydrateComponent(
   el.removeAttribute('data-flint-id')
   el.setAttribute('data-flint-hydrated', 'true')
 
-  // Restore event handlers if available
-  if (data.handlers) {
-    for (const [event, handler] of Object.entries(data.handlers)) {
-      if (typeof handler === 'function') {
+  // Restore event handlers from registry (safe pattern — no new Function)
+  if (data.handlerIds) {
+    for (const [event, handlerId] of Object.entries(data.handlerIds)) {
+      const handler = handlerRegistry.get(handlerId as string)
+      if (handler) {
         el.addEventListener(event, handler as EventListener)
       }
     }
