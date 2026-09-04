@@ -467,10 +467,10 @@ export async function createProject(
       lint: 'flint lint',
     },
     dependencies: {
-      'flint': '^3.0.0',
+      'flint': '^3.2.0',
     },
     devDependencies: {
-      '@flint/vite-plugin': '^3.0.0',
+      '@flint/vite-plugin': '^3.2.0',
       'vite': '^6.0.0',
     },
   }

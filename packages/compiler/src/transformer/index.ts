@@ -445,7 +445,7 @@ function generateJSXAttributes(attributes: any[], code: string): string {
       hasSpread = true
       const arg = generate(attr.argument, code)
       if (props.length > 0) {
-        props.push(`...__flint_merge(${arg})`)
+        props.push(`...(${arg} || {})`)
       } else {
         props.push(`...${arg}`)
       }

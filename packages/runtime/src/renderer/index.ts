@@ -347,7 +347,7 @@ function applyProps(el: HTMLElement, props: Props): void {
   for (const [key, value] of Object.entries(props)) {
     if (key === 'children') continue
 
-    if (key.startsWith('on') && typeof value === 'function') {
+    if (/^on[A-Z]/.test(key) && typeof value === 'function') {
       // Event handler: onClick → click
       const eventName = key.slice(2).toLowerCase()
       el.addEventListener(eventName, value)

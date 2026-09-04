@@ -878,25 +878,9 @@ export class Optimizer {
       return Array.from(deps)
     }
 
-    // Walk AST and wrap pure expressions in memoization
-    return walkAST(ast, (node) => {
-      // Check if this is a variable declarator with a pure initializer
-      if (node.type === 'VariableDeclarator' && node.init) {
-        if (isPureExpression(node.init) && !isTrivialExpression(node.init)) {
-          const deps = extractDependencies(node.init)
-          if (deps.length > 0) {
-            const original = node.init
-            node.init = {
-              type: 'ArrowFunctionExpression',
-              params: [],
-              body: original,
-            }
-            this.stats.autoMemoized++
-          }
-        }
-      }
-      return undefined
-    })
+    // Auto-memoization is disabled — wrapping initializers in ArrowFunctionExpression
+    // changes semantics (const doubled = count() * 2 becomes const doubled = () => count() * 2)
+    return ast
   }
 }
 
@@ -1183,192 +1167,13 @@ export function hoistStaticSubtrees(ast: ASTNode, code: string): {
 
 // ─── Auto-Memoization (React Compiler-like) ────────────────────
 
-/**
- * Automatically memoize expensive computations.
- * Similar to React Compiler's auto-memoization — eliminates the need for manual useMemo/useCallback.
- *
- * This optimizer:
- * 1. Identifies pure expressions (no side effects)
- * 2. Wraps them in memoization calls
- * 3. Analyzes dependency graphs to avoid unnecessary re-computation
- * 4. Skips memoization for trivial expressions (literals, simple references)
- */
+// Auto-memoization is disabled — wrapping initializers in ArrowFunctionExpression
+// changes semantics (const doubled = count() * 2 becomes const doubled = () => count() * 2)
 export function autoMemoize(ast: ASTNode): {
   ast: ASTNode
   memoized: number
 } {
-  let memoized = 0
-
-  // Identify pure expressions that should be memoized
-  function isPureExpression(node: ASTNode): boolean {
-    if (!node || typeof node !== 'object') return false
-
-    // Literals are always pure
-    if (node.type === 'Literal') return true
-
-    // Simple identifiers are pure
-    if (node.type === 'Identifier') return true
-
-    // Binary expressions are pure if both sides are pure
-    if (node.type === 'BinaryExpression') {
-      return isPureExpression(node.left) && isPureExpression(node.right)
-    }
-
-    // Unary expressions are pure if argument is pure
-    if (node.type === 'UnaryExpression') {
-      return isPureExpression(node.argument)
-    }
-
-    // Logical expressions are pure if both sides are pure
-    if (node.type === 'LogicalExpression') {
-      return isPureExpression(node.left) && isPureExpression(node.right)
-    }
-
-    // Conditional expressions are pure if all parts are pure
-    if (node.type === 'ConditionalExpression') {
-      return (
-        isPureExpression(node.test) &&
-        isPureExpression(node.consequent) &&
-        isPureExpression(node.alternate)
-      )
-    }
-
-    // Arrow functions and function expressions are pure
-    if (node.type === 'ArrowFunctionExpression' || node.type === 'FunctionExpression') {
-      return true
-    }
-
-    // Array expressions are pure if all elements are pure
-    if (node.type === 'ArrayExpression') {
-      return node.elements.every((el: ASTNode) => !el || isPureExpression(el))
-    }
-
-    // Object expressions are pure if all properties are pure
-    if (node.type === 'ObjectExpression') {
-      return node.properties.every((prop: ASTNode) => {
-        if (prop.type === 'Property') {
-          return isPureExpression(prop.value)
-        }
-        if (prop.type === 'SpreadElement') {
-          return isPureExpression(prop.argument)
-        }
-        return false
-      })
-    }
-
-    // Call expressions — only memoize if it's a known pure function
-    if (node.type === 'CallExpression') {
-      // Don't memoize setState, dispatch, or other state-updating functions
-      const calleeName = node.callee?.name || ''
-      if (calleeName.startsWith('set') || calleeName.startsWith('dispatch')) {
-        return false
-      }
-      // Don't memoize fetch, XMLHttpRequest, etc.
-      if (['fetch', 'XMLHttpRequest', 'setTimeout', 'setInterval'].includes(calleeName)) {
-        return false
-      }
-      // Memoize pure function calls (utils, math, etc.)
-      return true
-    }
-
-    return false
-  }
-
-  // Check if expression is too simple to memoize
-  function isTrivialExpression(node: ASTNode): boolean {
-    if (!node || typeof node !== 'object') return true
-
-    // Literals are trivial
-    if (node.type === 'Literal') return true
-
-    // Simple identifiers are trivial
-    if (node.type === 'Identifier') return true
-
-    // Simple member expressions are trivial
-    if (node.type === 'MemberExpression') {
-      return !node.computed && isTrivialExpression(node.object)
-    }
-
-    return false
-  }
-
-  // Extract dependencies from expression
-  function extractDependencies(node: ASTNode): string[] {
-    const deps: Set<string> = new Set()
-
-    function collectDeps(n: ASTNode): void {
-      if (!n || typeof n !== 'object') return
-
-      if (n.type === 'Identifier') {
-        deps.add(n.name)
-      }
-
-      if (n.type === 'MemberExpression' && n.object?.type === 'Identifier') {
-        deps.add(n.object.name)
-      }
-
-      // Recurse into children
-      for (const key of Object.keys(n)) {
-        if (key === 'type' || key === 'start' || key === 'end') continue
-        const child = n[key]
-        if (Array.isArray(child)) {
-          child.forEach((item: ASTNode) => {
-            if (item && typeof item === 'object' && item.type) {
-              collectDeps(item)
-            }
-          })
-        } else if (child && typeof child === 'object' && child.type) {
-          collectDeps(child)
-        }
-      }
-    }
-
-    collectDeps(node)
-    return Array.from(deps)
-  }
-
-  // Walk AST and wrap pure expressions in memoization
-  function walkAndMemoize(node: ASTNode, parent: ASTNode | null, key: string): void {
-    if (!node || typeof node !== 'object') return
-
-    // Check if this is a variable declarator with a pure initializer
-    if (node.type === 'VariableDeclarator' && node.init) {
-      if (isPureExpression(node.init) && !isTrivialExpression(node.init)) {
-        const deps = extractDependencies(node.init)
-
-        // Only memoize if there are dependencies
-        if (deps.length > 0) {
-          // Wrap in computed() for reactive memoization
-          const original = node.init
-          node.init = {
-            type: 'ArrowFunctionExpression',
-            params: [],
-            body: original,
-          }
-          memoized++
-        }
-      }
-    }
-
-    // Continue walking children
-    for (const childKey of Object.keys(node)) {
-      if (childKey === 'type' || childKey === 'start' || childKey === 'end') continue
-      const child = node[childKey]
-      if (Array.isArray(child)) {
-        child.forEach((item: ASTNode, idx: number) => {
-          if (item && typeof item === 'object' && item.type) {
-            walkAndMemoize(item, node, `${childKey}[${idx}]`)
-          }
-        })
-      } else if (child && typeof child === 'object' && child.type) {
-        walkAndMemoize(child, node, childKey)
-      }
-    }
-  }
-
-  walkAndMemoize(ast, null, '')
-
-  return { ast, memoized }
+  return { ast, memoized: 0 }
 }
 
 // ─── Compile-time CSS Scoping ───────────────────────────────────

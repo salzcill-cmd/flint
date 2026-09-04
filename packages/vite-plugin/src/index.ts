@@ -22,7 +22,8 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
 
     // Transform JSX files
     transform(code: string, id: string) {
-      const ext = '.' + id.split('.').pop()?.toLowerCase()
+      const cleanId = id.split('?')[0]
+      const ext = '.' + cleanId.split('.').pop()?.toLowerCase()
       if (!extensions.includes(ext)) {
         return undefined
       }
@@ -47,7 +48,14 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
 
         return {
           code: result.code,
-          map: (result.map as any) ?? null,
+          map: result.map ? {
+            version: result.map.version ?? 3,
+            file: result.map.file ?? id,
+            sources: result.map.sources ?? [],
+            sourcesContent: (result.map.sourcesContent ?? []).map(s => s ?? '') as string[],
+            names: result.map.names ?? [],
+            mappings: result.map.mappings ?? '',
+          } : null,
         }
       } catch (err) {
         this.error(
@@ -90,17 +98,44 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
 
     // Resolve 'flint' imports to @flint/runtime
     resolveId(id) {
-      if (id === 'flint' || id === 'flint/') {
+      if (id === 'flint') {
         return '\0flint:runtime'
       }
-      return undefined
+      if (id === 'flint/store') {
+        return '\0flint:store'
+      }
+      if (id === 'flint/router') {
+        return '\0flint:router'
+      }
+      if (id === 'flint/ssr') {
+        return '\0flint:ssr'
+      }
+      if (id === 'flint/testing') {
+        return '\0flint:testing'
+      }
+      if (id.startsWith('flint/')) {
+        return '\0flint:' + id.slice(6)
+      }
+      return null
     },
 
     load(id) {
       if (id === '\0flint:runtime') {
-        return `export { h, render, state, computed, effect, watch, batch, component, ref, createStore, initHMR, onMount, onUpdate, onDestroy } from '@flint/runtime'`
+        return 'export * from "@flint/runtime"'
       }
-      return undefined
+      if (id === '\0flint:store') {
+        return 'export * from "@flint/store"'
+      }
+      if (id === '\0flint:router') {
+        return 'export * from "@flint/runtime/router"'
+      }
+      if (id === '\0flint:ssr') {
+        return 'export * from "@flint/runtime/ssr"'
+      }
+      if (id === '\0flint:testing') {
+        return 'export * from "@flint/runtime/testing"'
+      }
+      return null
     },
   }
 }

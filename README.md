@@ -8,7 +8,7 @@ A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual D
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/Tests-748%20passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-3.1.0-blue)]()
+[![Version](https://img.shields.io/badge/Version-3.2.0-blue)]()
 [![Packages](https://img.shields.io/badge/Packages-13-blueviolet)]()
 
 [Getting Started](#-getting-started) • [Examples](#-examples) • [API Reference](#-api-reference) • [Contributing](#-contributing)

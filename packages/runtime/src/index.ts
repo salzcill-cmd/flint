@@ -424,6 +424,7 @@ export type {
   ErrorBoundaryState,
   ErrorInfo,
 } from './errors/index.js'
+export { initGlobalErrorHandlers, removeGlobalErrorHandlers } from './errors/global.js'
 
 // Security Utilities
 export {

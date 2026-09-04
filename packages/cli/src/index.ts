@@ -17,7 +17,7 @@ const program = new Command()
 program
   .name('flint')
   .description('Flint — Write less. Ship faster. Build beautifully.')
-  .version('3.0.0')
+  .version('3.2.0')
 
 program
   .command('create [project-name]')

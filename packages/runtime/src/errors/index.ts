@@ -396,7 +396,12 @@ export function ErrorBoundary(props: ErrorBoundaryProps): Child {
       }
 
       onError?.(err)
-      throw err
+      errorState.set({
+        hasError: true,
+        error: err,
+        retryCount: state_.retryCount,
+      })
+      return null
     }
   }
 
