@@ -94,6 +94,22 @@ importers:
         specifier: ^5.8.3
         version: 5.9.3
 
+  packages/flint:
+    dependencies:
+      '@flint/reactivity':
+        specifier: workspace:*
+        version: link:../reactivity
+      '@flint/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@flint/store':
+        specifier: workspace:*
+        version: link:../store
+    devDependencies:
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.3
+
   packages/flintkit:
     dependencies:
       '@flint/compiler':

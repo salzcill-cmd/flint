@@ -113,7 +113,6 @@ export function authMiddleware(options: {
 
   return (ctx, next) => {
     if (!isAuthenticated()) {
-      console.log('[Flint Auth] Not authenticated, redirecting to:', redirectTo)
       ctx.abort(redirectTo)
       return
     }

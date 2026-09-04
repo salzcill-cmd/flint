@@ -1,6 +1,6 @@
 {
   "name": "@flint/devtools",
-  "version": "0.1.0",
+  "version": "3.2.0",
   "description": "Flint DevTools — Browser extension and dev server integration for debugging Flint applications",
   "type": "module",
   "main": "dist/index.js",
@@ -21,7 +21,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "flint",
@@ -30,6 +31,18 @@
     "browser-extension"
   ],
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salzcill-cmd/flint.git",
+    "directory": "packages/devtools"
+  },
+  "bugs": {
+    "url": "https://github.com/salzcill-cmd/flint/issues"
+  },
+  "homepage": "https://github.com/salzcill-cmd/flint#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

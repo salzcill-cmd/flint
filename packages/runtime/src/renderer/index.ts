@@ -41,7 +41,9 @@ function disposeOwner(owner: Owner): void {
   for (const disposable of owner.disposables) {
     try {
       disposable()
-    } catch {}
+    } catch (e) {
+      console.warn('[Flint] Disposable cleanup failed:', e)
+    }
   }
   owner.disposables.length = 0
 }

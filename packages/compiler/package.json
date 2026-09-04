@@ -1,6 +1,6 @@
 {
   "name": "@flint/compiler",
-  "version": "3.0.0",
+  "version": "3.2.0",
   "description": "Flint compiler — JSX with tree-shaking and optimizations",
   "type": "module",
   "main": "dist/index.js",
@@ -26,6 +26,18 @@
     "typescript": "^5.7.3"
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salzcill-cmd/flint.git",
+    "directory": "packages/compiler"
+  },
+  "bugs": {
+    "url": "https://github.com/salzcill-cmd/flint/issues"
+  },
+  "homepage": "https://github.com/salzcill-cmd/flint#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

@@ -1,5 +1,6 @@
 import { execSync } from 'child_process'
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import { createServer } from 'http'
 import { parse } from 'url'
@@ -71,23 +72,28 @@ export function preview(options: PreviewOptions = {}): void {
             ? `start http://${host}:${port}`
             : `xdg-open http://${host}:${port}`
         execSync(command, { stdio: 'ignore' })
-      } catch {}
+      } catch (e) {
+        console.warn('[Flint] Failed to open browser:', e)
+      }
     }
   })
 }
 
 function getNetworkIP(): string {
   try {
-    const { networkInterfaces } = require('os')
-    const interfaces = networkInterfaces()
+    const interfaces = os.networkInterfaces()
     for (const name of Object.keys(interfaces)) {
-      for (const iface of interfaces[name]) {
+      const ifaces = interfaces[name]
+      if (!ifaces) continue
+      for (const iface of ifaces) {
         if (iface.family === 'IPv4' && !iface.internal) {
           return iface.address
         }
       }
     }
-  } catch {}
+  } catch (e) {
+    console.warn('[Flint] Failed to detect network IP:', e)
+  }
   return 'localhost'
 }
 

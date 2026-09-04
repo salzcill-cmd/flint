@@ -15,7 +15,7 @@ interface ${name}Props {
 }
 
 export function ${name}(props: ${name}Props) {
-  const [count, setCount] = state(0)
+  const count = state(0)
 
   onMount(() => {
     console.log('${name} mounted')
@@ -26,7 +26,7 @@ export function ${name}(props: ${name}Props) {
     <div class="${name.toLowerCase()}">
       <h2>${name}</h2>
       <p>Count: {count()}</p>
-      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+      <button onClick={() => count.set(c => c + 1)}>Increment</button>
     </div>
   )
 }
@@ -35,13 +35,13 @@ export function ${name}(props: ${name}Props) {
 import { Link } from 'flint/router'
 
 export default function ${name}Page() {
-  const [data, setData] = state<any[]>([])
+  const data = state<any[]>([])
 
   onMount(async () => {
     // Fetch data here
     const response = await fetch('/api/${name.toLowerCase()}')
     const result = await response.json()
-    setData(result)
+    data.set(result)
   })
 
   return (
@@ -97,9 +97,9 @@ export function clearItems() {
   'hook': (name: string) => `import { state, effect, onCleanup } from 'flint'
 
 export function ${name.startsWith('use') ? name : `use${name}`}<T>(options?: any) {
-  const [value, setValue] = state<T | null>(null)
-  const [loading, setLoading] = state(false)
-  const [error, setError] = state<string | null>(null)
+  const value = state<T | null>(null)
+  const loading = state(false)
+  const error = state<string | null>(null)
 
   effect(() => {
     // Implement hook logic here

@@ -1,6 +1,6 @@
 {
   "name": "@flint/cli",
-  "version": "0.0.1",
+  "version": "3.2.0",
   "description": "Flint CLI — create, dev, build, and test Flint projects",
   "type": "module",
   "main": "dist/index.js",
@@ -23,6 +23,18 @@
     "vite": "^6.0.0"
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salzcill-cmd/flint.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/salzcill-cmd/flint/issues"
+  },
+  "homepage": "https://github.com/salzcill-cmd/flint#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

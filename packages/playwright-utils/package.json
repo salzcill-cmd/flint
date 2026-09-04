@@ -1,6 +1,6 @@
 {
   "name": "@flint/playwright-utils",
-  "version": "0.1.0",
+  "version": "3.2.0",
   "description": "Playwright utilities for Flint E2E testing",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "flint",
@@ -26,6 +27,18 @@
     "testing"
   ],
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salzcill-cmd/flint.git",
+    "directory": "packages/playwright-utils"
+  },
+  "bugs": {
+    "url": "https://github.com/salzcill-cmd/flint/issues"
+  },
+  "homepage": "https://github.com/salzcill-cmd/flint#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "create-flint",
-  "version": "3.0.0",
+  "version": "3.2.0",
   "description": "Scaffold a new Flint project with npx create-flint",
   "type": "module",
   "bin": {
@@ -21,6 +21,18 @@
   },
   "files": ["dist"],
   "keywords": ["flint", "scaffold", "create", "template", "starter"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/salzcill-cmd/flint.git",
+    "directory": "packages/create-flint"
+  },
+  "bugs": {
+    "url": "https://github.com/salzcill-cmd/flint/issues"
+  },
+  "homepage": "https://github.com/salzcill-cmd/flint#readme",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "license": "MIT",
   "publishConfig": {
     "access": "public"

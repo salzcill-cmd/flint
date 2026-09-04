@@ -163,7 +163,9 @@ export async function renderToString(
   try {
     const urlObj = new URL(url, 'http://localhost')
     context.query = Object.fromEntries(urlObj.searchParams)
-  } catch {}
+  } catch (e) {
+    console.warn('[Flint] Failed to parse SSR URL query params:', e)
+  }
 
   try {
     // Render with timeout

@@ -592,6 +592,8 @@ export function hideErrorOverlay(): void {
  * Log component tree to console.
  */
 export function logComponentTree(): void {
+  if (process.env.NODE_ENV === 'production') return
+
   const devtools = getDevTools()
   if (!devtools) {
     console.log('[Flint] DevTools not initialized')
@@ -610,6 +612,8 @@ export function logComponentTree(): void {
  * Log signals to console.
  */
 export function logSignals(): void {
+  if (process.env.NODE_ENV === 'production') return
+
   const devtools = getDevTools()
   if (!devtools) {
     console.log('[Flint] DevTools not initialized')
@@ -628,6 +632,8 @@ export function logSignals(): void {
  * Log stores to console.
  */
 export function logStores(): void {
+  if (process.env.NODE_ENV === 'production') return
+
   const devtools = getDevTools()
   if (!devtools) {
     console.log('[Flint] DevTools not initialized')

@@ -365,7 +365,9 @@ export function secureSet(
   }
   try {
     sessionStorage.setItem(`flint:${key}`, JSON.stringify(entry))
-  } catch {}
+  } catch (e) {
+    console.warn('[Flint] secureSet failed:', e)
+  }
 }
 
 export function secureGet(key: string): string | null {
@@ -388,5 +390,7 @@ export function secureGet(key: string): string | null {
 export function secureRemove(key: string): void {
   try {
     sessionStorage.removeItem(`flint:${key}`)
-  } catch {}
+  } catch (e) {
+    console.warn('[Flint] secureRemove failed:', e)
+  }
 }

@@ -494,7 +494,9 @@ export function createRoot<T>(
     for (let i = scopeState.disposables.length - 1; i >= 0; i--) {
       try {
         scopeState.disposables[i]()
-      } catch {}
+      } catch (e) {
+        console.warn('[Flint] Disposable cleanup failed:', e)
+      }
     }
     scopeState.disposables.length = 0
     currentScope = prevScope

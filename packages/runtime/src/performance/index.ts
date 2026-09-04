@@ -103,7 +103,7 @@ export function performanceEnd(
   }
 
   // Log to console
-  if (config.logToConsole) {
+  if (config.logToConsole && process.env.NODE_ENV !== 'production') {
     console.log(`[Flint Perf] ${name}: ${duration.toFixed(2)}ms`, metadata ?? '')
   }
 
@@ -135,7 +135,7 @@ export function recordMetric(
     entries.shift()
   }
 
-  if (config.logToConsole) {
+  if (config.logToConsole && process.env.NODE_ENV !== 'production') {
     console.log(`[Flint Perf] ${name}: ${duration.toFixed(2)}ms`, metadata ?? '')
   }
 }
@@ -325,7 +325,9 @@ export function getWebVitals(): Promise<{
           }
         })
         clsObserver.observe({ type: 'layout-shift', buffered: true })
-      } catch {}
+      } catch (e) {
+        console.warn('[Flint] CLS observer setup failed:', e)
+      }
     }
 
     // Give some time for metrics to be collected

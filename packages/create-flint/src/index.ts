@@ -426,8 +426,8 @@ async function main() {
           process.exit(0)
         }
       }
-    } catch {
-      // Fallback to defaults
+    } catch (e) {
+      console.warn('[Flint] Interactive prompts failed, using defaults:', e)
     }
   }
 

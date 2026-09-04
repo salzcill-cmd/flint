@@ -47,7 +47,7 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
 
         return {
           code: result.code,
-          map: null,
+          map: (result.map as any) ?? null,
         }
       } catch (err) {
         this.error(
