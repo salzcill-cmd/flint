@@ -3,6 +3,7 @@
 
 import { state, computed } from '@flint/reactivity'
 import type { Signal } from '@flint/reactivity'
+import { createFlintError } from '../errors/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -266,7 +267,11 @@ async function renderFunctionComponent(
     // Render result
     return await renderNode(content, {}, hydrate, context)
   } catch (error) {
-    console.error(`[Flint SSR] Error in component "${component.name}":`, error)
+    console.error('[Flint SSR]', createFlintError(
+      'SSR_ERROR',
+      `Error in component "${component.name}"`,
+      { componentStack: component.name || 'Unknown' }
+    ).message)
     return hydrate
       ? `<div data-flint-error="${escapeHTML(String(error))}">Error</div>`
       : '<!-- SSR Error -->'
@@ -608,16 +613,29 @@ function attachHydration(
 
     const data = hydrationData[id]
 
-    // Attach click handlers
-    const clickElements = el.querySelectorAll('[onclick]')
-    clickElements.forEach((clickEl) => {
-      const handler = clickEl.getAttribute('onclick')
-      if (handler) {
-        // In a real implementation, we'd evaluate the handler safely
-        clickEl.removeAttribute('onclick')
+    // Restore reactive state from server
+    if (data.signals) {
+      for (const [key, value] of Object.entries(data.signals)) {
+        // Create signal with server value
+        const signal = state(value)
+        // We'll need to track this for cleanup
         effectsCount++
       }
-    })
+    }
+
+    // Re-attach click handlers from component data
+    if (data.handlers) {
+      for (const [event, handlerCode] of Object.entries(data.handlers)) {
+        try {
+          // Safely evaluate handler code
+          const handler = new Function('state', `return ${handlerCode}`) as EventListener
+          el.addEventListener(event.slice(2).toLowerCase(), handler)
+          effectsCount++
+        } catch (e) {
+          warnings.push(`Failed to attach handler for ${event}: ${e}`)
+        }
+      }
+    }
 
     // Mark as hydrated
     el.removeAttribute('data-flint-id')
@@ -740,11 +758,14 @@ function hydrateComponent(
   el.removeAttribute('data-flint-id')
   el.setAttribute('data-flint-hydrated', 'true')
 
-  // In a full implementation, we'd:
-  // 1. Create component instance
-  // 2. Attach reactive bindings
-  // 3. Set up event listeners
-  // 4. Sync state from server
+  // Restore event handlers if available
+  if (data.handlers) {
+    for (const [event, handler] of Object.entries(data.handlers)) {
+      if (typeof handler === 'function') {
+        el.addEventListener(event, handler as EventListener)
+      }
+    }
+  }
 }
 
 // ─── HTML Template ──────────────────────────────────────────────

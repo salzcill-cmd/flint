@@ -4,6 +4,7 @@
 
 import { effect, batch, type CleanupFn } from '@flint/reactivity'
 import { mountComponent, type ComponentInstance } from '../component/index.js'
+import { createFlintError } from '../errors/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -329,7 +330,11 @@ function createComponent(ComponentFn: Component, props: Props, children: Child[]
     return document.createTextNode(String(result))
   } catch (error) {
     // No error boundary found in this simple renderer — log and render fallback
-    console.error(`[Flint] Uncaught error in component ${(ComponentFn as any).displayName || ComponentFn.name || 'Unknown'}:`, error)
+    console.error('[Flint]', createFlintError(
+      'RENDER_ERROR',
+      `Error in component ${(ComponentFn as any).displayName || ComponentFn.name || 'Unknown'}`,
+      { componentStack: ComponentFn.name || 'Unknown' }
+    ).message)
     const errorContainer = document.createElement('div')
     errorContainer.style.cssText = 'color: red; padding: 16px; border: 1px solid red; border-radius: 4px; background: #fee;'
     errorContainer.textContent = `Error: ${error instanceof Error ? error.message : String(error)}`
@@ -453,7 +458,11 @@ export function render(
     : container
 
   if (!target) {
-    throw new Error(`[Flint] Container not found: ${container}`)
+    throw createFlintError(
+      'COMPONENT_NOT_FOUND',
+      `Container not found: ${typeof container === 'string' ? container : 'element'}`,
+      { componentStack: 'render()' }
+    )
   }
 
   // Clear existing content

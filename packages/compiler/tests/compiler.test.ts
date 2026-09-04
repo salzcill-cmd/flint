@@ -54,7 +54,9 @@ describe('Transformer', () => {
     const code = 'const el = <div style={dynamicStyle}>Content</div>'
     const { ast } = parse(code)
     const result = transform(ast, code)
-    expect(result.code).toContain('h("div", { style: dynamicStyle }')
+    // Reactive expressions use trackAttribute for fine-grained updates
+    expect(result.code).toContain('trackAttribute')
+    expect(result.code).toContain('dynamicStyle')
   })
 
   it('transforms JSX expression container', () => {
@@ -98,7 +100,7 @@ describe('Transformer', () => {
     const code = 'const el = <div>Hello</div>'
     const { ast } = parse(code)
     const result = transform(ast, code)
-    expect(result.code).toContain("import { h, track } from 'flint'")
+    expect(result.code).toContain("import { h, track, trackAttribute, trackEvent } from 'flint'")
   })
 
   it('does not add duplicate h import', () => {

@@ -11,6 +11,90 @@
 
 import type * as acorn from 'acorn'
 
+// ─── AST Node Types ─────────────────────────────────────────────
+
+interface ASTNode {
+  type: string
+  start: number
+  end: number
+  [key: string]: any
+}
+
+interface JSXElement extends ASTNode {
+  type: 'JSXElement'
+  openingElement: JSXOpeningElement
+  closingElement: JSXClosingElement | null
+  children: ASTNode[]
+}
+
+interface JSXOpeningElement extends ASTNode {
+  type: 'JSXOpeningElement'
+  name: JSXTagName
+  attributes: (JSXAttribute | JSXSpreadAttribute)[]
+  selfClosing: boolean
+}
+
+interface JSXClosingElement extends ASTNode {
+  type: 'JSXClosingElement'
+  name: JSXTagName
+}
+
+interface JSXAttribute extends ASTNode {
+  type: 'JSXAttribute'
+  name: JSXIdentifier
+  value: ASTNode | null
+}
+
+interface JSXSpreadAttribute extends ASTNode {
+  type: 'JSXSpreadAttribute'
+  argument: ASTNode
+}
+
+interface JSXIdentifier extends ASTNode {
+  type: 'JSXIdentifier'
+  name: string
+}
+
+interface JSXMemberExpression extends ASTNode {
+  type: 'JSXMemberExpression'
+  object: JSXIdentifier | JSXMemberExpression
+  property: JSXIdentifier
+}
+
+interface JSXNamespacedName extends ASTNode {
+  type: 'JSXNamespacedName'
+  namespace: JSXIdentifier
+  name: JSXIdentifier
+}
+
+type JSXTagName = JSXIdentifier | JSXMemberExpression | JSXNamespacedName
+
+interface JSXText extends ASTNode {
+  type: 'JSXText'
+  value: string
+  raw: string
+}
+
+interface JSXExpressionContainer extends ASTNode {
+  type: 'JSXExpressionContainer'
+  expression: ASTNode
+}
+
+interface JSXFragment extends ASTNode {
+  type: 'JSXFragment'
+  openingFragment: JSXOpeningFragment
+  closingFragment: JSXClosingFragment
+  children: ASTNode[]
+}
+
+interface JSXOpeningFragment extends ASTNode {
+  type: 'JSXOpeningFragment'
+}
+
+interface JSXClosingFragment extends ASTNode {
+  type: 'JSXClosingFragment'
+}
+
 export interface TransformOptions {
   filename?: string
   dev?: boolean
@@ -19,7 +103,7 @@ export interface TransformOptions {
 
 export interface TransformResult {
   code: string
-  ast: acorn.Node
+  ast: ASTNode
   map?: SourceMap
 }
 
@@ -136,11 +220,11 @@ class SourceMapGenerator {
 // ─── AST Walker ─────────────────────────────────────────────────
 
 interface WalkContext {
-  enter(node: acorn.Node, parent: acorn.Node | null): void | false
-  leave(node: acorn.Node, parent: acorn.Node | null): void
+  enter(node: ASTNode, parent: ASTNode | null): void | false
+  leave(node: ASTNode, parent: ASTNode | null): void
 }
 
-function walk(node: any, parent: any, ctx: WalkContext): void {
+function walk(node: ASTNode | null | undefined, parent: ASTNode | null, ctx: WalkContext): void {
   if (!node || typeof node !== 'object') return
   if (node.type) {
     const skip = ctx.enter(node, parent)
@@ -164,7 +248,7 @@ function walk(node: any, parent: any, ctx: WalkContext): void {
   }
 }
 
-function getNodeKeys(node: any): string[] {
+function getNodeKeys(node: ASTNode): string[] {
   const keys: string[] = []
   if (node.type) {
     switch (node.type) {
@@ -342,7 +426,7 @@ function getNodeKeys(node: any): string[] {
 
 // ─── Code Generator ─────────────────────────────────────────────
 
-function generate(node: any, code: string, options?: { inJSXExpression?: boolean }): string {
+function generate(node: ASTNode | null | undefined, code: string, options?: { inJSXExpression?: boolean }): string {
   if (!node || typeof node !== 'object') return ''
   if (!node.type) return ''
 
@@ -351,15 +435,15 @@ function generate(node: any, code: string, options?: { inJSXExpression?: boolean
 
   switch (node.type) {
     case 'JSXElement':
-      return generateJSXElement(node, code)
+      return generateJSXElement(node as JSXElement, code)
     case 'JSXFragment':
-      return generateJSXFragment(node, code)
+      return generateJSXFragment(node as JSXFragment, code)
     default:
       return code.slice(start, end)
   }
 }
 
-function isLikelyReactive(exprNode: any, code: string): boolean {
+function isLikelyReactive(exprNode: ASTNode | null | undefined, code: string): boolean {
   if (!exprNode || typeof exprNode !== 'object') return false
 
   // Function calls are likely reactive (signal reads)
@@ -378,7 +462,7 @@ function isLikelyReactive(exprNode: any, code: string): boolean {
   }
   // Template literals
   if (exprNode.type === 'TemplateLiteral') {
-    return exprNode.expressions.some((e: any) => isLikelyReactive(e, code))
+    return exprNode.expressions.some((e: ASTNode) => isLikelyReactive(e, code))
   }
   // Arrow functions and function expressions are NOT reactive (they create new closures)
   if (exprNode.type === 'ArrowFunctionExpression' || exprNode.type === 'FunctionExpression') {
@@ -390,12 +474,22 @@ function isLikelyReactive(exprNode: any, code: string): boolean {
   return false
 }
 
-function generateJSXElement(node: any, code: string): string {
+function generateJSXElement(node: JSXElement, code: string): string {
   const tag = getJSXTagName(node.openingElement.name, code)
-  const attrs = generateJSXAttributes(node.openingElement.attributes, code)
+  const isComponent = isJSXComponent(node.openingElement.name)
+
+  // Separate static vs reactive attributes
+  const { staticProps, reactiveCalls } = separateAttributes(
+    node.openingElement.attributes,
+    code,
+    isComponent
+  )
+
   const children = generateJSXChildren(node.children, code)
 
-  const isComponent = isJSXComponent(node.openingElement.name)
+  const attrs = staticProps.length > 0
+    ? `{ ${staticProps.join(', ')} }`
+    : 'null'
 
   let result = `h(${tag}, ${attrs}`
   if (children) {
@@ -403,10 +497,76 @@ function generateJSXElement(node: any, code: string): string {
   }
   result += ')'
 
+  // For DOM elements (not components), add reactive tracking calls after h()
+  if (!isComponent && reactiveCalls.length > 0) {
+    // Wrap in IIFE to capture element reference
+    result = `(() => { const __el = ${result}; ${reactiveCalls.map(c => c.replace('__el', '__el')).join('; ')}; return __el })()`
+  }
+
   return result
 }
 
-function generateJSXFragment(node: any, code: string): string {
+/**
+ * Separate attributes into static (can go in props object) and reactive (need trackAttribute/trackEvent calls).
+ */
+function separateAttributes(
+  attributes: (JSXAttribute | JSXSpreadAttribute)[],
+  code: string,
+  isComponent: boolean
+): { staticProps: string[]; reactiveCalls: string[] } {
+  const staticProps: string[] = []
+  const reactiveCalls: string[] = []
+
+  if (!attributes || attributes.length === 0) {
+    return { staticProps, reactiveCalls }
+  }
+
+  for (const attr of attributes) {
+    if (attr.type === 'JSXSpreadAttribute') {
+      const arg = generate(attr.argument, code)
+      staticProps.push(`...(${arg} || {})`)
+    } else if (attr.type === 'JSXAttribute') {
+      const name = attr.name.name
+
+      if (attr.value === null) {
+        // Boolean attribute: <div disabled />
+        staticProps.push(`${name}: true`)
+      } else if (attr.value.type === 'Literal') {
+        // Static string: <div class="x" />
+        staticProps.push(`${name}: ${JSON.stringify(attr.value.value)}`)
+      } else if (attr.value.type === 'JSXExpressionContainer') {
+        const expr = generate(attr.value.expression, code)
+        const isReactive = isLikelyReactive(attr.value.expression, code)
+
+        // For components, always pass as prop (components handle their own reactivity)
+        if (isComponent) {
+          staticProps.push(`${name}: ${expr}`)
+        } else if (isReactive) {
+          // For DOM elements with reactive expressions:
+          // Event handlers → trackEvent()
+          // Other attributes → trackAttribute()
+          if (/^on[A-Z]/.test(name)) {
+            const eventName = name.slice(2).toLowerCase()
+            reactiveCalls.push(
+              `trackEvent(__el, '${eventName}', () => ${expr})`
+            )
+          } else {
+            reactiveCalls.push(
+              `trackAttribute(__el, '${name}', () => ${expr})`
+            )
+          }
+        } else {
+          // Static expression — put in props object
+          staticProps.push(`${name}: ${expr}`)
+        }
+      }
+    }
+  }
+
+  return { staticProps, reactiveCalls }
+}
+
+function generateJSXFragment(node: JSXFragment, code: string): string {
   const children = generateJSXChildren(node.children, code)
   let result = 'h(null'
   if (children) {
@@ -416,7 +576,7 @@ function generateJSXFragment(node: any, code: string): string {
   return result
 }
 
-function getJSXTagName(name: any, code: string): string {
+function getJSXTagName(name: JSXTagName, code: string): string {
   if (name.type === 'JSXIdentifier') {
     return isJSXComponent(name) ? name.name : `"${name.name}"`
   }
@@ -426,7 +586,7 @@ function getJSXTagName(name: any, code: string): string {
   return code.slice(name.start, name.end)
 }
 
-function isJSXComponent(name: any): boolean {
+function isJSXComponent(name: JSXTagName): boolean {
   if (name.type === 'JSXIdentifier') {
     // Components start with uppercase
     return name.name[0] === name.name[0].toUpperCase()
@@ -434,7 +594,7 @@ function isJSXComponent(name: any): boolean {
   return name.type === 'JSXMemberExpression'
 }
 
-function generateJSXAttributes(attributes: any[], code: string): string {
+function generateJSXAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[], code: string): string {
   if (!attributes || attributes.length === 0) return 'null'
 
   const props: string[] = []
@@ -470,7 +630,7 @@ function generateJSXAttributes(attributes: any[], code: string): string {
   return `{ ${props.join(', ')} }`
 }
 
-function generateJSXChildren(children: any[], code: string): string {
+function generateJSXChildren(children: ASTNode[], code: string): string {
   if (!children || children.length === 0) return ''
 
   const parts: string[] = []
@@ -505,8 +665,8 @@ function generateJSXChildren(children: any[], code: string): string {
 
 // ─── Transformer ────────────────────────────────────────────────
 
-export function transform(ast: any, code: string, options: TransformOptions = {}): TransformResult {
-  const hImport = `import { h, track } from 'flint'`
+export function transform(ast: ASTNode, code: string, options: TransformOptions = {}): TransformResult {
+  const hImport = `import { h, track, trackAttribute, trackEvent } from 'flint'`
   const imports: string[] = []
   let hasFlintImport = false
   let hasJSX = false
@@ -518,7 +678,7 @@ export function transform(ast: any, code: string, options: TransformOptions = {}
       if (node.type === 'JSXElement' || node.type === 'JSXFragment') {
         hasJSX = true
       }
-      if (node.type === 'ImportDeclaration' && (node as any).source?.value === 'flint') {
+      if (node.type === 'ImportDeclaration' && node.source?.value === 'flint') {
         hasFlintImport = true
       }
     },

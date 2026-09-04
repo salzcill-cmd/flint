@@ -2,8 +2,8 @@
 // Re-exports everything a Flint app needs
 
 // Core rendering
-export { h, render } from './renderer/index.js'
-export type { Child, Component, Props } from './renderer/index.js'
+export { h, render, track, trackAttribute, trackEvent, trackChildren, trackComponent } from './renderer/index.js'
+export type { Child, Component, Props, ReactiveNode } from './renderer/index.js'
 
 // Component system
 export {
