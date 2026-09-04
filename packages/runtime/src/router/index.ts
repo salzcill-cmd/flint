@@ -65,6 +65,8 @@ export interface RouterOptions {
   scrollBehavior?: ScrollBehavior
   /** Base path */
   basePath?: string
+  /** Router mode: 'history' (default) or 'hash' */
+  mode?: 'hash' | 'history'
   /** Global navigation middleware */
   middleware?: NavigationMiddleware[]
   /** Not found route */
@@ -175,9 +177,11 @@ export class Router {
   private _location!: ReturnType<typeof state<Location>>
   private _isNavigating!: ReturnType<typeof state<boolean>>
   private _popstateHandler: (() => void) | null = null
+  private _hashchangeHandler: (() => void) | null = null
   private _scrollRestoration!: boolean
   private _scrollBehavior!: ScrollBehavior
   private _basePath!: string
+  private _mode: 'hash' | 'history' = 'history'
   private _middleware: NavigationMiddleware[] = []
   private _listeners: Set<(event: NavigationEvent) => void> = new Set()
   private _notFoundRoute?: Route
@@ -191,6 +195,7 @@ export class Router {
     this._scrollRestoration = options.scrollRestoration ?? true
     this._scrollBehavior = options.scrollBehavior ?? 'smooth'
     this._basePath = options.basePath ?? ''
+    this._mode = options.mode ?? 'history'
     this._middleware = options.middleware ?? []
     this._notFoundRoute = options.notFound
 
@@ -275,6 +280,13 @@ export class Router {
     }
 
     window.addEventListener('popstate', this._popstateHandler)
+
+    // Hash mode: also listen to hashchange
+    if (this._mode === 'hash') {
+      this._hashchangeHandler = this._popstateHandler
+      window.addEventListener('hashchange', this._hashchangeHandler)
+    }
+
     this.resolve()
   }
 
@@ -282,6 +294,10 @@ export class Router {
     if (this._popstateHandler) {
       window.removeEventListener('popstate', this._popstateHandler)
       this._popstateHandler = null
+    }
+    if (this._hashchangeHandler) {
+      window.removeEventListener('hashchange', this._hashchangeHandler)
+      this._hashchangeHandler = null
     }
   }
 
@@ -360,10 +376,19 @@ export class Router {
     }
 
     // Update browser history
-    if (replace) {
-      window.history.replaceState(null, '', toLocation.pathname + toLocation.search)
+    if (this._mode === 'hash') {
+      const hashPath = toLocation.pathname + toLocation.search
+      if (replace) {
+        window.location.hash = hashPath
+      } else {
+        window.location.hash = hashPath
+      }
     } else {
-      window.history.pushState(null, '', toLocation.pathname + toLocation.search)
+      if (replace) {
+        window.history.replaceState(null, '', toLocation.pathname + toLocation.search)
+      } else {
+        window.history.pushState(null, '', toLocation.pathname + toLocation.search)
+      }
     }
 
     // Update state with matched params
@@ -476,7 +501,23 @@ export class Router {
   // ─── Helpers ────────────────────────────────────────────────
 
   private getLocationFromBrowser(): Location {
-    const { pathname, search, hash } = window.location
+    const { search, hash } = window.location
+
+    // Hash mode: parse path from hash (e.g., "#/about?foo=bar")
+    if (this._mode === 'hash') {
+      const hashContent = hash.slice(1) || '/'
+      const [pathname, hashSearch] = hashContent.split('?')
+      return {
+        pathname: pathname || '/',
+        search: hashSearch ? `?${hashSearch}` : '',
+        hash,
+        query: parseQuery(hashSearch || ''),
+        params: {},
+      }
+    }
+
+    // History mode: use pathname directly
+    const { pathname } = window.location
     return {
       pathname,
       search,

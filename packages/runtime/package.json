@@ -15,29 +15,13 @@
       "types": "./dist/a11y/index.d.ts",
       "import": "./dist/a11y/index.js"
     },
-    "./hooks": {
-      "types": "./dist/hooks/index.d.ts",
-      "import": "./dist/hooks/index.js"
-    },
-    "./router": {
-      "types": "./dist/router/index.d.ts",
-      "import": "./dist/router/index.js"
-    },
-    "./router/*": {
-      "types": "./dist/router/*.d.ts",
-      "import": "./dist/router/*.js"
-    },
-    "./ssr": {
-      "types": "./dist/ssr/index.d.ts",
-      "import": "./dist/ssr/index.js"
-    },
-    "./testing": {
-      "types": "./dist/testing/index.d.ts",
-      "import": "./dist/testing/index.js"
-    },
     "./animations": {
       "types": "./dist/animations/index.d.ts",
       "import": "./dist/animations/index.js"
+    },
+    "./component": {
+      "types": "./dist/component/index.d.ts",
+      "import": "./dist/component/index.js"
     },
     "./components": {
       "types": "./dist/components/index.d.ts",
@@ -51,17 +35,81 @@
       "types": "./dist/errors/index.d.ts",
       "import": "./dist/errors/index.js"
     },
+    "./forms": {
+      "types": "./dist/forms/index.d.ts",
+      "import": "./dist/forms/index.js"
+    },
     "./hmr": {
       "types": "./dist/hmr/index.d.ts",
       "import": "./dist/hmr/index.js"
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js"
+    },
+    "./i18n": {
+      "types": "./dist/i18n/index.d.ts",
+      "import": "./dist/i18n/index.js"
+    },
+    "./image": {
+      "types": "./dist/image/index.d.ts",
+      "import": "./dist/image/index.js"
+    },
+    "./inject": {
+      "types": "./dist/inject/index.d.ts",
+      "import": "./dist/inject/index.js"
+    },
+    "./performance": {
+      "types": "./dist/performance/index.d.ts",
+      "import": "./dist/performance/index.js"
+    },
+    "./pwa": {
+      "types": "./dist/pwa/index.d.ts",
+      "import": "./dist/pwa/index.js"
+    },
+    "./query": {
+      "types": "./dist/query/index.d.ts",
+      "import": "./dist/query/index.js"
+    },
+    "./ref": {
+      "types": "./dist/ref/index.d.ts",
+      "import": "./dist/ref/index.js"
+    },
+    "./router": {
+      "types": "./dist/router/index.d.ts",
+      "import": "./dist/router/index.js"
+    },
+    "./router/*": {
+      "types": "./dist/router/*.d.ts",
+      "import": "./dist/router/*.js"
     },
     "./security": {
       "types": "./dist/security/index.d.ts",
       "import": "./dist/security/index.js"
     },
+    "./seo": {
+      "types": "./dist/seo/index.d.ts",
+      "import": "./dist/seo/index.js"
+    },
+    "./slots": {
+      "types": "./dist/slots/index.d.ts",
+      "import": "./dist/slots/index.js"
+    },
+    "./ssr": {
+      "types": "./dist/ssr/index.d.ts",
+      "import": "./dist/ssr/index.js"
+    },
     "./store": {
       "types": "./dist/store/index.d.ts",
       "import": "./dist/store/index.js"
+    },
+    "./styles": {
+      "types": "./dist/styles/index.d.ts",
+      "import": "./dist/styles/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
     }
   },
   "scripts": {

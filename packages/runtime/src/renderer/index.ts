@@ -8,9 +8,15 @@ import { createFlintError } from '../errors/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
-export type Component = (props: any) => any
+export type Component<P extends Record<string, unknown> = Record<string, unknown>> = (props: P) => Child
 export type Child = Node | string | number | boolean | null | undefined | Child[]
-export type Props = Record<string, any> | null
+export type Props = Record<string, unknown> | null
+
+/** Component function wrapped by component() with internal instance */
+export interface FlintComponent<P extends Record<string, unknown> = Record<string, unknown>> extends Component<P> {
+  __flint_instance?: ComponentInstance
+  displayName?: string
+}
 
 export interface ReactiveNode {
   node: Node
@@ -291,7 +297,8 @@ function createComponent(ComponentFn: Component, props: Props, children: Child[]
     const result = ComponentFn(componentProps)
 
     // For Flint components (wrapped by component()), schedule mountComponent
-    const instance: ComponentInstance | undefined = (ComponentFn as any).__flint_instance
+    const flintComp = ComponentFn as FlintComponent
+    const instance: ComponentInstance | undefined = flintComp.__flint_instance
     if (instance && !instance.mounted) {
       queueMicrotask(() => {
         mountComponent(instance)
@@ -332,7 +339,7 @@ function createComponent(ComponentFn: Component, props: Props, children: Child[]
     // No error boundary found in this simple renderer — log and render fallback
     console.error('[Flint]', createFlintError(
       'RENDER_ERROR',
-      `Error in component ${(ComponentFn as any).displayName || ComponentFn.name || 'Unknown'}`,
+      `Error in component ${(ComponentFn as FlintComponent).displayName || ComponentFn.name || 'Unknown'}`,
       { componentStack: ComponentFn.name || 'Unknown' }
     ).message)
     const errorContainer = document.createElement('div')
@@ -355,7 +362,7 @@ function applyProps(el: HTMLElement, props: Props): void {
     if (/^on[A-Z]/.test(key) && typeof value === 'function') {
       // Event handler: onClick → click
       const eventName = key.slice(2).toLowerCase()
-      el.addEventListener(eventName, value)
+      el.addEventListener(eventName, value as EventListener)
     } else if (key === 'class' || key === 'className') {
       // Class name
       if (typeof value === 'string') {
@@ -369,13 +376,14 @@ function applyProps(el: HTMLElement, props: Props): void {
     } else if (key === 'ref') {
       // Ref callback
       if (typeof value === 'function') {
-        value(el)
+        (value as (el: Element) => void)(el)
       } else if (value && typeof value === 'object' && 'current' in value) {
-        value.current = el
+        (value as { current: Element | null }).current = el
       }
     } else if (key === 'dangerouslySetInnerHTML') {
       // InnerHTML (use with caution!)
-      el.innerHTML = value.__html || ''
+      const innerHTMLValue = value as { __html?: string }
+      el.innerHTML = innerHTMLValue?.__html || ''
     } else if (key.startsWith('__')) {
       // Skip internal props
       continue
@@ -484,7 +492,8 @@ export function render(
     target.appendChild(currentNode)
 
     // For Flint components, schedule mountComponent after DOM insertion
-    const instance: ComponentInstance | undefined = (ComponentFn as any).__flint_instance
+    const flintComp = ComponentFn as FlintComponent
+    const instance: ComponentInstance | undefined = flintComp.__flint_instance
     if (instance && !instance.mounted) {
       queueMicrotask(() => {
         mountComponent(instance)

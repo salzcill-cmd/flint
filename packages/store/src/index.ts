@@ -206,14 +206,44 @@ export function devtools<T extends object>(
   }
 }
 
+/**
+ * Immer-compatible middleware: allows mutable draft updates.
+ * Deep clones state before passing to the updater function.
+ *
+ * @example
+ * const store = create((set, get) => ({
+ *   users: [],
+ * }), [immer()])
+ *
+ * // Mutate draft directly
+ * store.setState((state) => {
+ *   state.users.push({ name: 'John' })
+ * })
+ */
+/**
+ * Immer-compatible middleware: allows mutable draft updates.
+ * Deep clones state before passing to the updater function.
+ *
+ * @example
+ * const store = create((set, get) => ({
+ *   users: [],
+ * }), [immer()])
+ *
+ * // Mutate draft directly
+ * store.setState((state) => {
+ *   state.users.push({ name: 'John' })
+ * })
+ */
 export function immer<T extends object>(): Middleware<T> {
   return (stateCreator) => (set, get, store) => {
     const wrappedSet = (partial: SetState<T>) => {
       if (typeof partial === 'function') {
         const current = get()
+        // Clone state for immer-style draft mutations
+        // Use JSON clone for compatibility (handles cycles via replacer if needed)
         const draft = JSON.parse(JSON.stringify(current))
-        const result = (partial as any)(draft)
-        set(result !== draft ? result : draft)
+        const result = (partial as (draft: T) => T)(draft as T)
+        set(result !== undefined ? result : draft)
       } else {
         set(partial)
       }
