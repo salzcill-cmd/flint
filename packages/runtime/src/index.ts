@@ -492,13 +492,16 @@ export type {
   ReducedMotionOptions,
 } from './a11y/index.js'
 
-// useDeferredValue, useId, useImperativeHandle, forwardRef
+// useTransition, useDeferredValue, useId, useImperativeHandle, forwardRef
 export {
+  useTransition,
+  useDeferredValue,
   useId,
   useImperativeHandle,
   forwardRef,
 } from './hooks/index.js'
 export type {
+  TransitionStartFunction,
   ImperativeHandle,
   ForwardRefRenderFunction,
 } from './hooks/index.js'
@@ -578,8 +581,6 @@ export {
   use,
   createContext,
   useProvider,
-  useDeferredValue,
-  useTransition,
   useRef,
   useCallback,
   useMemo,

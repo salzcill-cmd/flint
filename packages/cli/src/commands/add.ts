@@ -27,158 +27,218 @@ export const router = createRouter({ routes, mode: 'hash' })`,
   store: {
     name: 'Store',
     description: 'Global state management',
-    import: `import { createStore } from 'flint/store'
+    import: `import { create, logger } from 'flint/store'
 
-export const useCounterStore = createStore({
-  state: {
+export const useCounterStore = create(
+  (set, get) => ({
     count: 0,
-    name: 'Counter',
-  },
-  actions: {
-    increment(state) {
-      state.count++
-    },
-    decrement(state) {
-      state.count--
-    },
-    reset(state) {
-      state.count = 0
-    },
-  },
-  getters: {
-    double: (state) => state.count * 2,
-  },
-})`,
+  }),
+  [logger()]
+)
+
+// Actions
+export function increment() {
+  useCounterStore.setState((prev) => ({ count: prev.count + 1 }))
+}
+
+export function decrement() {
+  useCounterStore.setState((prev) => ({ count: prev.count - 1 }))
+}
+
+export function reset() {
+  useCounterStore.setState({ count: 0 })
+}
+
+// Read state
+export function getDouble() {
+  return useCounterStore.getState().count * 2
+}`,
   },
   forms: {
     name: 'Forms',
     description: 'Form handling and validation',
-    import: `import { useForm } from 'flint/forms'
+    import: `import { createFormAction } from 'flint'
 
-export function useContactForm() {
-  return useForm({
-    initialValues: {
-      name: '',
-      email: '',
-      message: '',
-    },
-    validate: {
-      name: (v) => v.length > 0 || 'Name is required',
-      email: (v) => /^[^@]+@[^@]+$/.test(v) || 'Invalid email',
-      message: (v) => v.length > 10 || 'Message must be at least 10 characters',
-    },
-    onSubmit: async (values) => {
-      console.log('Form submitted:', values)
-    },
+const submitForm = createFormAction(async (formData, prev) => {
+  const name = formData.get('name')
+  const email = formData.get('email')
+  const message = formData.get('message')
+
+  // Validate
+  if (!name || !email || !message) {
+    return { ...prev, errors: { name: !name ? 'Required' : '', email: !email ? 'Required' : '', message: !message ? 'Required' : '' } }
+  }
+
+  // Submit
+  await fetch('/api/contact', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, message }),
   })
-}`,
+
+  return { success: true, errors: {} }
+})`,
   },
   i18n: {
     name: 'i18n',
     description: 'Internationalization',
-    import: `import { createI18n } from 'flint/i18n'
+    import: `import { state, computed } from 'flint'
 
-export const i18n = createI18n({
-  locales: ['en', 'id'],
-  defaultLocale: 'en',
-  messages: {
-    en: {
-      greeting: 'Hello',
-      farewell: 'Goodbye',
-    },
-    id: {
-      greeting: 'Halo',
-      farewell: 'Selamat tinggal',
-    },
+// Simple i18n implementation using signals
+const locale = state('en')
+const messages = {
+  en: {
+    greeting: 'Hello',
+    farewell: 'Goodbye',
   },
-})`,
+  id: {
+    greeting: 'Halo',
+    farewell: 'Selamat tinggal',
+  },
+}
+
+export function setLocale(loc: string) {
+  locale.set(loc)
+}
+
+export function t(key: string): string {
+  return messages[locale()]?.[key] || key
+}
+
+export function useLocale() {
+  return { locale, setLocale, t }
+}`,
   },
   query: {
     name: 'Query',
     description: 'Data fetching and caching',
-    import: `import { useQuery, useMutation, invalidateQueries } from 'flint/query'
+    import: `import { state } from 'flint'
 
-export function useTodos() {
-  return useQuery({
-    queryKey: ['todos'],
-    queryFn: async () => {
-      const res = await fetch('/api/todos')
-      return res.json()
-    },
-  })
+// Simple data fetching with signals
+const todoCache = new Map<string, any>()
+
+export async function fetchTodos() {
+  if (todoCache.has('todos')) {
+    return todoCache.get('todos')
+  }
+  const res = await fetch('/api/todos')
+  const data = await res.json()
+  todoCache.set('todos', data)
+  return data
 }
 
-export function useAddTodo() {
-  return useMutation({
-    mutationFn: async (todo) => {
-      const res = await fetch('/api/todos', {
-        method: 'POST',
-        body: JSON.stringify(todo),
-      })
-      return res.json()
-    },
-    onSuccess: () => {
-      invalidateQueries(['todos'])
-    },
-  })
+export function invalidateTodoCache() {
+  todoCache.delete('todos')
+}
+
+export function useTodos() {
+  const data = state<any[]>([])
+  const loading = state(false)
+  const error = state<string | null>(null)
+
+  const refetch = async () => {
+    loading.set(true)
+    error.set(null)
+    try {
+      const result = await fetchTodos()
+      data.set(result)
+    } catch (e) {
+      error.set(e instanceof Error ? e.message : 'Failed to fetch')
+    } finally {
+      loading.set(false)
+    }
+  }
+
+  refetch()
+  return { data, loading, error, refetch }
 }`,
   },
   seo: {
     name: 'SEO',
     description: 'Meta tags and structured data',
-    import: `import { useSEO, useTitle, useMeta } from 'flint/seo'
+    import: `import { onMount, onDestroy } from 'flint'
 
-export function usePageSEO() {
-  useTitle('My Page')
-  useMeta('description', 'Page description for search engines')
-  useMeta('og:title', 'My Page')
-  useMeta('og:description', 'Page description')
-  useMeta('og:image', '/og-image.png')
+export function usePageSEO(title: string, description: string) {
+  onMount(() => {
+    document.title = title
+
+    const metaDesc = document.createElement('meta')
+    metaDesc.name = 'description'
+    metaDesc.content = description
+    document.head.appendChild(metaDesc)
+
+    return () => {
+      document.title = 'My App'
+      document.head.removeChild(metaDesc)
+    }
+  })
 }`,
   },
   pwa: {
     name: 'PWA',
     description: 'Progressive Web App support',
-    import: `import { initPWA } from 'flint/pwa'
+    import: `import { onMount } from 'flint'
 
-// Initialize PWA in your app entry point
-const pwa = initPWA({
-  swPath: '/sw.js',
-  scope: '/',
-  cacheName: 'my-app-v1',
-  offlinePage: '/offline.html',
-})
-
-// Register service worker
-pwa.serviceWorker.register()`,
+export function initPWA(swPath: string = '/sw.js') {
+  onMount(async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        await navigator.serviceWorker.register(swPath)
+        console.log('Service Worker registered')
+      } catch (error) {
+        console.error('Service Worker registration failed:', error)
+      }
+    }
+  })
+}`,
   },
   image: {
     name: 'Image',
     description: 'Image optimization and lazy loading',
-    import: `import { Image, preloadImage, preloadImages } from 'flint/image'
+    import: `import { onMount } from 'flint'
 
-// Use in JSX
-// <Image src="/photo.jpg" alt="Photo" width={400} height={300} lazy />
+// Lazy load images using IntersectionObserver
+export function lazyLoadImages() {
+  onMount(() => {
+    const images = document.querySelectorAll('img[data-src]')
 
-// Preload images
-preloadImage('/hero.jpg')
-preloadImages(['/1.jpg', '/2.jpg', '/3.jpg'])`,
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const img = entry.target as HTMLImageElement
+          img.src = img.dataset.src || ''
+          img.removeAttribute('data-src')
+          observer.unobserve(img)
+        }
+      })
+    })
+
+    images.forEach((img) => observer.observe(img))
+
+    return () => observer.disconnect()
+  })
+}
+
+// Use in JSX:
+// <img data-src="/photo.jpg" alt="Photo" width={400} height={300} />`,
   },
   animations: {
     name: 'Animations',
     description: 'Animation utilities and presets',
-    import: `import { animate, spring, fadeIn, slideUp } from 'flint/animations'
+    import: `import { animate, presets } from 'flint'
 
-// Animate element
+// Animate element with keyframes
 const el = document.querySelector('.box')
-animate(el, { x: 100, opacity: 1 }, { duration: 300 })
+if (el) {
+  animate(el, [{ transform: 'translateX(0)' }, { transform: 'translateX(100px)' }], {
+    duration: 300,
+    fill: 'forwards',
+  })
+}
 
-// Use spring physics
-spring(el, { x: 200 }, { stiffness: 200, damping: 10 })
-
-// Predefined animations
-fadeIn(el, { duration: 500 })
-slideUp(el, { delay: 100 })`,
+// Use preset animations
+// presets.fadeIn.enter, presets.fadeOut.enter
+// presets.slideUp.enter, presets.slideDown.enter
+// presets.scale.enter`,
   },
   ssr: {
     name: 'SSR',

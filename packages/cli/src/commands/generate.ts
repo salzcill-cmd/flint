@@ -8,7 +8,7 @@ interface GenerateOptions {
 }
 
 const TEMPLATES: Record<string, (name: string) => string> = {
-  component: (name: string) => `import { state, onMount, onUnmount } from 'flint'
+  component: (name: string) => `import { state, onMount, onDestroy } from 'flint'
 
 interface ${name}Props {
   // Add props here
@@ -19,7 +19,10 @@ export function ${name}(props: ${name}Props) {
 
   onMount(() => {
     console.log('${name} mounted')
-    return () => console.log('${name} unmounted')
+  })
+
+  onDestroy(() => {
+    console.log('${name} unmounted')
   })
 
   return (
@@ -59,7 +62,7 @@ export default function ${name}Page() {
   )
 }
 `,
-  'store': (name: string) => `import { createStore } from 'flint/store'
+  'store': (name: string) => `import { create, persist } from 'flint/store'
 
 interface ${name}State {
   items: any[]
@@ -67,15 +70,14 @@ interface ${name}State {
   error: string | null
 }
 
-export const ${name.toLowerCase()}Store = createStore<${name}State>({
-  items: [],
-  loading: false,
-  error: null,
-}, {
-  name: '${name.toLowerCase()}',
-  persistence: 'local',
-  devtools: true,
-})
+export const ${name.toLowerCase()}Store = create<${name}State>(
+  (set, get) => ({
+    items: [],
+    loading: false,
+    error: null,
+  }),
+  [persist('${name.toLowerCase()}', { storage: localStorage })]
+)
 
 // Actions
 export function fetchItems() {
@@ -94,7 +96,7 @@ export function clearItems() {
   ${name.toLowerCase()}Store.setState({ items: [] })
 }
 `,
-  'hook': (name: string) => `import { state, effect, onCleanup } from 'flint'
+  'hook': (name: string) => `import { state, effect, onDestroy } from 'flint'
 
 export function ${name.startsWith('use') ? name : `use${name}`}<T>(options?: any) {
   const value = state<T | null>(null)
@@ -105,7 +107,7 @@ export function ${name.startsWith('use') ? name : `use${name}`}<T>(options?: any
     // Implement hook logic here
   })
 
-  onCleanup(() => {
+  onDestroy(() => {
     // Cleanup logic
   })
 

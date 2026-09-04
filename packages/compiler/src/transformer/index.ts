@@ -500,7 +500,7 @@ function generateJSXElement(node: JSXElement, code: string): string {
   // For DOM elements (not components), add reactive tracking calls after h()
   if (!isComponent && reactiveCalls.length > 0) {
     // Wrap in IIFE to capture element reference
-    result = `(() => { const __el = ${result}; ${reactiveCalls.map(c => c.replace('__el', '__el')).join('; ')}; return __el })()`
+    result = `(() => { const __el = ${result}; ${reactiveCalls.join('; ')}; return __el })()`
   }
 
   return result

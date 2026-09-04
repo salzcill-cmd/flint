@@ -4,6 +4,17 @@
 import { state, computed } from '@flint/reactivity'
 import type { Signal, Computed } from '@flint/reactivity'
 
+// ─── Helpers ────────────────────────────────────────────────────
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 // ─── Types ──────────────────────────────────────────────────────
 
 export interface DevToolsComponent {
@@ -538,7 +549,7 @@ export function showErrorOverlay(
     ">
       <div style="max-width: 800px; margin: 0 auto;">
         <h2 style="color: #ff6b6b; margin-top: 0;">
-          ${error.name}: ${error.message}
+          ${escapeHtml(error.name)}: ${escapeHtml(error.message)}
         </h2>
         <pre style="
           background: #1a1a1a;
@@ -547,7 +558,7 @@ export function showErrorOverlay(
           overflow-x: auto;
           font-size: 14px;
           line-height: 1.5;
-        ">${error.stack || 'No stack trace'}</pre>
+        ">${escapeHtml(error.stack || 'No stack trace')}</pre>
         ${componentStack ? `
           <h3 style="margin-top: 24px;">Component Stack:</h3>
           <pre style="
@@ -557,7 +568,7 @@ export function showErrorOverlay(
             overflow-x: auto;
             font-size: 14px;
             line-height: 1.5;
-          ">${componentStack}</pre>
+          ">${escapeHtml(componentStack)}</pre>
         ` : ''}
         <button onclick="this.closest('#flint-error-overlay').remove()" style="
           margin-top: 16px;

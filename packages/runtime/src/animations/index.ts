@@ -269,40 +269,6 @@ export function TransitionGroup(props: TransitionGroupProps): Child {
   )
 }
 
-// ─── useTransition Hook ─────────────────────────────────────────
-
-export interface UseTransitionReturn {
-  /** Start transition */
-  start: (callback: () => void) => void
-  /** Whether transition is pending */
-  isPending: Signal<boolean>
-}
-
-/**
- * Hook for concurrent transitions
- *
- * @example
- * const { start, isPending } = useTransition()
- *
- * start(() => {
- *   setState(newState)
- * })
- */
-export function useTransition(): UseTransitionReturn {
-  const isPending = state(false)
-
-  const start = (callback: () => void) => {
-    isPending.set(true)
-    callback()
-    // Use requestAnimationFrame for smoother updates
-    requestAnimationFrame(() => {
-      isPending.set(false)
-    })
-  }
-
-  return { start, isPending }
-}
-
 // ─── useAnimate Hook ────────────────────────────────────────────
 
 export interface UseAnimateReturn {

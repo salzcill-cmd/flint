@@ -13,7 +13,6 @@ export interface FlintPluginOptions {
 
 export default function flint(options: FlintPluginOptions = {}): Plugin {
   const extensions = options.extensions ?? ['.jsx', '.tsx']
-  const moduleGraph = new Map<string, { timestamp: number }>()
 
   return {
     name: 'flint',
@@ -42,9 +41,6 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
           filename: id,
           dev: options.dev ?? process.env.NODE_ENV !== 'production',
         })
-
-        // Track module for HMR
-        moduleGraph.set(id, { timestamp: Date.now() })
 
         return {
           code: result.code,
@@ -134,6 +130,11 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
       }
       if (id === '\0flint:testing') {
         return 'export * from "@flint/runtime/testing"'
+      }
+      // Generic fallback: flint/<module> → @flint/runtime/<module>
+      if (id.startsWith('\0flint:')) {
+        const moduleName = id.slice(8)
+        return `export * from "@flint/runtime/${moduleName}"`
       }
       return null
     },

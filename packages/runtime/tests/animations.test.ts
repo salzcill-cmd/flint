@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { AnimationEngine, Transition, TransitionGroup, useTransition, useAnimate, easings, presets, animate, getAnimationEngine } from '../src/animations/index.js'
+import { AnimationEngine, Transition, TransitionGroup, useAnimate, easings, presets, animate, getAnimationEngine } from '../src/animations/index.js'
+import { useTransition } from '../src/hooks/index.js'
 import { h } from '../src/renderer/index.js'
 
 describe('Animations', () => {
@@ -83,11 +84,10 @@ describe('Animations', () => {
 
   describe('useTransition', () => {
     it('should create transition hook', () => {
-      const transition = useTransition()
+      const [isPending, startTransition] = useTransition()
       
-      expect(transition).toBeDefined()
-      expect(typeof transition.start).toBe('function')
-      expect(transition.isPending).toBeDefined()
+      expect(isPending).toBeDefined()
+      expect(typeof startTransition).toBe('function')
     })
   })
 
