@@ -7,7 +7,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@flint/jsx-runtime",
+    "jsxImportSource": "flint",
     "paths": {
       "flint": ["./node_modules/flint"],
       "flint/*": ["./node_modules/flint/*"]

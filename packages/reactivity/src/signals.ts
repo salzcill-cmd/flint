@@ -95,6 +95,38 @@ function isDirty(computed: ComputedState<any>): boolean {
   return false
 }
 
+/**
+ * Lazily refresh any computed dependencies that are marked dirty but have not
+ * been recomputed yet (pull-based evaluation), so changeVersion is accurate
+ * before staleness is judged.
+ */
+function refreshComputedDeps(deps: Set<SignalState<any> | ComputedState<any>>): void {
+  for (const dep of deps) {
+    if (dep.kind === 'computed' && !dep.disposed) {
+      refreshComputedDeps(dep.dependencies)
+      if (dep.dirty || isDirty(dep)) {
+        updateComputed(dep)
+      }
+    }
+  }
+}
+
+/**
+ * An effect is stale when at least one dependency had a REAL value change
+ * (changeVersion) after the effect's last completed run. Dependencies whose
+ * custom equality said "unchanged" keep their old changeVersion, so effects
+ * they feed no longer re-run.
+ */
+function isEffectStale(effectState: EffectState): boolean {
+  refreshComputedDeps(effectState.dependencies)
+  for (const dep of effectState.dependencies) {
+    if (dep.changeVersion > effectState.version) {
+      return true
+    }
+  }
+  return false
+}
+
 // ─── Effect Scheduling ──────────────────────────────────────────
 
 function scheduleEffect(effect: EffectState): void {
@@ -125,12 +157,14 @@ function flush(): void {
     }
   }
 
-  // Then process effects (Set automatically deduplicates)
+  // Then process effects (Set automatically deduplicates).
+  // Stale-check first: effects whose dependencies all resolved "unchanged"
+  // (equality-filtered computeds) are skipped instead of re-running.
   const effects = [...pendingEffects]
   pendingEffects.clear()
-  for (const effect of effects) {
-    if (!effect.disposed) {
-      runEffect(effect)
+  for (const effectState of effects) {
+    if (!effectState.disposed && isEffectStale(effectState)) {
+      runEffect(effectState)
     }
   }
 }
@@ -138,15 +172,22 @@ function flush(): void {
 // ─── Core Primitives ────────────────────────────────────────────
 
 function updateComputed<T>(computed: ComputedState<T>): void {
+  updateComputedWithEquals(computed, computed.equals ?? defaultEquals)
+}
+
+/**
+ * Core computed update routine shared by all computed values.
+ * `comparator` lets individual computeds override the equality check
+ * (previously this logic was duplicated per-computed).
+ */
+function updateComputedWithEquals<T>(
+  computed: ComputedState<T>,
+  comparator: (prev: T, next: T) => boolean
+): void {
   // Cycle detection
   if (updatingComputeds.has(computed)) {
     console.warn('[Flint] Circular computed dependency detected during update:', computed)
     return
-  }
-
-  // Use custom updater if available
-  if ((computed as any).customUpdate) {
-    return (computed as any).customUpdate(computed)
   }
 
   updatingComputeds.add(computed)
@@ -158,10 +199,14 @@ function updateComputed<T>(computed: ComputedState<T>): void {
   readVersion++
 
   try {
+    const prevValue = computed.value
     const newValue = computed.fn()
-    if (!defaultEquals(computed.value, newValue)) {
+    const unchanged = comparator(prevValue, newValue)
+
+    if (!unchanged) {
       computed.value = newValue
       computed.version = writeVersion
+      computed.changeVersion = writeVersion
       // Notify observers of this computed
       for (const observer of computed.observers) {
         if (observer.kind === 'computed') {
@@ -174,6 +219,9 @@ function updateComputed<T>(computed: ComputedState<T>): void {
         }
       }
     }
+    // When "unchanged": version stays behind the dependencies' versions.
+    // Pending effects that depend on this computed are skipped by the
+    // staleness check in flush() — the equality filter wins.
     computed.dirty = false
   } finally {
     computed.tracking = false
@@ -205,6 +253,10 @@ function runEffect(effect: EffectState): void {
     if (typeof result === 'function') {
       effect.cleanup = result as CleanupFn
     }
+    // Stamp the changeVersion high-water mark of this completed run — used by
+    // isEffectStale() to skip effects whose dependencies all resolved
+    // "unchanged" (equality-filtered computeds).
+    effect.version = writeVersion
   } finally {
     effect.tracking = false
     currentSubscriber = prevSubscriber
@@ -227,6 +279,7 @@ export function state<T>(initial: T): Writable<T> & Signal<T> {
     kind: 'signal',
     value: initial,
     version: 0,
+    changeVersion: 0,
     observers: new Set(),
     comparator: defaultEquals,
   }
@@ -246,6 +299,7 @@ export function state<T>(initial: T): Writable<T> & Signal<T> {
     if (!signalState.comparator(signalState.value, newValue)) {
       signalState.value = newValue
       writeVersion++
+      signalState.changeVersion = writeVersion
       markDirty(signalState)
       scheduleFlush()
     }
@@ -274,6 +328,7 @@ export function computed<T>(fn: () => T, options?: { equals?: (prev: T, next: T)
     kind: 'computed',
     value: undefined as T,
     version: 0,
+    changeVersion: 0,
     dirty: true,
     disposed: false,
     fn,
@@ -283,15 +338,10 @@ export function computed<T>(fn: () => T, options?: { equals?: (prev: T, next: T)
   }
 
   const read = (() => {
-    // If we have a current subscriber, register as dependency
-    if (currentSubscriber && currentSubscriber !== computedState) {
-      // Don't track if already tracking this computed
-    }
-
     track(computedState)
 
     if (computedState.dirty || isDirty(computedState)) {
-      updateComputed(computedState)
+      updateComputedWithEquals(computedState, comparator)
     }
 
     return computedState.value
@@ -300,45 +350,12 @@ export function computed<T>(fn: () => T, options?: { equals?: (prev: T, next: T)
   // Mark as computed (use Object.defineProperty to bypass readonly)
   Object.defineProperty(read, COMPUTED_BRAND, { value: true })
 
-  // Override the default equals check for this computed
-  const originalUpdateComputed = updateComputed
-  const patchedUpdateComputed = (c: ComputedState<any>) => {
-    untrackAll(c)
-
-    const prevSubscriber = currentSubscriber
-    currentSubscriber = c
-    c.tracking = true
-    readVersion++
-
-    try {
-      const newValue = c.fn()
-      if (!comparator(c.value, newValue)) {
-        c.value = newValue
-        c.version = writeVersion
-        // Notify observers
-        for (const observer of c.observers) {
-          if (observer.kind === 'computed') {
-            if (!observer.dirty) {
-              observer.dirty = true
-              pendingComputeds.add(observer)
-            }
-          } else if (observer.kind === 'effect') {
-            scheduleEffect(observer)
-          }
-        }
-      }
-      c.dirty = false
-    } finally {
-      c.tracking = false
-      currentSubscriber = prevSubscriber
-    }
-  }
-
-  // Store the patched updater on the state
-  ;(computedState as any).customUpdate = patchedUpdateComputed
+  // Store the comparator on the state so updateComputed() (used by flush)
+  // applies the same equality filter.
+  computedState.equals = comparator
 
   // Initial evaluation
-  patchedUpdateComputed(computedState)
+  updateComputedWithEquals(computedState, comparator)
 
   return read
 }
@@ -360,6 +377,7 @@ export function effect(fn: () => void | CleanupFn): Effect {
     dependencies: new Set(),
     tracking: false,
     disposed: false,
+    version: 0,
   }
 
   // Run effect initially
@@ -430,6 +448,65 @@ export function batch(fn: () => void): void {
       scheduleFlush()
     }
   }
+}
+
+/**
+ * Run queued effects/computeds immediately instead of waiting for the
+ * microtask flush. Useful for tests and DOM measurements.
+ *
+ * @example
+ * batch(() => {
+ *   count.set(1)
+ *   name.set('Flint')
+ * })
+ * flushSync() // DOM is now updated
+ */
+export function flushSync(): void {
+  flush()
+}
+
+// ─── captureScope ─────────────────────────────────────────────
+
+/**
+ * Run a function and record which signals it reads, WITHOUT subscribing.
+ * Used by the renderer in dev to detect bare signal reads in component
+ * bodies (reads that would silently never update) and warn about them.
+ *
+ * The captured subscriber is detached afterwards, so nothing is scheduled
+ * and no observers are left behind.
+ *
+ * @example
+ * const { value, dependencies } = captureScope(() => myComponent())
+ * if (dependencies.size > 0) warnAboutBareReads()
+ */
+export function captureScope<T>(fn: () => T): {
+  value: T
+  dependencies: Set<SignalState<any> | ComputedState<any>>
+} {
+  // Shaped like a disposed effect so markDirty/scheduleEffect ignore it.
+  const probe: EffectState = {
+    kind: 'effect',
+    fn: () => undefined,
+    cleanup: null,
+    dependencies: new Set(),
+    tracking: true,
+    disposed: true,
+    version: 0,
+  }
+
+  const prevSubscriber = currentSubscriber
+  currentSubscriber = probe
+  let value: T
+  try {
+    value = fn()
+  } finally {
+    currentSubscriber = prevSubscriber
+    // Detach: the probe must not remain in any signal's observer set.
+    for (const dep of probe.dependencies) {
+      dep.observers.delete(probe)
+    }
+  }
+  return { value, dependencies: probe.dependencies }
 }
 
 // ─── untrack ────────────────────────────────────────────────────
@@ -536,11 +613,12 @@ export function onCleanup(fn: CleanupFn): void {
   if (currentScope) {
     currentScope.disposables.push(fn)
   }
-  // Also register in current effect if available
+  // Also register in current effect if available (chained after any
+  // existing cleanup, never replacing it)
   if (currentSubscriber && currentSubscriber.kind === 'effect') {
-    const effect = currentSubscriber as EffectState
-    const prevCleanup = effect.cleanup
-    effect.cleanup = () => {
+    const effectState = currentSubscriber as EffectState
+    const prevCleanup = effectState.cleanup
+    effectState.cleanup = () => {
       if (prevCleanup) prevCleanup()
       fn()
     }

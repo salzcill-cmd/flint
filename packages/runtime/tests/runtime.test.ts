@@ -1,8 +1,8 @@
 /**
  * @vitest-environment happy-dom
  */
-import { describe, it, expect } from 'vitest'
-import { h, render } from '../src/renderer/index.js'
+import { describe, it, expect, vi } from 'vitest'
+import { h, render, track } from '../src/renderer/index.js'
 import { state, computed, effect } from '@flint/reactivity'
 
 describe('h() — JSX Factory', () => {
@@ -122,12 +122,14 @@ describe('render()', () => {
 })
 
 describe('Reactive Rendering', () => {
-  it('updates when state changes', async () => {
+  it('updates reactive text when state changes (fine-grained)', async () => {
     const container = document.createElement('div')
     const count = state(0)
 
+    // Correct pattern: dynamic values go through track() so the compiler-
+    // managed effect updates just the text node.
     const App = () => {
-      return h('div', null, `Count: ${count()}`)
+      return h('div', null, track(() => `Count: ${count()}`))
     }
 
     render(App, container)
@@ -136,5 +138,19 @@ describe('Reactive Rendering', () => {
     count.set(5)
     await new Promise(r => setTimeout(r, 0))
     expect(container.textContent).toContain('Count: 5')
+  })
+
+  it('warns in dev when a component reads signals bare in its body', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const container = document.createElement('div')
+    const count = state(0)
+
+    const App = () => h('div', null, `Count: ${count()}`)
+    const handle = render(App, container)
+
+    expect(warn).toHaveBeenCalled()
+    expect(String(warn.mock.calls[0]?.[0])).toContain('render once')
+
+    handle.dispose()
   })
 })

@@ -2,9 +2,10 @@
 // Fine-grained reactive DOM updates with signal tracking
 // No Virtual DOM — direct surgical DOM mutations
 
-import { effect, batch, type CleanupFn } from '@flint/reactivity'
+import { effect, batch, untrack, captureScope, type CleanupFn } from '@flint/reactivity'
 import { mountComponent, type ComponentInstance } from '../component/index.js'
 import { createFlintError } from '../errors/index.js'
+import { safeUrl, isUrlAttribute } from '../security/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -15,6 +16,8 @@ export type Props = Record<string, unknown> | null
 /** Component function wrapped by component() with internal instance */
 export interface FlintComponent<P extends Record<string, unknown> = Record<string, unknown>> extends Component<P> {
   __flint_instance?: ComponentInstance
+  /** Original unwrapped function — set by component() */
+  __flint_original?: Component<P>
   displayName?: string
 }
 
@@ -107,6 +110,9 @@ export function trackAttribute<T>(
       }
     } else if (attr === 'style' && typeof value === 'object') {
       Object.assign(element.style, value)
+    } else if (isUrlAttribute(attr) && typeof value === 'string') {
+      // Block dangerous URL schemes (javascript:, ...) in URL attributes
+      element.setAttribute(attr, safeUrl(value))
     } else if (value === true) {
       element.setAttribute(attr, '')
     } else if (value === false || value == null) {
@@ -382,8 +388,18 @@ function applyProps(el: HTMLElement, props: Props): void {
       }
     } else if (key === 'dangerouslySetInnerHTML') {
       // InnerHTML (use with caution!)
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          '[Flint] dangerouslySetInnerHTML used. The HTML is inserted verbatim — ' +
+          'sanitize untrusted content first (see sanitizeInput()).'
+        )
+      }
       const innerHTMLValue = value as { __html?: string }
       el.innerHTML = innerHTMLValue?.__html || ''
+    } else if (isUrlAttribute(key) && typeof value === 'string') {
+      // Block dangerous URL schemes (javascript:, data:text/html, ...) in
+      // href/src/action/... attributes.
+      el.setAttribute(key, safeUrl(value))
     } else if (key.startsWith('__')) {
       // Skip internal props
       continue
@@ -478,35 +494,43 @@ export function render(
 
   const owner = createOwner()
 
-  // Track for fine-grained updates: wrap in effect for backward compatibility
+  // Render ONCE, untracked. Signal reads inside the component body must NOT
+  // become dependencies of a root-level effect — otherwise every state change
+  // would rebuild the entire DOM tree, defeating fine-grained updates.
+  // Granular updates come from track()/trackAttribute()/trackEvent() effects
+  // created by the compiler, which manage their own dependencies.
   let currentNode: Node | null = null
-  const eff = effect(() => {
-    // Remove old DOM if re-rendering
-    if (currentNode && currentNode.parentNode) {
-      currentNode.parentNode.removeChild(currentNode)
-    }
+  const captured = captureScope(() => ComponentFn({}))
+  currentNode = nodeify(captured.value)
+  target.appendChild(currentNode)
 
-    // Render the component
-    const result = ComponentFn({})
-    currentNode = nodeify(result)
-    target.appendChild(currentNode)
+  // Dev-only DX: bare signal reads in the component body would silently
+  // never update under fine-grained rendering. Point the developer at the
+  // compiler-managed helpers instead.
+  if (
+    process.env.NODE_ENV !== 'production' &&
+    captured.dependencies.size > 0 &&
+    typeof (ComponentFn as FlintComponent).__flint_original !== 'function'
+  ) {
+    console.warn(
+      `[Flint] "${ComponentFn.name || 'Anonymous'}" reads signal(s) directly in its body ` +
+      'but those reads will NOT update the UI (components render once). ' +
+      'The compiler wraps JSX expressions automatically; for manual h() usage, ' +
+      'wrap dynamic values in track(() => value()), trackAttribute(...), or trackEvent(...).'
+    )
+  }
 
-    // For Flint components, schedule mountComponent after DOM insertion
-    const flintComp = ComponentFn as FlintComponent
-    const instance: ComponentInstance | undefined = flintComp.__flint_instance
-    if (instance && !instance.mounted) {
-      queueMicrotask(() => {
-        mountComponent(instance)
-      })
-    }
-  })
-
-  // Also track the effect's lifecycle
-  trackDisposable(eff.dispose)
+  // For Flint components, schedule mountComponent after DOM insertion
+  const flintComp = ComponentFn as FlintComponent
+  const instance: ComponentInstance | undefined = flintComp.__flint_instance
+  if (instance && !instance.mounted) {
+    queueMicrotask(() => {
+      mountComponent(instance)
+    })
+  }
 
   return {
     dispose() {
-      eff.dispose()
       disposeOwner(owner)
       if (currentNode?.parentNode === target) {
         target.removeChild(currentNode)

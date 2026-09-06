@@ -1,13 +1,18 @@
-// Flint JSX Runtime
-// Used by the compiler for automatic JSX transform
+// Flint JSX Runtime — Automatic Runtime Entry Point
+// Re-exports the canonical implementation from @flint/runtime so that
+// `"jsx": "react-jsx"` with `jsxImportSource: "flint"` (or @flint/runtime)
+// resolves to a correct, single implementation.
+//
+// Also exports the classic factories for `"jsx": "react"` configs:
+//   pragma: h, pragmaFrag: Fragment
 
-import { h } from '@flint/runtime'
+export {
+  jsx,
+  jsxs,
+  jsxDEV,
+  Fragment,
+} from '@flint/runtime/jsx-runtime'
 
-export { h as jsx }
-export { h as jsxs }
-export { h as Fragment }
-
-// For development mode
-export function jsxDEV(type: any, props: any, key?: string): any {
-  return h(type, props, ...(props.children ? [props.children] : []))
-}
+// Classic runtime aliases (jsx: "react" + jsxFactory: "h")
+export { h } from '@flint/runtime'
+export { Fragment as default } from '@flint/runtime/jsx-runtime'

@@ -41,6 +41,8 @@ export interface SignalState<T> {
   kind: 'signal'
   value: T
   version: number
+  /** Monotonic stamp of the last REAL value change (used for effect staleness) */
+  changeVersion: number
   observers: Set<Subscriber>
   comparator: (prev: T, next: T) => boolean
 }
@@ -49,12 +51,16 @@ export interface ComputedState<T> {
   kind: 'computed'
   value: T
   version: number
+  /** Monotonic stamp of the last REAL value change (used for effect staleness) */
+  changeVersion: number
   dirty: boolean
   disposed: boolean
   fn: () => T
   observers: Set<Subscriber>
   dependencies: Set<SignalState<any> | ComputedState<any>>
   tracking: boolean
+  /** Custom equality — when it says "unchanged", changeVersion is NOT bumped */
+  equals?: (prev: T, next: T) => boolean
 }
 
 export interface EffectState {
@@ -64,6 +70,8 @@ export interface EffectState {
   dependencies: Set<SignalState<any> | ComputedState<any>>
   tracking: boolean
   disposed: boolean
+  /** changeVersion stamp of the last completed run — used for stale checks */
+  version: number
 }
 
 export interface WatchState<T> {

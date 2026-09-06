@@ -1,6 +1,6 @@
 {
   "name": "@flint/devtools",
-  "version": "3.2.0",
+  "version": "3.3.1",
   "description": "Flint DevTools — Browser extension and dev server integration for debugging Flint applications",
   "type": "module",
   "main": "dist/index.js",

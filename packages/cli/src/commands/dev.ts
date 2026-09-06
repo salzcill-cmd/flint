@@ -3,6 +3,7 @@
 
 import { createServer } from 'vite'
 import flint from '@flint/vite-plugin'
+import { validateProject, printValidationErrors } from './validate.js'
 
 export interface DevOptions {
   port: number
@@ -11,6 +12,13 @@ export interface DevOptions {
 }
 
 export async function startDev(options: DevOptions): Promise<void> {
+  // Pre-flight check: fail fast with friendly errors instead of raw Vite output
+  const validation = validateProject()
+  if (!validation.ok) {
+    printValidationErrors(validation)
+    process.exit(1)
+  }
+
   console.log(`\n  Starting Flint dev server...\n`)
 
   const server = await createServer({

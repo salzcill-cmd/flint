@@ -1,6 +1,6 @@
 {
   "name": "@flint/runtime",
-  "version": "3.2.0",
+  "version": "3.3.1",
   "description": "Flint runtime — complete framework with i18n, PWA, query, SEO, a11y, hooks",
   "type": "module",
   "main": "dist/index.js",
@@ -110,6 +110,14 @@
     "./testing": {
       "types": "./dist/testing/index.d.ts",
       "import": "./dist/testing/index.js"
+    },
+    "./jsx-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "import": "./dist/jsx-runtime.js"
+    },
+    "./jsx-dev-runtime": {
+      "types": "./dist/jsx-runtime.d.ts",
+      "import": "./dist/jsx-runtime.js"
     }
   },
   "scripts": {

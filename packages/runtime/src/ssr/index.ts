@@ -4,6 +4,7 @@
 import { state, computed } from '@flint/reactivity'
 import type { Signal } from '@flint/reactivity'
 import { createFlintError } from '../errors/index.js'
+import { safeJsonForScript, safeUrl, isUrlAttribute } from '../security/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -169,19 +170,27 @@ export async function renderToString(
   }
 
   try {
-    // Render with timeout
+    // Render with timeout (timer is always cleared so it never keeps the
+    // Node.js event loop alive after the render settles)
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined
     const html = await Promise.race([
       renderNode(component, props, hydrate, context),
-      new Promise<string>((_, reject) =>
-        setTimeout(() => reject(new Error('SSR timeout')), timeout)
-      ),
+      new Promise<string>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error(`SSR timeout after ${timeout}ms`)),
+          timeout
+        )
+      }),
     ])
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle)
 
     // Generate hydration script
     const scripts: string[] = []
     if (hydrate && Object.keys(context.hydrationData).length > 0) {
+      // safeJsonForScript escapes </script> and <!-- so embedded data
+      // can never break out of the script element (XSS prevention).
       scripts.push(
-        `<script data-flint-hydration>window.__FLINT_HYDRATION__=${JSON.stringify({
+        `<script data-flint-hydration>window.__FLINT_HYDRATION__=${safeJsonForScript({
           v: 1,
           d: context.hydrationData,
         })};</script>`
@@ -325,6 +334,12 @@ async function renderVNode(
 
   // Handle dangerouslySetInnerHTML
   if (props.dangerouslySetInnerHTML) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        `[Flint] dangerouslySetInnerHTML used on <${tag}>. ` +
+        'The HTML is inserted verbatim — sanitize untrusted content first (see sanitizeInput()).'
+      )
+    }
     childrenHtml = props.dangerouslySetInnerHTML.__html || ''
   }
 
@@ -370,6 +385,11 @@ function buildAttributes(props: Record<string, any>): string {
       // Event handlers - skip in SSR
       if (key.startsWith('on')) {
         return ''
+      }
+
+      // URL attributes: block dangerous schemes like javascript:
+      if (isUrlAttribute(key) && typeof value === 'string') {
+        return ` ${key}="${escapeAttr(safeUrl(value))}"`
       }
 
       // Regular attribute
@@ -432,7 +452,8 @@ export function renderToPipeableStream(
 
       // Add hydration script
       if (hydrate && Object.keys(context.hydrationData).length > 0) {
-        const hydrationScript = `<script data-flint-hydration>window.__FLINT_HYDRATION__=${JSON.stringify({
+        // Same escaping as renderToString — see safeJsonForScript().
+        const hydrationScript = `<script data-flint-hydration>window.__FLINT_HYDRATION__=${safeJsonForScript({
           v: 1,
           d: context.hydrationData,
         })};</script>`

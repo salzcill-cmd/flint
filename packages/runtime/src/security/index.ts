@@ -394,3 +394,92 @@ export function secureRemove(key: string): void {
     console.warn('[Flint] secureRemove failed:', e)
   }
 }
+
+// ─── Safe JSON Embedding (XSS Prevention) ──────────────────────
+
+/**
+ * Safely embed a JSON value inside an inline <script> tag.
+ *
+ * JSON.stringify alone is NOT safe: a string like "</script>" terminates
+ * the script element early, and "<!--" opens an HTML comment that can
+ * swallow the rest of the page. This escapes both sequences so the output
+ * is guaranteed to stay inside the script element.
+ *
+ * @example
+ * const html = `<script>var data = ${safeJsonForScript(data)}</script>`
+ * // data containing '</script>' can no longer break out
+ */
+export function safeJsonForScript(value: unknown): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003C')
+    .replace(/>/g, '\\u003E')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+}
+
+// ─── Safe URL (XSS Prevention) ─────────────────────────────────
+
+/**
+ * URL schemes that are always allowed as attribute values.
+ *
+ * Relative URLs (no scheme) are also allowed. Everything else
+ * ("javascript:", "data:text/html", "vbscript:", unknown schemes) is
+ * blocked to prevent XSS via href/src attributes.
+ */
+const SAFE_URL_SCHEMES = new Set([
+  'http',
+  'https',
+  'mailto',
+  'tel',
+  'ftp',
+  'blob',
+])
+
+/**
+ * Return the URL if it is safe for use in href/src attributes, otherwise
+ * return '#'. A URL is safe when it is relative or uses a scheme from the
+ * allowlist. Dangerous schemes like "javascript:" are blocked.
+ *
+ * @example
+ * safeUrl('https://example.com')   // 'https://example.com'
+ * safeUrl('/about')                // '/about'
+ * safeUrl('javascript:alert(1)')   // '#'
+ */
+export function safeUrl(url: string): string {
+  if (typeof url !== 'string') return '#'
+
+  // Strip control characters and whitespace that browsers may ignore when
+  // parsing schemes (e.g. "java\tscript:" or " j\navascript:").
+  const cleaned = url.replace(/[\u0000-\u0020]+/g, '')
+  const schemeMatch = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(cleaned)
+
+  // No scheme → relative URL → safe
+  if (!schemeMatch) return url
+
+  if (SAFE_URL_SCHEMES.has(schemeMatch[1].toLowerCase())) return url
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.warn(
+      `[Flint] Blocked unsafe URL scheme "${schemeMatch[1]}:" in attribute: ${JSON.stringify(url)}. ` +
+      'Use http:, https:, mailto:, tel:, ftp: or blob: instead.'
+    )
+  }
+
+  return '#'
+}
+
+/**
+ * Attributes whose values must pass through safeUrl().
+ */
+const URL_ATTRS = new Set(['href', 'src', 'xlink:href', 'formaction', 'action', 'poster'])
+
+/**
+ * Check whether an attribute name is a URL attribute.
+ *
+ * @example
+ * isUrlAttribute('href')  // true
+ * isUrlAttribute('title') // false
+ */
+export function isUrlAttribute(name: string): boolean {
+  return URL_ATTRS.has(name.toLowerCase())
+}

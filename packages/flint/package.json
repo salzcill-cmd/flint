@@ -1,6 +1,6 @@
 {
   "name": "flint",
-  "version": "3.2.0",
+  "version": "3.3.1",
   "description": "A signals-based JavaScript framework with JSX, fine-grained reactivity, and direct DOM",
   "type": "module",
   "main": "dist/index.js",

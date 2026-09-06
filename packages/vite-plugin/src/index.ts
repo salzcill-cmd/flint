@@ -13,6 +13,7 @@ export interface FlintPluginOptions {
 
 export default function flint(options: FlintPluginOptions = {}): Plugin {
   const extensions = options.extensions ?? ['.jsx', '.tsx']
+  const isDev = options.dev ?? process.env.NODE_ENV !== 'production'
 
   return {
     name: 'flint',
@@ -35,15 +36,31 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
       try {
         const { ast } = parse(code, {
           sourceType: 'module',
+          // Deterministic TS detection by extension (.ts/.tsx) — plain .js
+          // files are no longer reprinted through esbuild unnecessarily.
+          filename: cleanId,
         })
 
         const result = transform(ast, code, {
           filename: id,
-          dev: options.dev ?? process.env.NODE_ENV !== 'production',
+          dev: isDev,
         })
 
+        let finalCode = result.code
+
+        // Dev-only: auto-wire HMR. Injected AFTER the transform so the
+        // import is added to the already-generated code. Modules that use
+        // acceptHMR()/onHMRDispose() self-accept; everything else falls
+        // through to Vite's default bubbling (full reload) — always correct.
+        if (isDev) {
+          finalCode =
+            `import { __flintHMR__ } from 'flint'\n` +
+            `__flintHMR__(import.meta.hot, ${JSON.stringify(cleanId)})\n` +
+            finalCode
+        }
+
         return {
-          code: result.code,
+          code: finalCode,
           map: result.map ? {
             version: result.map.version ?? 3,
             file: result.map.file ?? id,
@@ -54,8 +71,11 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
           } : null,
         }
       } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
         this.error(
-          `[Flint] Error transforming ${id}: ${err instanceof Error ? err.message : String(err)}`
+          `[Flint] Error transforming ${id}: ${message}\n` +
+          `💡 Check the syntax near the reported position — every JSX tag must be closed, ` +
+          `and braces/parentheses must balance.`
         )
       }
     },

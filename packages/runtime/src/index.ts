@@ -244,7 +244,17 @@ export type {
 } from './testing/index.js'
 
 // HMR
-export { initHMR, acceptHMR, onHMRDispose, isHMR } from './hmr/index.js'
+export {
+  initHMR,
+  acceptHMR,
+  onHMRDispose,
+  isHMR,
+  triggerHMRUpdate,
+  runHMRDisposers,
+  hasHMRHandlers,
+  __flintHMR__,
+} from './hmr/index.js'
+export type { HMRModule, HMRUpdate } from './hmr/index.js'
 
 // Animations & Transitions v2
 export {
@@ -440,6 +450,9 @@ export {
   secureSet,
   secureGet,
   secureRemove,
+  safeJsonForScript,
+  safeUrl,
+  isUrlAttribute,
 } from './security/index.js'
 export type {
   SanitizeOptions,
@@ -517,7 +530,9 @@ export {
   effect,
   watch,
   batch,
+  flushSync,
   untrack,
+  captureScope,
   createSelector,
   createRoot,
   onCleanup,

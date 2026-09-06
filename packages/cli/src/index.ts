@@ -17,7 +17,7 @@ const program = new Command()
 program
   .name('flint')
   .description('Flint — Write less. Ship faster. Build beautifully.')
-  .version('3.2.0')
+  .version('3.3.1')
 
 program
   .command('create [project-name]')
@@ -57,10 +57,16 @@ program
   .description('Build for production')
   .option('-o, --outDir <dir>', 'Output directory', 'dist')
   .option('--minify', 'Enable minification', true)
+  .option('--no-minify', 'Disable minification')
   .option('--sourcemap', 'Generate source maps', true)
+  .option('--no-sourcemap', 'Skip source maps')
   .action(async (options: { outDir: string; minify: boolean; sourcemap: boolean }) => {
     try {
-      await buildProject(options.outDir, options.minify, options.sourcemap)
+      await buildProject({
+        outDir: options.outDir,
+        minify: options.minify,
+        sourcemap: options.sourcemap,
+      })
     } catch (err) {
       console.error(`\n✖ Error: ${err instanceof Error ? err.message : String(err)}\n`)
       process.exit(1)

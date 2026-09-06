@@ -1,6 +1,6 @@
 {
   "name": "@flint/playwright-utils",
-  "version": "3.2.0",
+  "version": "3.3.1",
   "description": "Playwright utilities for Flint E2E testing",
   "type": "module",
   "main": "dist/index.js",

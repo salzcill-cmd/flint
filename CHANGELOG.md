@@ -5,6 +5,47 @@ All notable changes to the Flint framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.1] - 2026-09-06
+
+### Fixed
+- **Compiler TypeScript detection** — replaced regex sniffing with deterministic extension-based detection (`filename` option). The old heuristics misfired on plain JS (`a != b`, `{ id: 5 }` object literals, English text inside template literals) and silently reprinted files through esbuild. Plain JS now parses directly with zero transformation cost; TS stripping is one deterministic step for `.ts/.tsx` and a single fallback when JS parsing fails.
+- **SSR timeout timer leak** — the `setTimeout` used by `renderToString`'s `Promise.race` was never cleared and kept the Node.js event loop alive for the full timeout after every render. The timer is now cleared when the race settles.
+- **Vite plugin error output** — transform failures now include an actionable hint instead of a bare message.
+
+### Added
+- **Compiler error UX** — `compile()` failures return `formatted` output: file, line:column, caret code frame, likely causes, and a suggestion; raw error preserved for tooling. New exports: `guessCauses()`, `codeFrame()`, richer `formatCompilerError()`.
+
+### Documentation
+- Replaced the "Compiler Auto-Memoization" section with an accurate "What the Compiler Does" description (Flint needs no `useMemo`/`React.memo` — computed caching plus per-expression tracking replaces re-render memoization). Experimental optimizer passes are documented as such.
+
+## [3.3.0] - 2026-09-06
+
+### Security
+- **Hydration payload escaping (SSR)** — `safeJsonForScript()` escapes `</script>`, `<!--`, and line separators when embedding hydration data, closing an XSS vector where server data could break out of the hydration `<script>` tag. Applied to both `renderToString` and `renderToPipeableStream`.
+- **Safe URL enforcement** — `javascript:`, `data:text/html`, `vbscript:` (and other non-allowlisted schemes) in `href`/`src`/`action`/`formaction`/`poster`/`xlink:href` are now replaced with `#` in both the client renderer and SSR, including obfuscation attempts like `java\tscript:`. Dev builds log a warning naming the blocked scheme.
+- **`dangerouslySetInnerHTML` dev warning** — client renderer and SSR now warn in development that inserted HTML is verbatim and should be sanitized (`sanitizeInput()`).
+
+### Performance
+- **Untracked mounting** — `render()` no longer registers every signal read inside the component tree as a root-effect dependency (which caused full-tree rebuilds on any state change). Components now render once; updates flow exclusively through the compiler's `track()`/`trackAttribute()`/`trackEvent()` effects. A dev warning fires for components that read signals bare in their body, pointing at the correct pattern.
+- **Equality-aware effect scheduling** — effects depending on a computed whose custom `equals` filter says "unchanged" are now skipped entirely (`changeVersion` staleness tracking with pull-based computed refresh). Previously they re-ran with identical values.
+- **`flushSync()`** — new API to flush pending effects immediately instead of waiting for the microtask queue (useful for tests and DOM measurement).
+
+### Fixed
+- **Automatic JSX runtime** — `jsx()`/`jsxs()`/`jsxDEV()` now extract `children` from props and pass them to `h()` correctly; `Fragment` is a real fragment renderer. Previously, `"jsx": "react-jsx"` (the config the README and the shipped ts-presets recommend) produced elements with no children and a `Fragment` export that broke rendering.
+- **TS presets import source** — `jsxImportSource` pointed at the non-existent `@flint/jsx-runtime`; it now resolves to `flint`.
+- **Reactivity internals** — deduplicated computed update logic (custom `equals` handling moved into the core update path instead of a per-instance patch); `onCleanup()` inside effects no longer replaces previously-registered cleanups.
+
+### Added
+- **`flushSync()`** — immediate effect flushing (`@flint/reactivity`, re-exported from `flint`).
+- **`captureScope()`** — internal-grade utility to detect signal reads in a function without subscribing (powers the renderer's bare-read warning).
+- **`safeJsonForScript()`, `safeUrl()`, `isUrlAttribute()`** — public security helpers in `@flint/runtime/security`.
+- **HMR auto-wiring** — `__flintHMR__(import.meta.hot, moduleId)` is injected automatically by `@flint/vite-plugin` in dev. Modules using `acceptHMR()`/`onHMRDispose()` now self-accept; everything else bubbles to Vite's full-reload fallback. Manual `initHMR()` calls are no longer required.
+- **CLI project validation** — `flint dev` and `flint build` pre-flight check `package.json`, `index.html`, and the module entry script, printing actionable fixes instead of raw Vite errors.
+- **CLI build report** — per-file gzip size estimates and a performance-budget warning when the largest JS chunk exceeds 50 KB gzipped; `--no-minify`/`--no-sourcemap` now actually disable those options.
+
+### Tests
+- 38 new regression tests covering XSS escaping, URL scheme blocking (client + SSR), `dangerouslySetInnerHTML` warnings, untracked rendering, automatic JSX runtime, HMR auto-wiring, `flushSync`, and equality-aware scheduling. Suite: 846 tests passing.
+
 ## [3.1.0] - 2026-09-03
 
 ### Added

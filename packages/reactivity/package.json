@@ -1,6 +1,6 @@
 {
   "name": "@flint/reactivity",
-  "version": "3.2.0",
+  "version": "3.3.1",
   "description": "Flint reactivity — fine-grained signals with debug mode",
   "type": "module",
   "main": "dist/index.js",

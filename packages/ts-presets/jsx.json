@@ -3,9 +3,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "@flint/jsx-runtime",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment",
+    "jsxImportSource": "flint",
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   }
 }

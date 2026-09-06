@@ -7,8 +7,8 @@
 A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual DOM.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-748%20passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-3.2.0-blue)]()
+[![Tests](https://img.shields.io/badge/Tests-865%20passing-brightgreen)]()
+[![Version](https://img.shields.io/badge/Version-3.3.1-blue)]()
 [![Packages](https://img.shields.io/badge/Packages-13-blueviolet)]()
 
 [Getting Started](#-getting-started) • [Examples](#-examples) • [API Reference](#-api-reference) • [Contributing](#-contributing)
@@ -276,6 +276,25 @@ batch(() => {
 
 Components are reusable UI building blocks in Flint.
 
+> **⚠ Important: components render once.**
+>
+> Flint is fine-grained like Solid — a component function runs a single time,
+> not on every state change. Dynamic values must be wrapped by the compiler's
+> tracking helpers. When you write JSX, the Flint compiler does this for you
+> automatically:
+>
+> ```jsx
+> // You write:
+> <p>Count: {count()}</p>
+>
+> // The compiler generates:
+> h('p', null, track(() => count()))   // ← only this text node updates
+> ```
+>
+> If you build UI with manual `h()` calls, wrap dynamic values yourself with
+> `track()`, `trackAttribute()`, or `trackEvent()`. Reading a signal bare in
+> the component body compiles fine but will not update — dev mode warns you.
+
 #### Creating Components
 
 ```jsx
@@ -496,6 +515,27 @@ export default defineConfig({
   fileRoutes: true,
   routesDir: 'pages',
 })
+```
+
+---
+
+## Security
+
+Flint is secure by default:
+
+| Protection | Behavior |
+|------------|----------|
+| **Hydration escaping** | Data embedded in SSR hydration scripts is escaped (`safeJsonForScript`) — `</script>` payloads cannot break out |
+| **URL scheme blocking** | `javascript:` / `data:text/html` / unknown schemes in `href`, `src`, `action`, `formaction`, `poster` are replaced with `#` on client and SSR (`safeUrl`) |
+| **Text escaping** | All interpolated text renders through `createTextNode` — never `innerHTML` |
+| **Explicit raw HTML** | `dangerouslySetInnerHTML` always warns in dev; sanitize untrusted content with `sanitizeInput()` first |
+
+```js
+import { safeUrl, safeJsonForScript, sanitizeInput } from 'flint'
+
+safeUrl('javascript:alert(1)')      // '#' (with a dev warning)
+safeUrl('https://example.com')      // 'https://example.com'
+safeJsonForScript({ x: '</script>' }) // safe to embed in <script>
 ```
 
 ---
@@ -746,36 +786,31 @@ function App() {
 
 ---
 
-## Compiler Auto-Memoization
+## What the Compiler Does
 
-The Flint compiler automatically memoizes pure expressions, eliminating the need for manual `useMemo`.
-
-### Automatic
+The Flint compiler transforms JSX into fine-grained runtime calls. Every dynamic
+expression gets its own tracking scope, so updates touch exactly one text node,
+attribute, or listener — never a whole component:
 
 ```jsx
-// Before compilation
-const doubled = count() * 2
-const fullName = firstName() + ' ' + lastName()
+// You write:
+<div class={active()} onClick={() => count.set(c => c + 1)}>
+  Count: {count()}
+</div>
 
-// After compilation (automatic memoization)
-const doubled = _memo(() => count() * 2)
-const fullName = _memo(() => firstName() + ' ' + lastName())
+// The compiler generates:
+(() => {
+  const __el = h('div', null, track(() => count()))
+  trackAttribute(__el, 'class', () => active())
+  trackEvent(__el, 'click', () => () => count.set(c => c + 1))
+  return __el
+})()
 ```
 
-### Configuration
-
-```ts
-// vite.config.ts
-import flint from '@flint/vite-plugin'
-
-export default defineConfig({
-  plugins: [
-    flint({
-      autoMemoization: true, // Enable auto-memoization
-    })
-  ]
-})
-```
+Flint does **not** need `useMemo`, `React.memo`, or dependency arrays: computed
+values cache themselves, and the granularity above replaces re-render memoization.
+(Experimental auto-memoization passes exist in `@flint/compiler` but are off by
+default and not required for optimal performance.)
 
 ---
 
@@ -1043,11 +1078,13 @@ export default function TodoPage({ todos }) {
 | Function | Description |
 |----------|-------------|
 | `state(initialValue)` | Create a reactive signal |
-| `computed(fn)` | Create a computed value |
+| `computed(fn, { equals? })` | Create a computed value (optional custom equality) |
 | `effect(fn)` | Run on dependency changes |
 | `watch(source, callback)` | Watch specific signals |
 | `batch(fn)` | Batch multiple updates |
+| `flushSync()` | Flush pending effects immediately |
 | `untrack(fn)` | Read without tracking |
+| `captureScope(fn)` | Record signal reads without subscribing |
 | `createSelector()` | Efficient list updates |
 | `createRoot(fn)` | Create effect scope |
 | `onCleanup(fn)` | Register cleanup |
@@ -1266,17 +1303,27 @@ export default function TodoPage({ todos }) {
 | `createSelector(selector, equalityFn?)` | Memoized selector |
 | `useStore(store, selector?)` | Use store in component |
 
+### Security (@flint/runtime/security)
+
+| Function | Description |
+|----------|-------------|
+| `safeJsonForScript(value)` | JSON safe to embed inside `<script>` tags |
+| `safeUrl(url)` | Block dangerous URL schemes, returns `'#'` for unsafe input |
+| `isUrlAttribute(name)` | Whether an attribute is a URL attribute |
+| `escapeHtml(str)` | Escape HTML entities |
+| `sanitizeInput(input, options?)` | Strip scripts/styles/handlers from untrusted HTML |
+
 ### @flint/compiler
 
-| Option | Description |
+| Export | Description |
 |--------|-------------|
-| `autoMemoization` | Auto-memoize pure expressions |
-| `staticHoisting` | Hoist static subtrees |
-| `cssScoping` | Compile-time CSS scoping |
-| `sourceMaps` | Generate source maps |
-| `deadCodeElimination` | Remove dead code |
-| `constantFolding` | Fold constants |
-| `functionInlining` | Inline small functions |
+| `compile(code, { filename, dev })` | Parse + transform JSX; on failure returns a formatted error with code frame and likely causes |
+| `parse(code, { filename })` | Parse JS/JSX/TS into an AST (TS detection by extension, JS-first fallback) |
+| `transform(ast, code, options)` | Lower JSX into `h()`/`track()` runtime calls |
+| `formatCompilerError(error)` | Render a compiler error with file, caret frame, causes, and suggestion |
+| `guessCauses(message)` | Heuristic likely-cause list from an error message |
+| `codeFrame(source, line, column)` | Caret-marked source line for error output |
+| `Optimizer` | Experimental passes (DCE, constant folding, inlining) — off by default in the pipeline |
 
 ### @flint/eslint-plugin
 
