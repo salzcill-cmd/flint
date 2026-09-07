@@ -126,10 +126,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flint/reactivity": "workspace:*"
+    "@flint/reactivity": "^4.0.0"
   },
   "peerDependencies": {
-    "@flint/reactivity": "workspace:*"
+    "@flint/reactivity": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",

@@ -202,14 +202,28 @@ export function useAsync<T>(
  */
 export function useDebounce<T>(value: T, delay: number): Computed<T> {
   const debounced = state(value)
-  let timeoutId: ReturnType<typeof setTimeout>
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
 
   effect(() => {
     const current = value
-    clearTimeout(timeoutId)
+
+    // Clear previous timeout
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId)
+    }
+
     timeoutId = setTimeout(() => {
       debounced.set(current)
+      timeoutId = null
     }, delay)
+
+    // Return cleanup function to clear timeout on effect disposal
+    return () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
+    }
   })
 
   return computed(() => debounced())
@@ -226,12 +240,31 @@ export function useDebounce<T>(value: T, delay: number): Computed<T> {
 export function useThrottle<T>(value: T, limit: number): Computed<T> {
   const throttled = state(value)
   let lastUpdate = 0
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
 
   effect(() => {
     const now = Date.now()
     if (now - lastUpdate >= limit) {
       throttled.set(value)
       lastUpdate = now
+    } else {
+      // Schedule update for remaining time
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+      }
+      timeoutId = setTimeout(() => {
+        throttled.set(value)
+        lastUpdate = Date.now()
+        timeoutId = null
+      }, limit - (now - lastUpdate))
+    }
+
+    // Return cleanup function to clear timeout on effect disposal
+    return () => {
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId)
+        timeoutId = null
+      }
     }
   })
 

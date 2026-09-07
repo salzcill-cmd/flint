@@ -41,6 +41,7 @@ export interface QueryResult<T> {
   isSuccess: Signal<boolean>
   isFetching: Signal<boolean>
   refetch: () => Promise<void>
+  destroy: () => void
 }
 
 export interface MutationOptions<TData, TVariables> {
@@ -197,14 +198,25 @@ export class QueryManager {
     fetch()
 
     // Refetch interval
+    let intervalId: ReturnType<typeof setInterval> | null = null
     if (options.refetchInterval) {
-      setInterval(fetch, options.refetchInterval)
+      intervalId = setInterval(fetch, options.refetchInterval)
     }
 
     const refetch = async () => {
       // Invalidate cache to force re-fetch
       this.cache.invalidate(cacheKey)
       await fetch()
+    }
+
+    // Cleanup function to stop interval and remove query
+    const destroy = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
+      this.cache.invalidate(cacheKey)
+      this.queries.delete(cacheKey)
     }
 
     const result: QueryResult<T> = {
@@ -215,6 +227,7 @@ export class QueryManager {
       isSuccess,
       isFetching,
       refetch,
+      destroy,
     }
 
     this.queries.set(cacheKey, { options, result })
@@ -226,6 +239,10 @@ export class QueryManager {
    */
   invalidate(queryKey: QueryKey): void {
     const cacheKey = this.cache.getQueryKey(queryKey)
+    const query = this.queries.get(cacheKey)
+    if (query) {
+      query.result.destroy()
+    }
     this.cache.invalidate(cacheKey)
     this.queries.delete(cacheKey)
   }
@@ -234,6 +251,10 @@ export class QueryManager {
    * Invalidate all queries
    */
   invalidateAll(): void {
+    // Destroy all queries to clean up intervals
+    for (const [, query] of this.queries) {
+      query.result.destroy()
+    }
     this.cache.invalidateAll()
     this.queries.clear()
   }

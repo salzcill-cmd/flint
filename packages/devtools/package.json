@@ -1,6 +1,6 @@
 {
   "name": "@flint/devtools",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "Flint DevTools — Browser extension and dev server integration for debugging Flint applications",
   "type": "module",
   "main": "dist/index.js",
@@ -48,7 +48,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@flint/reactivity": "workspace:*"
+    "@flint/reactivity": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

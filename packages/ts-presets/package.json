@@ -1,6 +1,6 @@
 {
   "name": "@flint/ts-presets",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "TypeScript configuration presets for Flint projects",
   "type": "module",
   "main": "index.json",

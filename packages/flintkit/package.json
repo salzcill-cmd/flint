@@ -1,6 +1,6 @@
 {
   "name": "flintkit",
-  "version": "3.3.1",
+  "version": "4.0.0",
   "description": "FlintKit — Metaframework for Flint with file-based routing, SSR, and full-stack features",
   "type": "module",
   "main": "dist/index.js",
@@ -45,10 +45,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@flint/compiler": "workspace:*",
-    "@flint/reactivity": "workspace:*",
-    "@flint/runtime": "workspace:*",
-    "@flint/vite-plugin": "workspace:*"
+    "@flint/compiler": "^4.0.0",
+    "@flint/reactivity": "^4.0.0",
+    "@flint/runtime": "^4.0.0",
+    "@flint/vite-plugin": "^4.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
