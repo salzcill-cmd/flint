@@ -324,4 +324,154 @@ export const QUICK_HELP = `
   <div sx="flex items-center gap-2">
   <div class={clsx("btn", { active })}>
   <div style={sx("p-4 bg-white rounded")}>
+
+🚀 Quick DX:
+  $ref()       // Template ref
+  $store()     // Quick store
+  $if()        // Conditional
+  $map()       // List render
+  $await()     // Async render
+  $log()       // Debug log
 `
+
+// ─── Dev Mode Helpers ───────────────────────────────────────────
+
+/**
+ * Get caller location from stack trace.
+ */
+function getCallerLocation(): string {
+  const err = new Error()
+  const stack = err.stack ?? ''
+  const lines = stack.split('\n')
+
+  // Find the first line that's not from this file
+  for (const line of lines) {
+    if (line.includes('beginner.ts') || line.includes('errors/')) continue
+    if (line.includes('at ') && (line.includes('.ts:') || line.includes('.js:'))) {
+      const match = line.match(/at\s+(.+):(\d+):(\d+)/)
+      if (match) {
+        const file = match[1].split('/').pop()
+        return `${file}:${match[2]}`
+      }
+    }
+  }
+  return ''
+}
+
+/**
+ * Dev warning with location info.
+ */
+export function devWarn(message: string, ...args: any[]): void {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
+
+  const location = getCallerLocation()
+  const prefix = location ? `[Flint @ ${location}]` : '[Flint]'
+  console.warn(`${prefix} ${message}`, ...args)
+}
+
+/**
+ * Dev error with location info.
+ */
+export function devError(message: string, ...args: any[]): void {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
+
+  const location = getCallerLocation()
+  const prefix = location ? `[Flint @ ${location}]` : '[Flint]'
+  console.error(`${prefix} ${message}`, ...args)
+}
+
+/**
+ * Dev log with location info.
+ */
+export function devLog(message: string, ...args: any[]): void {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
+
+  const location = getCallerLocation()
+  const prefix = location ? `[Flint @ ${location}]` : '[Flint]'
+  console.log(`${prefix} ${message}`, ...args)
+}
+
+/**
+ * Warn about deprecated API usage.
+ */
+export function devDeprecated(oldApi: string, newApi: string): void {
+  devWarn(`"${oldApi}" is deprecated. Use "${newApi}" instead.`)
+}
+
+/**
+ * Warn about performance issues.
+ */
+export function devPerfWarning(message: string): void {
+  devWarn(`[Performance] ${message}`)
+}
+
+/**
+ * Assert a condition in dev mode.
+ */
+export function devAssert(condition: boolean, message: string): void {
+  if (!condition) {
+    devError(`Assertion failed: ${message}`)
+  }
+}
+
+/**
+ * Warn if component renders too many times.
+ */
+export function devRenderWarning(componentName: string, count: number, threshold = 10): void {
+  if (count > threshold) {
+    devWarn(
+      `Component "${componentName}" has rendered ${count} times. ` +
+      `This may indicate an infinite loop or unnecessary re-renders.`
+    )
+  }
+}
+
+/**
+ * Warn about memory leaks.
+ */
+export function devMemoryWarning(message: string): void {
+  devWarn(`[Memory] ${message}`)
+}
+
+/**
+ * Log component lifecycle events.
+ */
+export function devLifecycle(componentName: string, event: string): void {
+  devLog(`[${componentName}] ${event}`)
+}
+
+/**
+ * Debug mode flag
+ */
+let debugMode = false
+
+/**
+ * Enable debug mode.
+ */
+export function enableDebugMode(): void {
+  debugMode = true
+  devLog('Debug mode enabled')
+}
+
+/**
+ * Disable debug mode.
+ */
+export function disableDebugMode(): void {
+  debugMode = false
+  devLog('Debug mode disabled')
+}
+
+/**
+ * Check if debug mode is enabled.
+ */
+export function isDebugMode(): boolean {
+  return debugMode
+}
+
+/**
+ * Debug log that only shows in debug mode.
+ */
+export function debugLog(message: string, ...args: any[]): void {
+  if (!debugMode) return
+  devLog(message, ...args)
+}

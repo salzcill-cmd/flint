@@ -171,6 +171,16 @@ export {
   warnUnknownProp,
   warnInvalidChild,
   QUICK_HELP,
+  devWarn,
+  devLog,
+  devPerfWarning,
+  devRenderWarning,
+  devMemoryWarning,
+  devLifecycle,
+  enableDebugMode,
+  disableDebugMode,
+  isDebugMode,
+  debugLog,
 } from './errors/beginner.js'
 export type { FlintErrorCode } from './errors/beginner.js'
 
@@ -239,6 +249,27 @@ export {
   useDarkMode,
 } from './hooks/use.js'
 export type { UseResult, UseContextResult } from './hooks/use.js'
+
+// Advanced DX Features (v4.1)
+export {
+  $ref,
+  $reactive,
+  $store,
+  $computed,
+  $effect,
+  $watch,
+  $event,
+  $class,
+  $style,
+  $if,
+  $map,
+  $await,
+  $immerStore,
+  $log,
+  $inspect,
+  $perf,
+  hc,
+} from './hooks/dx.js'
 
 // DevTools
 export {
