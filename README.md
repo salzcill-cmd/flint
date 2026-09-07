@@ -1,179 +1,34 @@
-<div align="center">
+# Flint
 
-# 🔥 Flint
+A JavaScript framework built around one idea: you write less code, and it runs faster.
 
-### Write less. Ship faster. Build beautifully.
+Flint uses fine-grained signals instead of a virtual DOM. When state changes, only the exact DOM node that depends on it updates. No diffing, no reconciliation, no wasted work.
 
-A modern JavaScript framework with fine-grained signals, JSX, and zero Virtual DOM.
-
-[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-865%20passing-brightgreen)]()
-[![Version](https://img.shields.io/badge/Version-4.0.0-blue)]()
-[![Packages](https://img.shields.io/badge/Packages-13-blueviolet)]()
-
-[Getting Started](#-getting-started) • [Examples](#-examples) • [API Reference](#-api-reference) • [Contributing](#-contributing)
-
-</div>
-
----
-
-## Table of Contents
-
-- [What is Flint?](#-what-is-flint)
-- [Why Flint?](#-why-flint)
-- [Getting Started](#-getting-started)
-- [Core Concepts](#-core-concepts)
-- [Packages](#-packages)
-- [Metaframework (FlintKit)](#-metaframework-flintkit)
-- [State Management (Store)](#-state-management-store)
-- [Server-Side Rendering](#-server-side-rendering)
-- [Server Components & Actions](#-server-components--actions)
-- [Optimistic Updates](#-optimistic-updates)
-- [Form Actions & Resource Preloading](#-form-actions--resource-preloading)
-- [Compiler Auto-Memoization](#-compiler-auto-memoization)
-- [DevTools](#-devtools)
-- [ESLint Plugin](#-eslint-plugin)
-- [Testing](#-testing)
-- [Examples](#-examples)
-- [API Reference](#-api-reference)
-- [Contributing](#-contributing)
-- [License](#-license)
-
----
-
-## What is Flint?
-
-Flint is a modern JavaScript framework designed for building fast, reactive user interfaces. It uses **fine-grained signals** for state management and **JSX** for templating, with **zero Virtual DOM** overhead.
-
-### v4 — Write Less, Ship Faster
-
-Flint v4 introduces **model()**, **reactive()**, **view()**, **When**, and **auto-imports** — reducing boilerplate by 70% while maintaining full power.
-
-```jsx
-// Before (other frameworks): 25+ lines
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
-
-function Counter() {
-  const [count, setCount] = useState(0)
-  const doubled = useMemo(() => count * 2, [count])
-  const increment = useCallback(() => setCount(c => c + 1), [])
-  useEffect(() => { document.title = `Count: ${count}` }, [count])
-  return <button onClick={increment}>{count} x2 = {doubled}</button>
-}
-
-// Flint v4: 7 lines, same result
-const counter = model({
-  state: { count: 0 },
-  computed: { doubled: (s) => s.count * 2 },
-  actions: { increment(s) { s.count++ } },
-})
-
-function App() {
-  return <button onClick={counter.increment}>{counter.count()} x2 = {counter.doubled()}</button>
-}
 ```
-
-### Key Features
-
-| Feature | Description |
-|---------|-------------|
-| **model()** | State + computed + actions in one clean object |
-| **reactive()** | Vue-style proxy reactivity — no .set() needed |
-| **view()** | Simplified component decorator |
-| **When** | Cleaner conditional rendering than Show |
-| **Auto-Import** | No import statements needed — compiler adds them |
-| **createStore** | Simplified store with object syntax |
-| **bind()** | Two-way binding helper |
-| **derive()** | Create multiple derived signals |
-| **signals()** | Batch-create signals |
-| **watchDebounced** | Debounced watching built-in |
-| **Fine-Grained Signals** | Reactive state that only updates what changed |
-| **Zero Virtual DOM** | Direct DOM manipulation for maximum performance |
-| **JSX Syntax** | Familiar syntax for React developers |
-| **Compiler-Optimized** | Automatic optimizations at build time |
-| **TypeScript First** | Full TypeScript support with inference |
-| **Small Bundle** | ~5KB gzipped core |
-| **Server Components** | React 19-compatible RSC support |
-| **Optimistic Updates** | Instant UI feedback with useOptimistic |
-| **Form Actions** | Progressive enhancement for forms |
-| **Resource Preloading** | preload, preinit, prefetchDNS APIs |
-| **Metaframework** | FlintKit for full-stack apps |
-| **Built-in Store** | Zustand-compatible with middleware |
-| **Built-in i18n** | Internationalization in core |
-| **Built-in Security** | CSP, CSRF, rate limiting |
-| **Built-in a11y** | Focus trap, keyboard nav, ARIA |
-| **Built-in SEO** | Structured data, meta management |
-| **Built-in PWA** | Service worker, caching |
-| **Time-Travel Debugging** | Built into DevTools |
-| **Deep Reactivity** | Vue-style reactive objects |
-| **Effect Events** | Debounced, throttled, intersection |
-
----
-
-## Why Flint?
-
-### Comparison with Other Frameworks
-
-| Feature | Flint | React | Vue | Svelte | Solid |
-|---------|-------|-------|-----|--------|-------|
-| Virtual DOM | ❌ None | ✅ Yes | ✅ Yes | ❌ None | ❌ None |
-| Fine-Grained Reactivity | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
-| Bundle Size (gzip) | ~5KB | ~40KB | ~30KB | ~3KB | ~7KB |
-| Learning Curve | Easy | Medium | Easy | Easy | Medium |
-| TypeScript Support | First-Class | Good | Good | Good | Good |
-| Compiler Optimization | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ✅ Yes |
-| Server Components | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Form Actions | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Built-in Store | ✅ Yes | ❌ No | ✅ Pinia | ❌ No | ❌ No |
-| Built-in i18n | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| Built-in Security | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| Built-in a11y | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| Built-in SEO | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| Built-in PWA | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-| Optimistic Updates | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Effect Events | ✅ Yes | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| Deep Reactivity | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes | ✅ Yes |
-| Time-Travel Debugging | ✅ Yes | ❌ No | ❌ No | ❌ No | ❌ No |
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20 or higher
-- pnpm 9 or higher
-
-### Quick Start (v4)
-
-```bash
-# Create a new project with v4 templates
-npx create-flint my-app
-
-# Choose from: blank, counter, todo, reactive
+npm create flint my-app
 cd my-app
-pnpm dev
+npm run dev
 ```
 
-### Manual Setup
+That's it. You're running.
 
-```bash
-mkdir my-flint-app && cd my-flint-app
-pnpm init
-pnpm add flint
-pnpm add -D @flint/vite-plugin vite typescript
-```
+---
 
-### v4 — No Imports Needed!
+## Why Flint Exists
 
-The Flint compiler auto-imports all symbols. Just use them directly:
+Most frameworks ask you to manage state, memoize values, track dependencies, and manually optimize re-renders. Flint removes that work entirely.
+
+Your component function runs once. After that, only the signals you read get tracked, and only the DOM nodes that depend on those signals update. You don't write `useMemo`, `useCallback`, or dependency arrays. The compiler handles it.
 
 ```jsx
-// No import statement needed!
-function App() {
+// This whole component renders once. After that:
+// - count() updates only the <p> tag
+// - doubled() updates only the second <p> tag
+// - Nothing else re-renders
+function Counter() {
   const count = state(0)
   const doubled = computed(() => count() * 2)
-  
+
   return (
     <div>
       <p>Count: {count()}</p>
@@ -182,14 +37,514 @@ function App() {
     </div>
   )
 }
+```
+
+Compare that to React, where you'd need `useState`, `useMemo`, and careful dependency tracking to get the same result.
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18 or higher
+- npm, pnpm, or yarn
+
+### Create a Project
+
+```bash
+npx create-flint my-app
+cd my-app
+npm run dev
+```
+
+The CLI asks you to pick a template: blank, counter, todo, reactive, dashboard, landing, or auth. Pick one and you're coding in seconds.
+
+### Manual Setup
+
+```bash
+mkdir my-app && cd my-app
+npm init -y
+npm install flint
+npm install -D vite @flint/vite-plugin typescript
+```
+
+Create these files:
+
+**vite.config.js**
+```js
+import { defineConfig } from 'vite'
+import flint from '@flint/vite-plugin'
+
+export default defineConfig({
+  plugins: [flint()]
+})
+```
+
+**index.html**
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
+```
+
+**src/main.jsx**
+```jsx
+import { render } from 'flint'
+
+function App() {
+  return <h1>Hello, Flint!</h1>
+}
 
 render(App, '#app')
 ```
 
-### Project Structure
+Run `npm run dev` and open your browser.
+
+---
+
+## Core Concepts
+
+### Signals
+
+Signals hold reactive state. When you change a signal's value, every DOM node that read that signal updates automatically.
+
+```jsx
+const count = state(0)
+
+count()       // read: 0
+count.set(5)  // update
+count()       // read: 5
+```
+
+That's the whole API for basic state.
+
+### Computed Values
+
+A computed value derives from other signals. It recalculates only when its dependencies change, and it caches the result.
+
+```jsx
+const count = state(0)
+const doubled = computed(() => count() * 2)
+
+doubled()  // 0
+count.set(3)
+doubled()  // 6
+```
+
+### Effects
+
+An effect runs code whenever its dependencies change. Use it to sync reactive state with the outside world.
+
+```jsx
+const count = state(0)
+
+effect(() => {
+  document.title = `Count: ${count()}`
+})
+```
+
+When `count` changes, the document title updates. No dependency arrays, no stale closures.
+
+### Reactive Objects
+
+For complex state, `reactive()` creates a proxy object. Mutations to the object trigger updates automatically.
+
+```jsx
+const user = reactive({ name: 'Alice', age: 30 })
+
+user.name = 'Bob'  // triggers re-render where user.name is used
+user.age++          // triggers re-render where user.age is used
+```
+
+### model()
+
+`model()` bundles state, computed values, and actions into a single object. It's the fastest way to build interactive components.
+
+```jsx
+const counter = model({
+  state: { count: 0, step: 1 },
+  computed: {
+    doubled: (s) => s.count * 2,
+  },
+  actions: {
+    increment(s) { s.count += s.step },
+    decrement(s) { s.count -= s.step },
+    reset(s) { s.count = 0 },
+  },
+})
+
+// In your component:
+<button onClick={counter.increment}>+1</button>
+<p>Count: {counter.count()}</p>
+<p>Doubled: {counter.doubled()}</p>
+```
+
+---
+
+## Components
+
+A component is a function that returns JSX. It runs once, and signals handle the rest.
+
+```jsx
+function Greeting({ name }) {
+  return <h1>Hello, {name}!</h1>
+}
+
+<Greeting name="Alice" />
+```
+
+### Lifecycle
+
+```jsx
+function Dashboard() {
+  onMount(() => {
+    console.log('mounted')
+    // fetch data, start subscriptions, etc.
+  })
+
+  onDestroy(() => {
+    console.log('cleaned up')
+  })
+
+  return <div>Dashboard</div>
+}
+```
+
+### Refs
+
+Access DOM elements directly:
+
+```jsx
+function SearchBox() {
+  const inputRef = ref()
+
+  onMount(() => {
+    inputRef.current?.focus()
+  })
+
+  return <input ref={inputRef} type="search" />
+}
+```
+
+---
+
+## Conditional Rendering
+
+Flint gives you `<Show>` and `<When>` for conditional rendering.
+
+```jsx
+const isLoggedIn = state(false)
+
+// Using When (simpler)
+<When condition={isLoggedIn()}>
+  <p>Welcome back!</p>
+</When>
+
+// Using Show (with fallback)
+<Show when={isLoggedIn()} fallback={<p>Please log in</p>}>
+  <p>Welcome back!</p>
+</Show>
+```
+
+---
+
+## List Rendering
+
+Use `<For>` to render lists with fine-grained updates. Only the changed item re-renders, not the whole list.
+
+```jsx
+const todos = state([
+  { id: 1, text: 'Learn Flint', done: false },
+  { id: 2, text: 'Build something', done: false },
+])
+
+<ul>
+  <For each={todos()}>
+    {(todo) => (
+      <li style={{ textDecoration: todo.done ? 'line-through' : 'none' }}>
+        {todo.text}
+      </li>
+    )}
+  </For>
+</ul>
+```
+
+---
+
+## Styling
+
+Use inline styles, CSS classes, or the built-in `createStyles` for scoped CSS-in-JS.
+
+```jsx
+// Inline
+<div style={{ color: 'red', fontSize: '20px' }}>Red text</div>
+
+// Classes
+<div className="container">Styled div</div>
+
+// Scoped CSS-in-JS
+const styles = createStyles({
+  card: { padding: '16px', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+  title: { fontSize: '24px', fontWeight: 'bold' },
+})
+
+<div className={styles.classNames.card}>
+  <h2 className={styles.classNames.title}>Card Title</h2>
+</div>
+```
+
+---
+
+## State Management
+
+### Local State
+
+For component-level state, use `state()` directly.
+
+### Global Store
+
+For shared state across components, use `createStore()`.
+
+```jsx
+const useStore = create((set) => ({
+  todos: [],
+  addTodo: (text) => set((state) => ({
+    todos: [...state.todos, { id: Date.now(), text, done: false }]
+  })),
+  toggleTodo: (id) => set((state) => ({
+    todos: state.todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
+  })),
+}))
+
+function TodoApp() {
+  const { todos, addTodo, toggleTodo } = useStore()
+  return (
+    <div>
+      <button onClick={() => addTodo('New todo')}>Add</button>
+      {todos.map(todo => (
+        <div key={todo.id} onClick={() => toggleTodo(todo.id)}>
+          {todo.done ? '✓' : '○'} {todo.text}
+        </div>
+      ))}
+    </div>
+  )
+}
+```
+
+### Middleware
+
+```jsx
+const useStore = create(
+  (set) => ({ count: 0, increment: () => set(s => ({ count: s.count + 1 })) }),
+  [logger(), persist('counter')]
+)
+```
+
+---
+
+## Fetching Data
+
+### Simple Fetch
+
+```jsx
+function UserProfile({ userId }) {
+  const { data, error, loading } = $api(`/api/users/${userId}`)
+
+  if (loading()) return <p>Loading...</p>
+  if (error()) return <p>Error: {error().message}</p>
+  return <p>{data().name}</p>
+}
+```
+
+### HTTP Client
+
+```jsx
+const api = $http({ baseUrl: '/api', token: 'abc123' })
+
+const users = await api.get('/users')
+const newUser = await api.post('/users', { name: 'Alice' })
+```
+
+### Cached Queries
+
+```jsx
+const todos = $query({
+  key: 'todos',
+  fetch: () => fetch('/api/todos').then(r => r.json()),
+  staleTime: 5 * 60 * 1000,  // cache for 5 minutes
+})
+
+todos.data()    // the cached data
+todos.refetch() // force a refresh
+```
+
+---
+
+## Routing
+
+```jsx
+import { createRouter, Link, Outlet } from 'flint'
+
+const router = createRouter({
+  routes: [
+    { path: '/', component: () => <Home /> },
+    { path: '/about', component: () => <About /> },
+    { path: '/users/:id', component: () => <UserProfile /> },
+  ],
+})
+
+function App() {
+  return (
+    <nav>
+      <Link href="/">Home</Link>
+      <Link href="/about">About</Link>
+    </nav>
+    <Outlet />
+  </nav>
+  )
+}
+```
+
+### Lazy Routes
+
+```jsx
+const routes = [
+  { path: '/dashboard', lazy: () => import('./Dashboard') },
+  { path: '/settings', lazy: () => import('./Settings') },
+]
+```
+
+---
+
+## Forms
+
+```jsx
+const form = useForm(
+  { email: '', password: '' },
+  {
+    email: [v.required(), v.email()],
+    password: v.required(),
+  },
+  async (values) => {
+    await login(values)
+  }
+)
+
+<form {...form.formProps()}>
+  <Input {...form.field('email')} label="Email" type="email" />
+  <Input {...form.field('password')} label="Password" type="password" />
+  <button disabled={!form.state.isValid()}>Login</button>
+</form>
+```
+
+---
+
+## Testing
+
+```bash
+npm install -D vitest @testing-library/jest-dom
+```
+
+```jsx
+import { describe, it, expect } from 'vitest'
+import { testRender } from 'flint'
+
+describe('Counter', () => {
+  it('increments', () => {
+    const { click, textContent } = testRender(() => <Counter />)
+    expect(textContent('p')).toBe('0')
+    click('button')
+    expect(textContent('p')).toBe('1')
+  })
+})
+```
+
+---
+
+## Solid/React Compatibility
+
+Coming from Solid.js or React? Flint supports both API styles.
+
+```jsx
+// Solid.js style
+const [count, setCount] = createSignal(0)
+createEffect(() => console.log(count()))
+const doubled = createMemo(() => count() * 2)
+
+// React style (same thing, different names)
+const [name, setName] = createSignal('Alice')
+```
+
+These are aliases for Flint's `state()`, `effect()`, and `computed()` functions. Use whichever style feels natural.
+
+---
+
+## Reactivity API Reference
+
+| Function | What It Does |
+|----------|--------------|
+| `state(initial)` | Create a reactive signal |
+| `computed(fn)` | Derive a cached value from signals |
+| `effect(fn)` | Run code when dependencies change |
+| `reactive(obj)` | Create a proxy-based reactive object |
+| `model(config)` | Bundle state + computed + actions |
+| `batch(fn)` | Group multiple updates into one render |
+| `watch(signal, cb)` | Watch a signal and run on change |
+| `watchDebounced(signal, cb, ms)` | Debounced watching |
+| `onMount(fn)` | Run after component mounts |
+| `onDestroy(fn)` | Run when component unmounts |
+
+## Solid Aliases
+
+| Solid.js | Flint Equivalent |
+|----------|------------------|
+| `createSignal(0)` | `state(0)` |
+| `createEffect(fn)` | `effect(fn)` |
+| `createMemo(fn)` | `computed(fn)` |
+| `createStore(obj)` | `reactive(obj)` |
+| `createResource(src, fn)` | `$api(url)` or `$query({...})` |
+| `createRoot(fn)` | `createRoot(fn)` |
+| `batch(fn)` | `batch(fn)` |
+
+## Components
+
+| Component | What It Does |
+|-----------|--------------|
+| `<Show when={cond}>` | Conditional render with fallback |
+| `<When condition={cond}>` | Simplified conditional |
+| `<For each={list}>` | Keyed list rendering |
+| `<Switch>/<Match>` | Pattern matching |
+| `<Portal>` | Render to a different DOM node |
+| `<Suspense>` | Async loading boundary |
+| `<ErrorBoundary>` | Catch errors |
+| `lazy(() => import('./X'))` | Lazy-load a component |
+
+## Utility Functions
+
+| Function | What It Does |
+|----------|--------------|
+| `$api(url, opts)` | Fetch with reactive loading/error state |
+| `$http(opts)` | Create an HTTP client with methods |
+| `$query({ key, fetch })` | Cached query with refetch |
+| `$mutation({ mutation })` | Mutation with optimistic updates |
+| `createStyles(obj)` | Scoped CSS-in-JS |
+| `useForm(values, rules, submit)` | Form with validation |
+| `debounce(fn, ms)` | Debounce a function |
+| `throttle(fn, ms)` | Throttle a function |
+| `clamp(val, min, max)` | Clamp a number |
+| `lerp(a, b, t)` | Linear interpolation |
+
+---
+
+## Project Structure
 
 ```
-my-flint-app/
+my-app/
 ├── src/
 │   ├── components/
 │   │   └── Counter.jsx
@@ -197,1335 +552,31 @@ my-flint-app/
 │   └── main.jsx
 ├── index.html
 ├── package.json
-├── tsconfig.json
 └── vite.config.js
 ```
-
-### Configuration Files
-
-**vite.config.js**
-```javascript
-import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
-
-export default defineConfig({
-  plugins: [flint()]  // Auto-imports are ON by default
-})
-```
-
-**tsconfig.json**
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "jsx": "react-jsx",
-    "strict": true,
-    "moduleResolution": "node"
-  }
-}
-```
-
----
-
-## Core Concepts
-
-### Signals (Reactivity)
-
-Signals are the heart of Flint's reactivity system. They are reactive state containers that automatically track dependencies and update only when needed.
-
-#### Creating Signals
-
-```javascript
-import { state, computed, effect } from '@flint/reactivity'
-
-// Create a writable signal
-const count = state(0)
-
-// Read the value
-console.log(count()) // 0
-
-// Update the value
-count.set(1)
-console.log(count()) // 1
-
-// Update based on previous value
-count.set(prev => prev + 1)
-console.log(count()) // 2
-```
-
-#### Computed Values
-
-Computed values derive from other signals and are automatically cached.
-
-```javascript
-const count = state(0)
-const doubled = computed(() => count() * 2)
-
-console.log(doubled()) // 0
-
-count.set(5)
-console.log(doubled()) // 10
-```
-
-#### Effects
-
-Effects run whenever their dependencies change.
-
-```javascript
-const count = state(0)
-
-effect(() => {
-  console.log(`Count is: ${count()}`)
-})
-
-// Output: "Count is: 0"
-
-count.set(1)
-// Output: "Count is: 1"
-```
-
-#### Watching
-
-Watch specific signals with more control.
-
-```javascript
-const count = state(0)
-
-watch(
-  () => count(),
-  (newValue, oldValue) => {
-    console.log(`Changed from ${oldValue} to ${newValue}`)
-  }
-)
-
-count.set(5)
-// Output: "Changed from 0 to 5"
-```
-
-#### Batching Updates
-
-Batch multiple updates to prevent unnecessary re-renders.
-
-```javascript
-const firstName = state('John')
-const lastName = state('Doe')
-
-batch(() => {
-  firstName.set('Jane')
-  lastName.set('Smith')
-})
-// Only triggers effects once
-```
-
----
-
-### Components
-
-Components are reusable UI building blocks in Flint.
-
-> **⚠ Important: components render once.**
->
-> Flint is fine-grained like Solid — a component function runs a single time,
-> not on every state change. Dynamic values must be wrapped by the compiler's
-> tracking helpers. When you write JSX, the Flint compiler does this for you
-> automatically:
->
-> ```jsx
-> // You write:
-> <p>Count: {count()}</p>
->
-> // The compiler generates:
-> h('p', null, track(() => count()))   // ← only this text node updates
-> ```
->
-> If you build UI with manual `h()` calls, wrap dynamic values yourself with
-> `track()`, `trackAttribute()`, or `trackEvent()`. Reading a signal bare in
-> the component body compiles fine but will not update — dev mode warns you.
-
-#### Creating Components
-
-```jsx
-// Counter.jsx
-export function Counter() {
-  const count = state(0)
-
-  return (
-    <div>
-      <p>Count: {count()}</p>
-      <button onClick={() => count.set(prev => prev + 1)}>
-        Increment
-      </button>
-    </div>
-  )
-}
-```
-
-#### Component with Props
-
-```jsx
-// Greeting.jsx
-export function Greeting({ name, age }) {
-  return (
-    <div>
-      <h1>Hello, {name}!</h1>
-      <p>You are {age} years old.</p>
-    </div>
-  )
-}
-
-// Usage
-<Greeting name="John" age={30} />
-```
-
-#### Lifecycle Hooks
-
-```jsx
-import { onMount, onUpdate, onDestroy } from '@flint/runtime'
-
-export function MyComponent() {
-  const data = state(null)
-
-  onMount(() => {
-    console.log('Component mounted!')
-    // Fetch data, set up subscriptions, etc.
-  })
-
-  onUpdate(() => {
-    console.log('Component updated!')
-  })
-
-  onDestroy(() => {
-    console.log('Component destroyed!')
-    // Cleanup subscriptions, timers, etc.
-  })
-
-  return <div>My Component</div>
-}
-```
-
-#### Refs
-
-Access DOM elements directly.
-
-```jsx
-import { ref } from '@flint/runtime'
-
-export function InputComponent() {
-  const inputRef = ref()
-
-  const focusInput = () => {
-    inputRef.current?.focus()
-  }
-
-  return (
-    <div>
-      <input ref={inputRef} type="text" />
-      <button onClick={focusInput}>Focus Input</button>
-    </div>
-  )
-}
-```
-
----
-
-### JSX
-
-Flint uses JSX syntax for building UIs.
-
-#### Expressions
-
-```jsx
-const name = state('World')
-
-// Text interpolation
-<p>Hello, {name()}!</p>
-
-// Conditional rendering
-<p>{count() > 0 ? 'Positive' : 'Non-positive'}</p>
-
-// Inline styles
-<div style={{ color: 'red', fontSize: '20px' }}>Red Text</div>
-
-// Event handlers
-<button onClick={() => console.log('Clicked!')}>Click Me</button>
-```
-
-#### Fragments
-
-```jsx
-<>
-  <h1>Title</h1>
-  <p>Content</p>
-</>
-```
-
-#### Spread Props
-
-```jsx
-const props = { class: 'btn', id: 'submit' }
-<button {...props}>Submit</button>
-```
-
----
-
-### Rendering
-
-Mount your app to the DOM.
-
-```jsx
-import { render } from '@flint/runtime'
-import App from './App'
-
-// Render to DOM
-const container = document.getElementById('app')
-const dispose = render(() => <App />, container)
-
-// Cleanup when needed
-dispose.dispose()
-```
-
----
-
-## Packages
-
-Flint is organized as a monorepo with the following packages:
-
-| Package | Description |
-|---------|-------------|
-| `@flint/reactivity` | Fine-grained signals, computed, effects |
-| `@flint/runtime` | Runtime, renderer, components, hooks |
-| `@flint/compiler` | JSX compiler with optimizations |
-| `@flint/vite-plugin` | Vite integration |
-| `@flint/cli` | CLI tools (generate, preview, doctor) |
-| `@flint/store` | Zustand-compatible state management |
-| `@flint/devtools` | Browser DevTools integration |
-| `@flint/eslint-plugin` | ESLint rules for Flint |
-| `@flint/playwright-utils` | E2E testing utilities |
-| `@flint/ts-presets` | TypeScript configuration presets |
-| `flintkit` | Metaframework with SSR & file-based routing |
-| `create-flint` | Project scaffolding CLI |
-
----
-
-## Metaframework (FlintKit)
-
-FlintKit is a full-stack metaframework for Flint, similar to Next.js or Nuxt.
-
-### File-Based Routing
-
-```
-pages/
-├── index.tsx          → /
-├── about.tsx          → /about
-├── blog/
-│   ├── index.tsx      → /blog
-│   └── [slug].tsx     → /blog/:slug
-├── _layout.tsx        → Root layout
-└── _error.tsx         → Error boundary
-```
-
-### Data Loading
-
-```tsx
-// pages/blog/[slug].loader.ts
-export async function loader({ params }) {
-  const post = await fetchPost(params.slug)
-  return { post }
-}
-
-// pages/blog/[slug].tsx
-export default function BlogPost({ post }) {
-  return <article>{post.title}</article>
-}
-```
-
-### Form Actions
-
-```tsx
-// pages/contact.action.ts
-export async function action({ request }) {
-  const formData = await request.formData()
-  await sendEmail(formData)
-  return { success: true }
-}
-```
-
-### Configuration
-
-```ts
-// flintkit.config.ts
-import { defineConfig } from 'flintkit'
-
-export default defineConfig({
-  name: 'my-app',
-  ssr: true,
-  fileRoutes: true,
-  routesDir: 'pages',
-})
-```
-
----
-
-## Security (v4 — Still Secure by Default)
-
-Flint is secure by default:
-
-| Protection | Behavior |
-|------------|----------|
-| **Hydration escaping** | Data embedded in SSR hydration scripts is escaped (`safeJsonForScript`) — `</script>` payloads cannot break out |
-| **URL scheme blocking** | `javascript:` / `data:text/html` / unknown schemes in `href`, `src`, `action`, `formaction`, `poster` are replaced with `#` on client and SSR (`safeUrl`) |
-| **Text escaping** | All interpolated text renders through `createTextNode` — never `innerHTML` |
-| **Explicit raw HTML** | `dangerouslySetInnerHTML` always warns in dev; sanitize untrusted content with `sanitizeInput()` first |
-
-```js
-import { safeUrl, safeJsonForScript, sanitizeInput } from 'flint'
-
-safeUrl('javascript:alert(1)')      // '#' (with a dev warning)
-safeUrl('https://example.com')      // 'https://example.com'
-safeJsonForScript({ x: '</script>' }) // safe to embed in <script>
-```
-
----
-
-## State Management Store
-
-Flint provides a Zustand-compatible store with reactive signals.
-
-### Basic Usage
-
-```tsx
-import { create } from '@flint/store'
-
-const useStore = create((set, get) => ({
-  count: 0,
-  increment: () => set((state) => ({ count: state.count + 1 })),
-  decrement: () => set((state) => ({ count: state.count - 1 })),
-}))
-
-// In component
-function Counter() {
-  const { count, increment } = useStore()
-  return <button onClick={increment}>{count}</button>
-}
-```
-
-### Middleware
-
-```tsx
-import { create, logger, persist, devtools } from '@flint/store'
-
-const useStore = create(
-  (set) => ({
-    todos: [],
-    addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
-  }),
-  [logger(), persist('todos'), devtools({ name: 'TodoStore' })]
-)
-```
-
-### Selectors
-
-```tsx
-import { useStore } from '@flint/store'
-
-function TodoCount() {
-  const count = useStore((state) => state.todos.length)
-  return <span>{count} todos</span>
-}
-```
-
----
-
-## Server-Side Rendering
-
-### Basic SSR
-
-```tsx
-import { renderToString } from '@flint/runtime'
-
-const html = await renderToString(() => <App />)
-```
-
-### Streaming SSR
-
-```tsx
-import { renderToPipeableStream } from '@flint/runtime'
-
-const stream = renderToPipeableStream(() => <App />)
-stream.pipe(res)
-```
-
-### Hydration
-
-```tsx
-import { hydrate } from '@flint/runtime'
-
-hydrate(() => <App />, document.getElementById('app'))
-```
-
-### Data Loading
-
-```tsx
-import { dataLoader } from '@flint/runtime'
-
-const userDataLoader = dataLoader(async ({ params }) => {
-  const user = await fetchUser(params.id)
-  return { user }
-})
-
-const router = createRouter({
-  routes: [
-    {
-      path: '/users/:id',
-      component: () => <UserProfile />,
-      loader: userDataLoader,
-    },
-  ],
-})
-```
-
----
-
-## Server Components & Actions
-
-### Server Components
-
-```tsx
-import { createServerComponent } from '@flint/runtime'
-
-const ServerGreeting = createServerComponent(async ({ name }) => {
-  // This runs on the server only
-  const data = await fetchFromDatabase()
-  return <div>Hello {name}! Data: {data}</div>
-})
-```
-
-### Server Actions
-
-```tsx
-import { createServerAction } from '@flint/runtime'
-
-const saveTodo = createServerAction(async (title: string) => {
-  // This runs on the server when called from client
-  await db.todos.create({ title })
-  return { success: true }
-}, { revalidate: ['todos'] })
-
-// In client component
-function TodoForm() {
-  const handleSubmit = async (title: string) => {
-    const result = await saveTodo(title)
-    console.log(result)
-  }
-}
-```
-
-### Universal Components
-
-```tsx
-import { createUniversalComponent } from '@flint/runtime'
-
-const UserCard = createUniversalComponent(
-  async (props) => {
-    // Server: fetch data
-    const user = await fetchUser(props.id)
-    return <Card user={user} />
-  },
-  (props) => {
-    // Client: render with data
-    return <Card user={props.user} />
-  }
-)
-```
-
----
-
-## Optimistic Updates
-
-### useOptimistic
-
-```tsx
-import { useOptimistic } from '@flint/runtime'
-
-function TodoList({ todos }) {
-  const [optimisticTodos, setOptimisticTodos] = useOptimistic(todos)
-
-  const addTodo = async (text: string) => {
-    // Optimistically add
-    setOptimisticTodos(prev => [...prev, { text, done: false }])
-    
-    // Then save to server
-    await saveTodo(text)
-  }
-
-  return (
-    <ul>
-      {optimisticTodos.map(todo => <li>{todo.text}</li>)}
-    </ul>
-  )
-}
-```
-
-### useOptimisticAction
-
-```tsx
-import { useOptimisticAction } from '@flint/runtime'
-
-function LikeButton({ likes, postId }) {
-  const { optimisticState, execute } = useOptimisticAction(
-    likes,
-    (current) => current + 1,
-    async () => {
-      await fetch(`/api/posts/${postId}/like`, { method: 'POST' })
-    }
-  )
-
-  return <button onClick={execute}>👍 {optimisticState}</button>
-}
-```
-
----
-
-## Form Actions & Resource Preloading
-
-### Form Actions
-
-```tsx
-import { createFormAction } from '@flint/runtime'
-
-const submitForm = createFormAction({
-  action: async (formData) => {
-    await saveData(formData)
-    return { success: true }
-  },
-  onSubmit: (result) => console.log('Submitted:', result),
-  onError: (error) => console.error('Error:', error),
-})
-
-// In component
-<form action={submitForm}>
-  <input name="title" />
-  <button type="submit">Submit</button>
-</form>
-```
-
-### Resource Preloading
-
-```tsx
-import { preload, preinit, prefetchDNS, preconnect } from '@flint/runtime'
-
-function App() {
-  // Preload a font
-  preload('/fonts/inter.woff2', { as: 'font' })
-  
-  // Preinitialize a script
-  preinit('/analytics.js', { as: 'script' })
-  
-  // Prefetch DNS for an API
-  prefetchDNS('https://api.example.com')
-  
-  // Preconnect to a CDN
-  preconnect('https://cdn.example.com')
-  
-  return <div>App</div>
-}
-```
-
----
-
-## What the Compiler Does
-
-The Flint compiler transforms JSX into fine-grained runtime calls. Every dynamic
-expression gets its own tracking scope, so updates touch exactly one text node,
-attribute, or listener — never a whole component:
-
-```jsx
-// You write:
-<div class={active()} onClick={() => count.set(c => c + 1)}>
-  Count: {count()}
-</div>
-
-// The compiler generates:
-(() => {
-  const __el = h('div', null, track(() => count()))
-  trackAttribute(__el, 'class', () => active())
-  trackEvent(__el, 'click', () => () => count.set(c => c + 1))
-  return __el
-})()
-```
-
-Flint does **not** need `useMemo`, `React.memo`, or dependency arrays: computed
-values cache themselves, and the granularity above replaces re-render memoization.
-(Experimental auto-memoization passes exist in `@flint/compiler` but are off by
-default and not required for optimal performance.)
-
----
-
-## DevTools
-
-### Browser Extension
-
-```tsx
-import { initDevTools, trackSignal, trackComponent } from '@flint/devtools'
-
-// Initialize devtools
-initDevTools({
-  appName: 'My App',
-  logLevel: 'debug',
-})
-
-// Track signals
-const count = state(0)
-trackSignal(count, 'count', 'state')
-
-// Track components
-function MyComponent() {
-  trackComponent('MyComponent', { prop: 'value' })
-  return <div>Component</div>
-}
-```
-
-### Redux DevTools Integration
-
-```tsx
-import { create, devtools } from '@flint/store'
-
-const useStore = create(
-  (set) => ({ count: 0 }),
-  [devtools({ name: 'CounterStore' })]
-)
-
-// Opens in Redux DevTools extension
-```
-
----
-
-## ESLint Plugin
-
-### Installation
-
-```bash
-pnpm add -D @flint/eslint-plugin eslint
-```
-
-### Configuration
-
-```js
-// .eslintrc.js
-module.exports = {
-  plugins: ['@flint'],
-  extends: ['plugin:@flint/recommended'],
-}
-```
-
-### Available Rules
-
-| Rule | Description |
-|------|-------------|
-| `no-state-outside-effect` | Prevents state() in effects/callbacks |
-| `no-computed-in-render` | Prevents computed() in JSX |
-| `prefer-signal-over-value` | Suggests signal() over .value |
-| `no-reassign-signal` | Prevents direct signal assignment |
-| `require-effect-cleanup` | Requires cleanup in effects |
-| `no-nested-effect` | Prevents nested effects |
-
----
-
-## Testing
-
-### Unit Testing
-
-```bash
-pnpm add -D vitest happy-dom
-```
-
-```javascript
-// vitest.config.js
-import { defineConfig } from 'vitest/config'
-
-export default defineConfig({
-  test: {
-    environment: 'happy-dom',
-  },
-})
-```
-
-### Testing Components
-
-```jsx
-import { describe, it, expect } from 'vitest'
-import { testRender } from '@flint/runtime'
-import Counter from './Counter'
-
-describe('Counter', () => {
-  it('renders correctly', () => {
-    const { querySelector, textContent } = testRender(() => <Counter />)
-    
-    expect(querySelector('button')).toBeDefined()
-    expect(textContent('p')).toBe('0')
-  })
-  
-  it('increments on click', () => {
-    const { click, textContent } = testRender(() => <Counter />)
-    
-    click('button')
-    expect(textContent('p')).toBe('1')
-  })
-})
-```
-
-### E2E Testing
-
-```bash
-pnpm add -D @playwright/test @flint/playwright-utils
-```
-
-```tsx
-import { test, expect } from '@flint/playwright-utils'
-
-test('counter works', async ({ flint, page }) => {
-  await page.goto('/')
-  
-  // Wait for hydration
-  await flint.waitForHydration()
-  
-  // Check initial state
-  await expect(page.locator('p')).toHaveText('0')
-  
-  // Click button
-  await page.click('button')
-  
-  // Wait for signal update
-  await flint.waitForSignal('count', 1)
-  
-  // Verify
-  await expect(page.locator('p')).toHaveText('1')
-})
-```
-
----
-
-## Examples
-
-### Counter App
-
-```jsx
-// v4 — no imports needed, auto-imported by compiler
-function Counter() {
-  const count = state(0)
-  
-  return (
-    <div>
-      <h1>Counter: {count()}</h1>
-      <button onClick={() => count.set(c => c + 1)}>+</button>
-      <button onClick={() => count.set(c => c - 1)}>-</button>
-    </div>
-  )
-}
-
-render(Counter, '#app')
-```
-
-### Counter with model() — Even Shorter
-
-```jsx
-// model() — state + computed + actions in one object
-const counter = model({
-  state: { count: 0 },
-  computed: {
-    doubled: (s) => s.count * 2,
-    isPositive: (s) => s.count > 0,
-  },
-  actions: {
-    increment(s) { s.count++ },
-    decrement(s) { s.count-- },
-    reset(s) { s.count = 0 },
-  },
-})
-
-function App() {
-  return (
-    <div>
-      <h1>Counter: {counter.count()}</h1>
-      <p>Doubled: {counter.doubled()}</p>
-      <button onClick={counter.increment}>+</button>
-      <button onClick={counter.decrement}>-</button>
-      <button onClick={counter.reset}>Reset</button>
-    </div>
-  )
-}
-```
-
-### reactive() — Vue-Style Proxy Reactivity
-
-```jsx
-// reactive() — proxy-based, no .set() needed
-function App() {
-  const user = reactive({ name: 'John', age: 30 })
-  const visible = state(true)
-
-  return (
-    <div>
-      <When condition={visible()}>
-        <p>{user.name}, {user.age}</p>
-        <button onClick={() => user.age++}>Birthday</button>
-      </When>
-    </div>
-  )
-}
-```
-
-### createStore — Simplified State Management
-
-```jsx
-// createStore — object syntax with getters and actions
-const useTodoStore = createStore({
-  todos: [],
-  filter: 'all',
-  
-  get filteredTodos() {
-    switch (this.filter) {
-      case 'active': return this.todos.filter(t => !t.done)
-      case 'done': return this.todos.filter(t => t.done)
-      default: return this.todos()
-    }
-  },
-
-  addTodo(text) {
-    this.todos = [...this.todos, { id: Date.now(), text, done: false }]
-  },
-  
-  toggleTodo(id) {
-    this.todos = this.todos.map(t => t.id === id ? { ...t, done: !t.done } : t)
-  },
-})
-
-function TodoApp() {
-  const { todos, addTodo } = useTodoStore()
-  return <button onClick={() => addTodo('New')}>Add</button>
-}
-```
-
-### Todo App with Store
-
-```tsx
-import { create } from '@flint/store'
-import { For } from '@flint/runtime'
-
-const useTodoStore = create((set) => ({
-  todos: [],
-  addTodo: (text) => set((state) => ({
-    todos: [...state.todos, { text, done: false }]
-  })),
-  toggleTodo: (index) => set((state) => ({
-    todos: state.todos.map((t, i) => 
-      i === index ? { ...t, done: !t.done } : t
-    )
-  })),
-}))
-
-function TodoApp() {
-  const { todos, addTodo, toggleTodo } = useTodoStore()
-  const newTodo = state('')
-
-  return (
-    <div>
-      <h1>Todo App</h1>
-      <input
-        value={newTodo()}
-        onInput={(e) => newTodo.set(e.target.value)}
-      />
-      <button onClick={() => {
-        addTodo(newTodo())
-        newTodo.set('')
-      }}>Add</button>
-      <ul>
-        <For each={todos}>
-          {(todo, index) => (
-            <li
-              style={{ textDecoration: todo().done ? 'line-through' : 'none' }}
-              onClick={() => toggleTodo(index())}
-            >
-              {todo().text}
-            </li>
-          )}
-        </For>
-      </ul>
-    </div>
-  )
-}
-```
-
-### Server-Side Todo App with FlintKit
-
-```tsx
-// pages/index.tsx
-import { createServerAction } from '@flint/runtime'
-
-const addTodo = createServerAction(async (title: string) => {
-  await db.todos.create({ title })
-  return { success: true }
-}, { revalidate: ['todos'] })
-
-export async function loader() {
-  const todos = await db.todos.findMany()
-  return { todos }
-}
-
-export default function TodoPage({ todos }) {
-  return (
-    <div>
-      <h1>Todos</h1>
-      <form action={async (formData) => {
-        await addTodo(formData.get('title'))
-      }}>
-        <input name="title" />
-        <button type="submit">Add</button>
-      </form>
-      <ul>
-        {todos.map(todo => <li key={todo.id}>{todo.title}</li>)}
-      </ul>
-    </div>
-  )
-}
-```
-
----
-
-## API Reference
-
-### @flint/reactivity (v4 — Simplified APIs)
-
-| Function | Description |
-|----------|-------------|
-| `state(initialValue)` | Create a reactive signal |
-| `computed(fn, { equals? })` | Create a computed value |
-| `effect(fn)` | Run on dependency changes |
-| `watch(source, callback)` | Watch specific signals |
-| `watchDebounced(source, callback, ms)` | Debounced watching |
-| `watchThrottled(source, callback, ms)` | Throttled watching |
-| `batch(fn)` | Batch multiple updates |
-| `reactive(obj)` | Vue-style proxy reactivity |
-| `model(config)` | State + computed + actions in one object |
-| `bind(signal, prop)` | Two-way binding helper |
-| `derive(sources, fn)` | Create multiple derived signals |
-| `signals(...initials)` | Batch-create signals |
-| `poll(fn, ms)` | Run effect on interval |
-| `createRef(initial)` | Mutable ref (React-style) |
-| `shallowRef(value)` | Reference-change-only signal |
-| `untrack(fn)` | Read without tracking |
-| `createRoot(fn)` | Create effect scope |
-| `onCleanup(fn)` | Register cleanup |
-
-### @flint/runtime — Components (v4)
-
-| Component | Description |
-|-----------|-------------|
-| `view(fn, options?)` | **NEW** Simplified component decorator |
-| `withModel(model, fn)` | **NEW** Component bound to a reactive model |
-| `Show` | Conditional rendering with fallback |
-| `When` | **NEW** Simplified conditional rendering |
-| `For` | Keyed list rendering |
-| `ForEach` | Fine-grained list with DOM-level reconciliation |
-| `Index` | List rendering with index tracking |
-| `Switch` / `Match` | Pattern-matching conditional |
-| `Portal` | Render to different DOM node |
-| `Suspense` | Async loading boundary |
-| `ErrorBoundary` | Error catching boundary |
-| `Activity` | Hide/restore UI (React 19) |
-| `KeepAlive` | Cache component instances (Vue) |
-| `memo` | Memoized rendering |
-| `lazy` | Lazy component loading |
-
-### @flint/runtime — Hooks
-
-| Hook | Description |
-|------|-------------|
-| `useTransition` | Mark updates as low-priority |
-| `useDeferredValue` | Defer value updates |
-| `useId` | Generate unique IDs |
-| `useImperativeHandle` | Customize ref handle |
-| `forwardRef` | Forward ref to child |
-| `useRef` | Mutable ref |
-| `useOptimistic` | Optimistic UI updates |
-| `useActionState` | Form action state (React 19) |
-| `useFormStatus` | Parent form status (React 19) |
-| `use` | Read Promise/Context in render (React 19) |
-
-### @flint/runtime — Effect Events
-
-| Hook | Description |
-|------|-------------|
-| `useEffectEvent(fn)` | Stable event handler (React 19) |
-| `useStableEvent(fn)` | Simplified effect event |
-| `useEffectEventDebounced(fn, ms)` | Debounced effect event |
-| `useEffectEventThrottled(fn, ms)` | Throttled effect event |
-| `useEffectAnimationFrame(fn)` | Effect on animation frame |
-| `useEffectEventIntersection(el, fn)` | IntersectionObserver event |
-
-### @flint/runtime — Utilities
-
-| Function | Description |
-|----------|-------------|
-| `reactive(obj)` | Deep reactive proxy (Vue-style) |
-| `shallowRef(value)` | Reference-change-only signal |
-| `readonly(obj)` | Immutable proxy |
-| `shallowReadonly(obj)` | Shallow immutable proxy |
-| `toRef(obj, key)` | Create ref from reactive property |
-| `toRefs(obj)` | Create refs from all properties |
-| `triggerRef(ref)` | Force-trigger effects |
-| `createRef()` | Create ref object (React 19) |
-| `assignRef(ref, value)` | Assign to ref |
-| `mergeRefs(...refs)` | Merge multiple refs |
-| `mergeProps(...props)` | Merge props (Solid-style) |
-| `splitProps(props, ...keys)` | Split props into groups |
-| `bindable(value)` | Two-way binding (Svelte 5) |
-| `cn(...classes)` | Class name utility (clsx-style) |
-
-### @flint/runtime — Transitions
-
-| Function | Description |
-|----------|-------------|
-| `useTransitionClasses(options)` | CSS transition class management |
-| `applyTransition(el, options)` | Apply transition classes |
-
-### @flint/runtime — SSR
-
-| Function | Description |
-|----------|-------------|
-| `renderToString(fn)` | Render to HTML string |
-| `renderToPipeableStream(fn)` | Render to Node.js stream |
-| `hydrate(fn, container)` | Hydrate server HTML |
-| `generateHTML(fn)` | Generate full HTML page |
-| `dataLoader(fn)` | Define route data loader |
-| `useTitle(title)` | Set page title (SSR) |
-| `useMeta(meta)` | Set meta tags (SSR) |
-
-### @flint/runtime — Server Components & Actions
-
-| Function | Description |
-|----------|-------------|
-| `createServerAction(fn)` | Create server action |
-| `createServerComponent(fn)` | Create server component |
-| `createUniversalComponent(fn)` | Universal component (SSR + CSR) |
-| `createFormActionHandler(fn)` | Form action handler |
-
-### @flint/runtime — Form Actions & Preloading
-
-| Function | Description |
-|----------|-------------|
-| `createFormAction(options)` | Create form action |
-| `preload(href, options)` | Preload resource |
-| `preinit(href, options)` | Preinitialize resource |
-| `prefetchDNS(origin)` | Prefetch DNS |
-| `preconnect(origin)` | Preconnect to server |
-
-### @flint/runtime — Styling
-
-| Function | Description |
-|----------|-------------|
-| `createStyles(styles)` | Create CSS-in-JS styles |
-| `createDynamicStyles(fn)` | Reactive dynamic styles |
-| `setTheme(theme)` | Set theme |
-| `getTheme()` | Get current theme |
-| `cssVariablesFromTheme(theme)` | Generate CSS variables |
-| `cx(...classes)` | Conditional class builder |
-| `mergeStyles(...styles)` | Merge style objects |
-
-### @flint/runtime — Animations
-
-| Function | Description |
-|----------|-------------|
-| `Transition` | Single element transition |
-| `TransitionGroup` | Group transition |
-| `animate(el, keyframes, options)` | Animate element |
-| `easings` | Easing functions library |
-
-### @flint/runtime — Security
-
-| Function | Description |
-|----------|-------------|
-| `escapeHtml(str)` | Escape HTML entities |
-| `sanitizeInput(input)` | Sanitize user input |
-| `generateCSP(rules)` | Generate Content Security Policy |
-| `generateCSRFToken()` | Generate CSRF token |
-| `validateCSRFToken(token)` | Validate CSRF token |
-| `createRateLimiter(options)` | API rate limiter |
-
-### @flint/runtime — Accessibility (a11y)
-
-| Hook | Description |
-|------|-------------|
-| `useFocusTrap(container)` | Trap focus within container |
-| `useFocusVisible()` | Detect keyboard vs mouse focus |
-| `useKeyboard(handlers)` | Keyboard event handler |
-| `useListNavigation(options)` | Arrow-key list navigation |
-| `useAriaLive(priority)` | ARIA live region management |
-| `useReducedMotion()` | Detect prefers-reduced-motion |
-| `useRovingTabindex(options)` | Roving tabindex pattern |
-
-### @flint/runtime — Performance
-
-| Function | Description |
-|----------|-------------|
-| `initPerformance()` | Initialize monitoring |
-| `trackRender(component)` | Track render time |
-| `trackApi(name)` | Track API call time |
-| `getWebVitals()` | Get CLS, FID, LCP metrics |
-
-### @flint/runtime — i18n
-
-| Function | Description |
-|----------|-------------|
-| `createI18n(options)` | Create i18n instance |
-| `formatNumber(num, locale)` | Format numbers |
-| `formatDate(date, locale)` | Format dates |
-| `formatRelativeTime(date, locale)` | Format relative time |
-
-### @flint/runtime — Data Fetching
-
-| Function | Description |
-|----------|-------------|
-| `createQueryManager()` | Create query cache |
-| `useQuery(options)` | Fetch data with caching |
-| `useMutation(options)` | Mutate data |
-| `invalidateQueries(key)` | Invalidate cached queries |
-
-### @flint/runtime — SEO
-
-| Function | Description |
-|----------|-------------|
-| `useSEO(meta)` | Set SEO meta tags |
-| `useStructuredData(data)` | Add JSON-LD structured data |
-| `createArticleSchema(data)` | Create Article schema |
-| `createProductSchema(data)` | Create Product schema |
-
-### @flint/runtime — PWA
-
-| Function | Description |
-|----------|-------------|
-| `initPWA(options)` | Initialize PWA features |
-| `isOnline()` | Check online status |
-| `ServiceWorkerManager` | Service worker lifecycle |
-| `CacheManager` | Cache storage management |
-
-### @flint/runtime — Router
-
-| Function | Description |
-|----------|-------------|
-| `createRouter(options)` | Create router |
-| `navigate(path)` | Programmatic navigation |
-| `useParams()` | Access route parameters |
-| `useQueryParams()` | Access query parameters |
-| `useLocation()` | Access current location |
-| `Link` | Navigation link component |
-| `Outlet` | Render child routes |
-| `createLazyRoute(fn)` | Lazy-loaded route |
-
-### @flint/store (v4 — Simplified)
-
-| Function | Description |
-|----------|-------------|
-| `createStore(config, middlewares?)` | **NEW** Simplified store — object or function syntax |
-| `create(creator, middlewares?)` | Create store (Zustand-compatible) |
-| `logger()` | Logger middleware |
-| `persist(name, options?)` | Persistence middleware |
-| `devtools(options?)` | Redux DevTools middleware |
-| `immer()` | Immutable updates middleware |
-| `createSelector(selector, equalityFn?)` | Memoized selector |
-| `useStore(store, selector?)` | Use store in component |
-
-### Security (@flint/runtime/security)
-
-| Function | Description |
-|----------|-------------|
-| `safeJsonForScript(value)` | JSON safe to embed inside `<script>` tags |
-| `safeUrl(url)` | Block dangerous URL schemes, returns `'#'` for unsafe input |
-| `isUrlAttribute(name)` | Whether an attribute is a URL attribute |
-| `escapeHtml(str)` | Escape HTML entities |
-| `sanitizeInput(input, options?)` | Strip scripts/styles/handlers from untrusted HTML |
-
-### @flint/compiler
-
-| Export | Description |
-|--------|-------------|
-| `compile(code, { filename, dev })` | Parse + transform JSX; on failure returns a formatted error with code frame and likely causes |
-| `parse(code, { filename })` | Parse JS/JSX/TS into an AST (TS detection by extension, JS-first fallback) |
-| `transform(ast, code, options)` | Lower JSX into `h()`/`track()` runtime calls |
-| `formatCompilerError(error)` | Render a compiler error with file, caret frame, causes, and suggestion |
-| `guessCauses(message)` | Heuristic likely-cause list from an error message |
-| `codeFrame(source, line, column)` | Caret-marked source line for error output |
-| `Optimizer` | Experimental passes (DCE, constant folding, inlining) — off by default in the pipeline |
-
-### @flint/eslint-plugin
-
-| Rule | Severity |
-|------|----------|
-| `no-state-outside-effect` | warn |
-| `no-computed-in-render` | error |
-| `prefer-signal-over-value` | warn |
-| `no-reassign-signal` | error |
-| `require-effect-cleanup` | warn |
-| `no-nested-effect` | error |
-
-### @flint/devtools
-
-| Function | Description |
-|----------|-------------|
-| `initDevTools(options)` | Initialize client DevTools |
-| `trackSignal(signal, name)` | Track signal changes |
-| `trackComponent(name, props)` | Track component lifecycle |
-| `trackPerformance(metric)` | Track performance metric |
-| `buildSignalGraph()` | Build dependency graph |
 
 ---
 
 ## Contributing
 
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Setup
-
-```bash
-# Clone your fork
-git clone https://github.com/your-username/flint.git
-
-# Install dependencies
-pnpm install
-
-# Run tests
-pnpm test
-
-# Build packages
-pnpm build
-```
-
-### Code Style
-
-- Use TypeScript for all source files
-- Follow ESLint rules
-- Write tests for new features
-- Update documentation as needed
+1. Fork the repo
+2. Create a branch: `git checkout -b my-feature`
+3. Make changes and add tests
+4. Run `pnpm test` to verify
+5. Push and open a PR
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the Flint Community**
+**Flint** — Less code. Faster apps. Better DX.
 
-[GitHub](https://github.com/salzcill-cmd/flint) • [Issues](https://github.com/salzcill-cmd/flint/issues)
+[GitHub](https://github.com/salzcill-cmd/flint)
 
 </div>

@@ -1,93 +1,93 @@
-# Flint vs React vs Vue vs Svelte vs Solid — Code Comparison
+# Flint vs React vs Vue vs Svelte vs Solid
+
+Real code comparisons. Same features, different frameworks. Find the one that fits how you think.
+
+---
 
 ## Hello World
 
+The smallest possible app in each framework.
+
 ### Flint
+
 ```jsx
 function App() {
-  const count = state(0)
-  return (
-    <div>
-      <h1>Count: {count()}</h1>
-      <button onClick={() => count.set(c => c + 1)}>+1</button>
-    </div>
-  )
+  const name = state('World')
+  return <h1>Hello, {name()}!</h1>
 }
 render(App, '#app')
 ```
 
+No imports. Just write a function and render it.
+
 ### React
+
 ```jsx
 import { useState } from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
-  return (
-    <div>
-      <h1>Count: {count}</h1>
-      <button onClick={() => setCount(c => c + 1)}>+1</button>
-    </div>
-  )
+  const [name, setName] = useState('World')
+  return <h1>Hello, {name}!</h1>
 }
 ```
 
+You need to import `useState` and call it at the top of your component.
+
 ### Vue
+
 ```vue
 <script setup>
 import { ref } from 'vue'
-const count = ref(0)
+const name = ref('World')
 </script>
 
 <template>
-  <div>
-    <h1>Count: {{ count }}</h1>
-    <button @click="count++">+1</button>
-  </div>
+  <h1>Hello, {{ name }}!</h1>
 </template>
 ```
 
+Vue splits logic and template into separate blocks.
+
 ### Svelte
+
 ```svelte
 <script>
-  let count = 0
+  let name = 'World'
 </script>
 
-<div>
-  <h1>Count: {count}</h1>
-  <button on:click={() => count++}>+1</button>
-</div>
+<h1>Hello, {name}!</h1>
 ```
 
+Svelte uses a compiler. You write normal JavaScript and the framework handles reactivity.
+
 ### Solid
+
 ```jsx
 import { createSignal } from 'solid-js'
 
 function App() {
-  const [count, setCount] = createSignal(0)
-  return (
-    <div>
-      <h1>Count: {count()}</h1>
-      <button onClick={() => setCount(c => c + 1)}>+1</button>
-    </div>
-  )
+  const [name, setName] = createSignal('World')
+  return <h1>Hello, {name()}!</h1>
 }
 ```
 
+Solid uses function calls to read signals, just like Flint.
+
 ---
 
-## Counter with Model (State + Computed + Actions)
+## Counter
+
+A counter with increment, decrement, reset, and a derived value.
 
 ### Flint
+
 ```jsx
 const counter = model({
-  state: { count: 0, step: 1 },
-  computed: {
-    doubled: (s) => s.count * 2,
-    isEven: (s) => s.count % 2 === 0,
-  },
+  state: { count: 0 },
+  computed: { doubled: (s) => s.count * 2 },
   actions: {
-    increment(s) { s.count += s.step },
-    decrement(s) { s.count -= s.step },
+    increment(s) { s.count++ },
+    decrement(s) { s.count-- },
     reset(s) { s.count = 0 },
   },
 })
@@ -97,7 +97,6 @@ function App() {
     <div>
       <p>Count: {counter.count()}</p>
       <p>Doubled: {counter.doubled()}</p>
-      <p>Even: {counter.isEven() ? 'Yes' : 'No'}</p>
       <button onClick={counter.decrement}>-</button>
       <button onClick={counter.increment}>+</button>
       <button onClick={counter.reset}>Reset</button>
@@ -106,26 +105,24 @@ function App() {
 }
 ```
 
+One object holds everything. The `computed` and `actions` reference `s.count` directly — no special syntax.
+
 ### React
+
 ```jsx
 import { useState, useMemo, useCallback } from 'react'
 
 function App() {
   const [count, setCount] = useState(0)
-  const step = 1
-
   const doubled = useMemo(() => count * 2, [count])
-  const isEven = useMemo(() => count % 2 === 0, [count])
-
-  const increment = useCallback(() => setCount(c => c + step), [step])
-  const decrement = useCallback(() => setCount(c => c - step), [step])
+  const increment = useCallback(() => setCount(c => c + 1), [])
+  const decrement = useCallback(() => setCount(c => c - 1), [])
   const reset = useCallback(() => setCount(0), [])
 
   return (
     <div>
       <p>Count: {count}</p>
       <p>Doubled: {doubled}</p>
-      <p>Even: {isEven ? 'Yes' : 'No'}</p>
       <button onClick={decrement}>-</button>
       <button onClick={increment}>+</button>
       <button onClick={reset}>Reset</button>
@@ -134,19 +131,18 @@ function App() {
 }
 ```
 
+React requires `useMemo` to avoid recalculating `doubled` on every render, and `useCallback` to keep functions stable. Miss a dependency and you get bugs.
+
 ### Vue
+
 ```vue
 <script setup>
 import { ref, computed } from 'vue'
 
 const count = ref(0)
-const step = 1
-
 const doubled = computed(() => count.value * 2)
-const isEven = computed(() => count.value % 2 === 0)
-
-const increment = () => count.value += step
-const decrement = () => count.value -= step
+const increment = () => count.value++
+const decrement = () => count.value--
 const reset = () => count.value = 0
 </script>
 
@@ -154,7 +150,6 @@ const reset = () => count.value = 0
   <div>
     <p>Count: {{ count }}</p>
     <p>Doubled: {{ doubled }}</p>
-    <p>Even: {{ isEven ? 'Yes' : 'No' }}</p>
     <button @click="decrement">-</button>
     <button @click="increment">+</button>
     <button @click="reset">Reset</button>
@@ -162,77 +157,79 @@ const reset = () => count.value = 0
 </template>
 ```
 
+Vue is clean. You define reactive values with `ref()`, read them with `.value` in the script, and the template handles the rest.
+
 ### Svelte
+
 ```svelte
 <script>
   let count = 0
-  let step = 1
-
   $: doubled = count * 2
-  $: isEven = count % 2 === 0
-
-  const increment = () => count += step
-  const decrement = () => count -= step
-  const reset = () => count = 0
 </script>
 
 <div>
   <p>Count: {count}</p>
   <p>Doubled: {doubled}</p>
-  <p>Even: {isEven ? 'Yes' : 'No'}</p>
-  <button on:click={decrement}>-</button>
-  <button on:click={increment}>+</button>
-  <button on:click={reset}>Reset</button>
+  <button on:click={() => count--}>-</button>
+  <button on:click={() => count++}>+</button>
+  <button on:click={() => count = 0}>Reset</button>
 </div>
 ```
 
+Svelte uses the `$:` label for reactive declarations. The compiler turns this into fine-grained updates under the hood.
+
 ### Solid
+
 ```jsx
 import { createSignal, createMemo } from 'solid-js'
 
 function App() {
   const [count, setCount] = createSignal(0)
-  const step = 1
-
   const doubled = createMemo(() => count() * 2)
-  const isEven = createMemo(() => count() % 2 === 0)
-
-  const increment = () => setCount(c => c + step)
-  const decrement = () => setCount(c => c - step)
-  const reset = () => setCount(0)
 
   return (
     <div>
       <p>Count: {count()}</p>
       <p>Doubled: {doubled()}</p>
-      <p>Even: {isEven() ? 'Yes' : 'No'}</p>
-      <button onClick={decrement}>-</button>
-      <button onClick={increment}>+</button>
-      <button onClick={reset}>Reset</button>
+      <button onClick={() => setCount(c => c - 1)}>-</button>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+      <button onClick={() => setCount(0)}>Reset</button>
     </div>
   )
 }
 ```
 
+Solid and Flint are nearly identical. Both run the component once and track signals individually.
+
 ---
 
 ## Two-Way Binding
 
+Binding an input to a signal without boilerplate.
+
 ### Flint
+
 ```jsx
 const name = state('')
 
 function App() {
   return (
     <div>
-      <Input bind={name} placeholder="Enter name" />
+      <input value={name()} onInput={(e) => name.set(e.target.value)} />
       <p>Hello, {name()}</p>
     </div>
   )
 }
 ```
 
+Or with the `bind` helper:
+
+```jsx
+<Input bind={name} placeholder="Enter name" />
+```
+
 ### React
+
 ```jsx
 import { useState } from 'react'
 
@@ -240,18 +237,17 @@ function App() {
   const [name, setName] = useState('')
   return (
     <div>
-      <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Enter name"
-      />
+      <input value={name} onChange={(e) => setName(e.target.value)} />
       <p>Hello, {name}</p>
     </div>
   )
 }
 ```
 
+React requires writing the onChange handler every time. No built-in shorthand.
+
 ### Vue
+
 ```vue
 <script setup>
 import { ref } from 'vue'
@@ -259,26 +255,28 @@ const name = ref('')
 </script>
 
 <template>
-  <div>
-    <input v-model="name" placeholder="Enter name" />
-    <p>Hello, {{ name }}</p>
-  </div>
+  <input v-model="name" />
+  <p>Hello, {{ name }}</p>
 </template>
 ```
 
+Vue's `v-model` is the cleanest two-way binding syntax.
+
 ### Svelte
+
 ```svelte
 <script>
   let name = ''
 </script>
 
-<div>
-  <input bind:value={name} placeholder="Enter name" />
-  <p>Hello, {name}</p>
-</div>
+<input bind:value={name} />
+<p>Hello, {name}</p>
 ```
 
+Svelte's `bind:` directive works similarly to Vue's `v-model`.
+
 ### Solid
+
 ```jsx
 import { createSignal } from 'solid-js'
 
@@ -286,22 +284,23 @@ function App() {
   const [name, setName] = createSignal('')
   return (
     <div>
-      <input
-        value={name()}
-        onInput={(e) => setName(e.target.value)}
-        placeholder="Enter name"
-      />
+      <input value={name()} onInput={(e) => setName(e.target.value)} />
       <p>Hello, {name()}</p>
     </div>
   )
 }
 ```
 
+Solid requires writing the handler manually, like Flint without the `bind` helper.
+
 ---
 
 ## Conditional Rendering
 
+Show different content based on a condition.
+
 ### Flint
+
 ```jsx
 const isLoggedIn = state(false)
 
@@ -313,7 +312,7 @@ function App() {
         <button onClick={() => isLoggedIn.set(false)}>Logout</button>
       </When>
       <When condition={!isLoggedIn()}>
-        <p>Please login</p>
+        <p>Please log in</p>
         <button onClick={() => isLoggedIn.set(true)}>Login</button>
       </When>
     </div>
@@ -321,7 +320,10 @@ function App() {
 }
 ```
 
+`<When>` reads like plain English. No special syntax to learn.
+
 ### React
+
 ```jsx
 import { useState } from 'react'
 
@@ -336,7 +338,7 @@ function App() {
         </>
       ) : (
         <>
-          <p>Please login</p>
+          <p>Please log in</p>
           <button onClick={() => setIsLoggedIn(true)}>Login</button>
         </>
       )}
@@ -345,7 +347,10 @@ function App() {
 }
 ```
 
+React uses ternary expressions or `&&` for conditionals. Fragments (`<>...</>`) are needed when returning multiple elements.
+
 ### Vue
+
 ```vue
 <script setup>
 import { ref } from 'vue'
@@ -359,14 +364,17 @@ const isLoggedIn = ref(false)
       <button @click="isLoggedIn = false">Logout</button>
     </template>
     <template v-else>
-      <p>Please login</p>
+      <p>Please log in</p>
       <button @click="isLoggedIn = true">Login</button>
     </template>
   </div>
 </template>
 ```
 
+Vue's `v-if` and `v-else` directives are clear, but they live in the template rather than in JavaScript logic.
+
 ### Svelte
+
 ```svelte
 <script>
   let isLoggedIn = false
@@ -377,13 +385,16 @@ const isLoggedIn = ref(false)
     <p>Welcome back!</p>
     <button on:click={() => isLoggedIn = false}>Logout</button>
   {:else}
-    <p>Please login</p>
+    <p>Please log in</p>
     <button on:click={() => isLoggedIn = true}>Login</button>
   {/if}
 </div>
 ```
 
+Svelte uses `{#if}` blocks, which compile to efficient DOM updates.
+
 ### Solid
+
 ```jsx
 import { createSignal } from 'solid-js'
 
@@ -395,7 +406,7 @@ function App() {
         when={isLoggedIn()}
         fallback={
           <>
-            <p>Please login</p>
+            <p>Please log in</p>
             <button onClick={() => setIsLoggedIn(true)}>Login</button>
           </>
         }
@@ -408,11 +419,16 @@ function App() {
 }
 ```
 
+Solid uses `<Show>` with a `when` prop and `fallback` prop. It's similar to Flint's `<Show>`.
+
 ---
 
 ## List Rendering
 
+Render a list of items with proper keying.
+
 ### Flint
+
 ```jsx
 const items = state([
   { id: 1, name: 'Apple' },
@@ -431,7 +447,10 @@ function App() {
 }
 ```
 
+`<For>` tracks each item by its key. Only the changed item re-renders.
+
 ### React
+
 ```jsx
 function App() {
   const items = [
@@ -450,7 +469,10 @@ function App() {
 }
 ```
 
+React uses `.map()` to render lists. You manage keys manually.
+
 ### Vue
+
 ```vue
 <script setup>
 const items = [
@@ -469,7 +491,10 @@ const items = [
 </template>
 ```
 
+Vue's `v-for` directive handles list rendering with keying.
+
 ### Svelte
+
 ```svelte
 <script>
   const items = [
@@ -486,7 +511,10 @@ const items = [
 </ul>
 ```
 
+Svelte's `{#each}` block with a key expression.
+
 ### Solid
+
 ```jsx
 import { For } from 'solid-js'
 
@@ -507,11 +535,100 @@ function App() {
 }
 ```
 
+Solid's `<For>` is identical to Flint's `<For>`.
+
+---
+
+## Side Effects
+
+Run code when state changes.
+
+### Flint
+
+```jsx
+const count = state(0)
+
+effect(() => {
+  document.title = `Count: ${count()}`
+})
+```
+
+No dependency array. The effect automatically tracks `count()` and re-runs when it changes.
+
+### React
+
+```jsx
+import { useState, useEffect } from 'react'
+
+function App() {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    document.title = `Count: ${count}`
+  }, [count])
+
+  return <div>{count}</div>
+}
+```
+
+React's `useEffect` requires a dependency array. Forget one and you get stale closures. Add the wrong one and you get infinite loops.
+
+### Vue
+
+```vue
+<script setup>
+import { ref, watch } from 'vue'
+
+const count = ref(0)
+
+watch(count, (newVal) => {
+  document.title = `Count: ${newVal}`
+})
+</script>
+```
+
+Vue's `watch` is explicit about what you're watching.
+
+### Svelte
+
+```svelte
+<script>
+  let count = 0
+
+  $: {
+    document.title = `Count: ${count}`
+  }
+</script>
+```
+
+Svelte's `$:` label runs reactive code whenever its dependencies change.
+
+### Solid
+
+```jsx
+import { createSignal, createEffect } from 'solid-js'
+
+function App() {
+  const [count, setCount] = createSignal(0)
+
+  createEffect(() => {
+    document.title = `Count: ${count()}`
+  })
+
+  return <div>{count()}</div>
+}
+```
+
+Solid's `createEffect` works exactly like Flint's `effect()`.
+
 ---
 
 ## Form Handling
 
+Building a form with validation.
+
 ### Flint
+
 ```jsx
 const form = useForm(
   { email: '', password: '' },
@@ -527,15 +644,18 @@ const form = useForm(
 function App() {
   return (
     <form {...form.formProps()}>
-      <Input bind={form.state.values().email} label="Email" error={form.state.errors().email} />
-      <Input bind={form.state.values().password} type="password" label="Password" error={form.state.errors().password} />
-      <Button loading={form.state.isSubmitting()}>Login</Button>
+      <Input {...form.field('email')} label="Email" type="email" />
+      <Input {...form.field('password')} label="Password" type="password" />
+      <button disabled={!form.state.isValid()}>Login</button>
     </form>
   )
 }
 ```
 
+`useForm` handles state, validation, and submission. You define the shape, the rules, and the handler.
+
 ### React
+
 ```jsx
 import { useState } from 'react'
 
@@ -566,16 +686,9 @@ function App() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input
-        value={form.email}
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-      />
+      <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
       {errors.email && <span>{errors.email}</span>}
-      <input
-        type="password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-      />
+      <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
       {errors.password && <span>{errors.password}</span>}
       <button disabled={isSubmitting}>Login</button>
     </form>
@@ -583,7 +696,10 @@ function App() {
 }
 ```
 
+React requires manual state management for every field, error, and loading state.
+
 ### Vue
+
 ```vue
 <script setup>
 import { reactive } from 'vue'
@@ -614,7 +730,10 @@ const handleSubmit = async () => {
 </template>
 ```
 
+Vue keeps it clean with `reactive` and `v-model`, but you still write validation manually.
+
 ### Svelte
+
 ```svelte
 <script>
   let email = ''
@@ -644,9 +763,12 @@ const handleSubmit = async () => {
 </form>
 ```
 
+Svelte is concise, but form handling still requires manual wiring.
+
 ### Solid
+
 ```jsx
-import { createSignal, createMemo } from 'solid-js'
+import { createSignal } from 'solid-js'
 
 function App() {
   const [email, setEmail] = createSignal('')
@@ -680,269 +802,63 @@ function App() {
 }
 ```
 
----
-
-## Styling
-
-### Flint
-```jsx
-// Using sx() utility
-<div sx="flex items-center gap-2 p-4 bg-white rounded shadow">
-  <Text size="lg" weight="bold">Hello</Text>
-</div>
-
-// Or using style prop
-<div style={sx('flex items-center gap-2 p-4 bg-white rounded')}>
-  Hello
-</div>
-```
-
-### React
-```jsx
-// Using className (requires CSS)
-<div className="container">
-  <span className="text-lg font-bold">Hello</span>
-</div>
-
-// Or using inline styles (verbose)
-<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '1rem' }}>
-  <span style={{ fontSize: '1.125rem', fontWeight: 700 }}>Hello</span>
-</div>
-```
-
-### Vue
-```vue
-<template>
-  <!-- Using class -->
-  <div class="container">
-    <span class="text-lg font-bold">Hello</span>
-  </div>
-
-  <!-- Or using :style -->
-  <div :style="{ display: 'flex', alignItems: 'center', gap: '0.5rem' }">
-    Hello
-  </div>
-</template>
-```
-
-### Svelte
-```svelte
-<style>
-  .container { display: flex; align-items: center; gap: 0.5rem; }
-</style>
-
-<div class="container">
-  Hello
-</div>
-```
-
-### Solid
-```jsx
-// Using className
-<div class="container">
-  <span class="text-lg font-bold">Hello</span>
-</div>
-
-// Or using style object
-<div style={{ display: 'flex', 'align-items': 'center', gap: '0.5rem' }}>
-  Hello
-</div>
-```
+Solid requires manual state for each field. No built-in form helper.
 
 ---
 
-## Component Reusability
-
-### Flint
-```jsx
-// Simple component
-function Card({ title, children }) {
-  return (
-    <div class="card">
-      <h3>{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-// Usage
-<Card title="My Title">
-  <p>Content here</p>
-</Card>
-```
-
-### React
-```jsx
-function Card({ title, children }) {
-  return (
-    <div className="card">
-      <h3>{title}</h3>
-      {children}
-    </div>
-  )
-}
-
-// Usage
-<Card title="My Title">
-  <p>Content here</p>
-</Card>
-```
-
-### Vue
-```vue
-<!-- Card.vue -->
-<template>
-  <div class="card">
-    <h3>{{ title }}</h3>
-    <slot />
-  </div>
-</template>
-
-<script setup>
-defineProps(['title'])
-</script>
-
-<!-- Usage -->
-<Card title="My Title">
-  <p>Content here</p>
-</Card>
-```
-
-### Svelte
-```svelte
-<!-- Card.svelte -->
-<script>
-  export let title
-</script>
-
-<div class="card">
-  <h3>{title}</h3>
-  <slot />
-</div>
-
-<!-- Usage -->
-<Card title="My Title">
-  <p>Content here</p>
-</Card>
-```
-
-### Solid
-```jsx
-function Card(props) {
-  return (
-    <div class="card">
-      <h3>{props.title}</h3>
-      {props.children}
-    </div>
-  )
-}
-
-// Usage
-<Card title="My Title">
-  <p>Content here</p>
-</Card>
-```
-
----
-
-## Effects / Side Effects
-
-### Flint
-```jsx
-const count = state(0)
-
-effect(() => {
-  console.log('Count changed:', count())
-  document.title = `Count: ${count()}`
-})
-```
-
-### React
-```jsx
-import { useState, useEffect } from 'react'
-
-function App() {
-  const [count, setCount] = useState(0)
-
-  useEffect(() => {
-    console.log('Count changed:', count)
-    document.title = `Count: ${count}`
-  }, [count])
-
-  return <div>{count}</div>
-}
-```
-
-### Vue
-```vue
-<script setup>
-import { ref, watch } from 'vue'
-
-const count = ref(0)
-
-watch(count, (newVal) => {
-  console.log('Count changed:', newVal)
-  document.title = `Count: ${newVal}`
-})
-</script>
-```
-
-### Svelte
-```svelte
-<script>
-  let count = 0
-
-  $: {
-    console.log('Count changed:', count)
-    document.title = `Count: ${count}`
-  }
-</script>
-```
-
-### Solid
-```jsx
-import { createSignal, createEffect } from 'solid-js'
-
-function App() {
-  const [count, setCount] = createSignal(0)
-
-  createEffect(() => {
-    console.log('Count changed:', count())
-    document.title = `Count: ${count()}`
-  })
-
-  return <div>{count()}</div>
-}
-```
-
----
-
-## Summary Comparison
+## Summary
 
 | Feature | Flint | React | Vue | Svelte | Solid |
 |---------|-------|-------|-----|--------|-------|
-| **State** | `state()` | `useState()` | `ref()` / `reactive()` | `let` | `createSignal()` |
-| **Computed** | `computed()` | `useMemo()` | `computed()` | `$:` | `createMemo()` |
-| **Effect** | `effect()` | `useEffect()` | `watch()` | `$:` | `createEffect()` |
-| **Two-way binding** | `bind={signal}` | Manual | `v-model` | `bind:` | Manual |
-| **Conditional** | `<When>` | `{cond && <X>}` | `v-if` | `{#if}` | `<Show>` |
-| **List** | `<For>` | `.map()` | `v-for` | `{#each}` | `<For>` |
-| **Form helpers** | `useForm()` | Manual | Manual | Manual | Manual |
-| **Styling** | `sx()` | className | class / :style | `<style>` | class |
-| **Bundle size** | ~8KB | ~40KB | ~30KB | ~2KB | ~7KB |
-| **Learning curve** | Low | Medium | Medium | Low | Medium |
-| **TypeScript** | Built-in | Separate | Built-in | Separate | Built-in |
-| **SSR** | Built-in | Next.js | Nuxt | SvelteKit | SolidStart |
+| State | `state()` | `useState()` | `ref()` | `let` | `createSignal()` |
+| Computed | `computed()` | `useMemo()` | `computed()` | `$:` | `createMemo()` |
+| Effect | `effect()` | `useEffect()` | `watch()` | `$:` | `createEffect()` |
+| Two-way binding | `bind={}` | Manual | `v-model` | `bind:` | Manual |
+| Conditional | `<When>` | Ternary | `v-if` | `{#if}` | `<Show>` |
+| List | `<For>` | `.map()` | `v-for` | `{#each}` | `<For>` |
+| Form helper | `useForm()` | Manual | Manual | Manual | Manual |
+| Bundle size | ~5KB | ~40KB | ~30KB | ~3KB | ~7KB |
+| Learning curve | Low | Medium | Medium | Low | Medium |
+| TypeScript | Built-in | Separate | Built-in | Separate | Built-in |
+| SSR | Built-in | Next.js | Nuxt | SvelteKit | SolidStart |
 
 ---
 
-## Code Length Comparison (Same Feature)
+## Code Length
+
+Lines of code for the same feature:
 
 | Feature | Flint | React | Vue | Svelte | Solid |
 |---------|-------|-------|-----|--------|-------|
-| Hello World | 8 lines | 12 lines | 10 lines | 6 lines | 10 lines |
-| Counter | 15 lines | 25 lines | 18 lines | 12 lines | 18 lines |
-| Form | 12 lines | 35 lines | 25 lines | 20 lines | 30 lines |
-| List + Filter | 18 lines | 30 lines | 22 lines | 15 lines | 22 lines |
+| Hello World | 4 | 8 | 6 | 3 | 8 |
+| Counter | 12 | 18 | 14 | 8 | 14 |
+| Form | 10 | 30 | 20 | 16 | 25 |
+| List + Filter | 15 | 25 | 18 | 12 | 18 |
 
-**Average: ~40% less code than React, ~25% less than Vue**
+Flint averages 30-40% less code than React. The gap widens for complex features like forms and state management.
+
+---
+
+## When to Pick What
+
+**Pick Flint** if you want React's syntax with better performance, less boilerplate, and built-in everything.
+
+**Pick React** if you need the largest ecosystem, the most job listings, and don't mind writing more code.
+
+**Pick Vue** if you like templates, want great documentation, and prefer a gentle learning curve.
+
+**Pick Svelte** if you want the smallest bundle size and the most "just write JavaScript" experience.
+
+**Pick Solid** if you want fine-grained reactivity like Flint but prefer a more established framework.
+
+---
+
+## Try Flint
+
+```bash
+npx create-flint my-app
+cd my-app
+npm run dev
+```
+
+Five minutes to try it. You'll know if it fits.
