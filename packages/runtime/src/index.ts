@@ -326,6 +326,17 @@ export {
   expectAttribute,
   mockSSRContext,
   mockLocation,
+  mockSignal,
+  waitForAsync,
+  waitFor,
+  createMockEvent,
+  createMockKeyboardEvent,
+  createMockInputEvent,
+  assertSignalValue,
+  assertSignalChanged,
+  createTestWrapper,
+  createMockFetchWithRestore,
+  createMockTimer,
 } from './testing/index.js'
 export type {
   TestComponentResult,
@@ -333,6 +344,85 @@ export type {
   MockSSROptions,
   SpyFunction,
 } from './testing/index.js'
+
+// Utility Functions (v4.1)
+export {
+  // Number utilities
+  clamp,
+  lerp,
+  mapRange,
+  inRange,
+  roundTo,
+  random,
+  randomInt,
+  // String utilities
+  capitalize,
+  camelCase,
+  kebabCase,
+  snakeCase,
+  pascalCase,
+  truncate,
+  slug,
+  escapeHtml,
+  unescapeHtml,
+  stripHtml,
+  getInitials,
+  // Array utilities
+  unique,
+  chunk,
+  flatten,
+  groupBy,
+  sortBy,
+  randomItem,
+  shuffle,
+  last,
+  first,
+  sum,
+  average,
+  min,
+  max,
+  // Object utilities
+  deepClone,
+  deepMerge,
+  pick,
+  omit,
+  isEmpty,
+  get,
+  set,
+  // Function utilities
+  debounce,
+  throttle,
+  memoize,
+  once,
+  retry,
+  delay,
+  sleep,
+  // Type utilities
+  isString,
+  isNumber,
+  isBoolean,
+  isFunction,
+  isObject,
+  isArray,
+  isNil,
+  isDefined,
+  isTruthy,
+  isFalsy,
+  // Date utilities
+  formatDate,
+  timeAgo,
+  isToday,
+  isYesterday,
+  addDays,
+  subtractDays,
+  daysBetween,
+  // Color utilities
+  hexToRgb,
+  rgbToHex,
+  randomColor,
+  lighten,
+  darken,
+} from './utils/helpers.js'
 
 // HMR
 export {
@@ -430,7 +520,6 @@ export {
   createI18n,
   LOCALES,
   formatNumber,
-  formatDate,
   formatRelativeTime,
 } from './i18n/index.js'
 export type {
@@ -529,7 +618,6 @@ export { initGlobalErrorHandlers, removeGlobalErrorHandlers } from './errors/glo
 
 // Security Utilities
 export {
-  escapeHtml,
   sanitizeInput,
   isSafeUrl,
   isValidUrl,
@@ -588,6 +676,22 @@ export {
   useAriaId,
   createAriaProps,
   useRovingTabindex,
+  useAriaIds,
+  useAriaProps,
+  useRole,
+  announce,
+  announcePolite,
+  announceAssertive,
+  useKeyboardShortcuts,
+  getLuminance,
+  getContrastRatio,
+  hasGoodContrast,
+  createSkipLink,
+  focusAndAnnounce,
+  focusNext,
+  focusPrevious,
+  isVisibleToScreenReader,
+  getAccessibleName,
 } from './a11y/index.js'
 export type {
   FocusTrapOptions,

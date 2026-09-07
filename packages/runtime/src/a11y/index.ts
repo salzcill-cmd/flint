@@ -525,3 +525,368 @@ export function useRovingTabindex(options: {
   container.addEventListener('keydown', handleKeyDown)
   return () => container.removeEventListener('keydown', handleKeyDown)
 }
+
+// ─── ARIA Helpers ───────────────────────────────────────────────
+
+/**
+ * Generate unique IDs for aria relationships.
+ *
+ * @example
+ * const ids = useAriaIds()
+ * <label id={ids.label}>Email</label>
+ * <input aria-labelledby={ids.label} aria-describedby={ids.description} />
+ * <span id={ids.description}>Enter your email</span>
+ */
+export function useAriaIds(...prefixes: string[]): Record<string, string> {
+  const baseId = `flint-${Math.random().toString(36).slice(2, 9)}`
+  const ids: Record<string, string> = {}
+
+  if (prefixes.length === 0) {
+    prefixes = ['label', 'description']
+  }
+
+  for (const prefix of prefixes) {
+    ids[prefix] = `${baseId}-${prefix}`
+  }
+
+  return ids
+}
+
+/**
+ * Create aria props for accessible components.
+ *
+ * @example
+ * const aria = useAriaProps({ label: 'Close menu', expanded: isOpen() })
+ * <button {...aria}>×</button>
+ */
+export function useAriaProps(options: {
+  label?: string
+  labelledBy?: string
+  describedBy?: string
+  expanded?: boolean
+  hasPopup?: boolean | 'menu' | 'listbox' | 'tree' | 'grid' | 'dialog'
+  controls?: string
+  current?: boolean | 'page' | 'step' | 'location' | 'date' | 'time'
+  disabled?: boolean
+  live?: 'polite' | 'assertive' | 'off'
+  atomic?: boolean
+  relevant?: string
+  busy?: boolean
+  hidden?: boolean
+}): Record<string, any> {
+  const props: Record<string, any> = {}
+
+  if (options.label) props['aria-label'] = options.label
+  if (options.labelledBy) props['aria-labelledby'] = options.labelledBy
+  if (options.describedBy) props['aria-describedby'] = options.describedBy
+  if (options.expanded !== undefined) props['aria-expanded'] = options.expanded
+  if (options.hasPopup !== undefined) props['aria-haspopup'] = options.hasPopup
+  if (options.controls) props['aria-controls'] = options.controls
+  if (options.current !== undefined) props['aria-current'] = options.current
+  if (options.disabled !== undefined) props['aria-disabled'] = options.disabled
+  if (options.live) props['aria-live'] = options.live
+  if (options.atomic !== undefined) props['aria-atomic'] = options.atomic
+  if (options.relevant) props['aria-relevant'] = options.relevant
+  if (options.hidden !== undefined) props['aria-hidden'] = options.hidden
+
+  return props
+}
+
+/**
+ * Create role props for common patterns.
+ *
+ * @example
+ * const role = useRole('button')
+ * <div {...role}>Click me</div>
+ */
+export function useRole(
+  role: string,
+  options?: {
+    label?: string
+    description?: string
+    level?: number
+    orientation?: 'horizontal' | 'vertical'
+    multiline?: boolean
+    required?: boolean
+    selected?: boolean
+    checked?: boolean | 'mixed'
+    pressed?: boolean | 'mixed'
+    expanded?: boolean
+  }
+): Record<string, any> {
+  const props: Record<string, any> = { role }
+
+  if (options?.label) props['aria-label'] = options.label
+  if (options?.description) props['aria-description'] = options.description
+  if (options?.level) props['aria-level'] = options.level
+  if (options?.orientation) props['aria-orientation'] = options.orientation
+  if (options?.multiline !== undefined) props['aria-multiline'] = options.multiline
+  if (options?.required !== undefined) props['aria-required'] = options.required
+  if (options?.selected !== undefined) props['aria-selected'] = options.selected
+  if (options?.checked !== undefined) props['aria-checked'] = options.checked
+  if (options?.pressed !== undefined) props['aria-pressed'] = options.pressed
+  if (options?.expanded !== undefined) props['aria-expanded'] = options.expanded
+
+  return props
+}
+
+// ─── Screen Reader Announcements ────────────────────────────────
+
+/**
+ * Announce a message to screen readers.
+ *
+ * @example
+ * announce('Item deleted', 'assertive')
+ */
+export function announce(message: string, priority: 'polite' | 'assertive' = 'polite'): void {
+  const el = document.createElement('div')
+  el.setAttribute('role', 'status')
+  el.setAttribute('aria-live', priority)
+  el.setAttribute('aria-atomic', 'true')
+  el.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)'
+  document.body.appendChild(el)
+
+  setTimeout(() => {
+    el.textContent = message
+  }, 100)
+
+  setTimeout(() => {
+    document.body.removeChild(el)
+  }, 1000)
+}
+
+/**
+ * Announce a polite message to screen readers.
+ */
+export function announcePolite(message: string): void {
+  announce(message, 'polite')
+}
+
+/**
+ * Announce an assertive message to screen readers.
+ */
+export function announceAssertive(message: string): void {
+  announce(message, 'assertive')
+}
+
+// ─── Keyboard Shortcuts ─────────────────────────────────────────
+
+/**
+ * Create a keyboard shortcut handler.
+ *
+ * @example
+ * const shortcuts = useKeyboardShortcuts({
+ *   'ctrl+s': () => save(),
+ *   'escape': () => closeModal(),
+ *   'ctrl+z': () => undo(),
+ * })
+ */
+export function useKeyboardShortcuts(
+  shortcuts: Record<string, (e: KeyboardEvent) => void>
+): () => void {
+  function handleKeyDown(e: KeyboardEvent) {
+    const parts = Object.keys(shortcuts).find((shortcut) => {
+      const keys = shortcut.split('+').map((k) => k.trim().toLowerCase())
+      const key = e.key.toLowerCase()
+
+      // Check if key matches
+      if (!keys.includes(key)) return false
+
+      // Check modifiers
+      const needsCtrl = keys.includes('ctrl')
+      const needsShift = keys.includes('shift')
+      const needsAlt = keys.includes('alt')
+      const needsMeta = keys.includes('meta')
+
+      if (needsCtrl && !e.ctrlKey) return false
+      if (needsShift && !e.shiftKey) return false
+      if (needsAlt && !e.altKey) return false
+      if (needsMeta && !e.metaKey) return false
+
+      // If no modifiers needed, but user pressed one, don't match
+      if (!needsCtrl && e.ctrlKey) return false
+      if (!needsShift && e.shiftKey && key !== 'tab') return false
+      if (!needsAlt && e.altKey) return false
+      if (!needsMeta && e.metaKey) return false
+
+      return true
+    })
+
+    if (parts) {
+      e.preventDefault()
+      shortcuts[parts](e)
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}
+
+// ─── Color Contrast ─────────────────────────────────────────────
+
+/**
+ * Calculate relative luminance of a color.
+ */
+export function getLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    c = c / 255
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  })
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+}
+
+/**
+ * Calculate contrast ratio between two colors.
+ *
+ * @example
+ * const ratio = getContrastRatio('#ffffff', '#000000')
+ * // ratio === 21 (highest contrast)
+ */
+export function getContrastRatio(
+  color1: { r: number; g: number; b: number },
+  color2: { r: number; g: number; b: number }
+): number {
+  const l1 = getLuminance(color1.r, color1.g, color1.b)
+  const l2 = getLuminance(color2.r, color2.g, color2.b)
+  const lighter = Math.max(l1, l2)
+  const darker = Math.min(l1, l2)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+/**
+ * Check if color combination meets WCAG contrast requirements.
+ *
+ * @example
+ * const isAccessible = hasGoodContrast('#ffffff', '#000000', 'AAA')
+ */
+export function hasGoodContrast(
+  color1: { r: number; g: number; b: number },
+  color2: { r: number; g: number; b: number },
+  level: 'AA' | 'AAA' = 'AA'
+): boolean {
+  const ratio = getContrastRatio(color1, color2)
+  return level === 'AAA' ? ratio >= 7 : ratio >= 4.5
+}
+
+// ─── Skip Link ──────────────────────────────────────────────────
+
+/**
+ * Create a skip link for keyboard navigation.
+ *
+ * @example
+ * const skipLink = createSkipLink('main-content')
+ * document.body.insertBefore(skipLink, document.body.firstChild)
+ */
+export function createSkipLink(targetId: string, text = 'Skip to main content'): HTMLElement {
+  const link = document.createElement('a')
+  link.href = `#${targetId}`
+  link.textContent = text
+  link.className = 'flint-skip-link'
+  link.style.cssText = `
+    position: absolute;
+    left: -9999px;
+    z-index: 999;
+    padding: 8px 16px;
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+  `
+  link.addEventListener('focus', () => {
+    link.style.left = '0'
+  })
+  link.addEventListener('blur', () => {
+    link.style.left = '-9999px'
+  })
+  return link
+}
+
+/**
+ * Focus an element and announce it.
+ *
+ * @example
+ * focusAndAnnounce(inputElement, 'Email input focused')
+ */
+export function focusAndAnnounce(element: HTMLElement, message?: string): void {
+  element.focus()
+  if (message) {
+    announce(message)
+  }
+}
+
+/**
+ * Move focus to the next focusable element.
+ */
+export function focusNext(container: HTMLElement = document.body): void {
+  const focusable = container.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  const current = document.activeElement
+  const index = Array.from(focusable).indexOf(current as Element)
+  const next = focusable[(index + 1) % focusable.length] as HTMLElement
+  next?.focus()
+}
+
+/**
+ * Move focus to the previous focusable element.
+ */
+export function focusPrevious(container: HTMLElement = document.body): void {
+  const focusable = container.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )
+  const current = document.activeElement
+  const index = Array.from(focusable).indexOf(current as Element)
+  const prev = focusable[(index - 1 + focusable.length) % focusable.length] as HTMLElement
+  prev?.focus()
+}
+
+/**
+ * Check if an element is visible to screen readers.
+ */
+export function isVisibleToScreenReader(element: HTMLElement): boolean {
+  if (element.hasAttribute('aria-hidden') && element.getAttribute('aria-hidden') === 'true') {
+    return false
+  }
+  if (element.hidden) {
+    return false
+  }
+  if (element.getAttribute('role') === 'presentation') {
+    return false
+  }
+  return true
+}
+
+/**
+ * Get accessible name for an element.
+ */
+export function getAccessibleName(element: HTMLElement): string {
+  // Check aria-label
+  const ariaLabel = element.getAttribute('aria-label')
+  if (ariaLabel) return ariaLabel
+
+  // Check aria-labelledby
+  const labelledBy = element.getAttribute('aria-labelledby')
+  if (labelledBy) {
+    const ids = labelledBy.split(' ')
+    const names = ids.map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+    if (names.length > 0) return names.join(' ')
+  }
+
+  // Check label element
+  const id = element.id
+  if (id) {
+    const label = document.querySelector(`label[for="${id}"]`)
+    if (label) return label.textContent?.trim() ?? ''
+  }
+
+  // Check placeholder
+  const placeholder = element.getAttribute('placeholder')
+  if (placeholder) return placeholder
+
+  // Check title
+  const title = element.getAttribute('title')
+  if (title) return title
+
+  // Fallback to text content
+  return element.textContent?.trim() ?? ''
+}

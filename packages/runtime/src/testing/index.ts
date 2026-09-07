@@ -404,3 +404,246 @@ export function mockLocation(
     },
   }
 }
+
+// ─── Advanced Testing Utilities ─────────────────────────────────
+
+/**
+ * Create a mock signal for testing.
+ *
+ * @example
+ * const count = mockSignal(0)
+ * expect(count()).toBe(0)
+ * count.set(5)
+ * expect(count()).toBe(5)
+ */
+export function mockSignal<T>(initial: T): Signal<T> & { set: (value: T) => void } {
+  const sig = state(initial)
+  return Object.assign(sig, { set: sig.set })
+}
+
+/**
+ * Wait for async operations to complete.
+ *
+ * @example
+ * await waitForAsync()
+ */
+export function waitForAsync(ms = 0): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/**
+ * Wait for a condition to be true.
+ *
+ * @example
+ * await waitFor(() => isLoading() === false)
+ */
+export async function waitFor(
+  condition: () => boolean,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<void> {
+  const { timeout = 1000, interval = 10 } = options
+  const start = Date.now()
+
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      if (condition()) {
+        resolve()
+        return
+      }
+      if (Date.now() - start > timeout) {
+        reject(new Error('Timeout waiting for condition'))
+        return
+      }
+      setTimeout(check, interval)
+    }
+    check()
+  })
+}
+
+/**
+ * Create a mock event.
+ *
+ * @example
+ * const clickEvent = createMockEvent('click')
+ * element.dispatchEvent(clickEvent)
+ */
+export function createMockEvent(type: string, options: any = {}): Event {
+  return new Event(type, { bubbles: true, cancelable: true, ...options })
+}
+
+/**
+ * Create a mock keyboard event.
+ *
+ * @example
+ * const enterEvent = createMockKeyboardEvent('keydown', { key: 'Enter' })
+ */
+export function createMockKeyboardEvent(
+  type: string,
+  options: { key?: string; code?: string } = {}
+): KeyboardEvent {
+  return new KeyboardEvent(type, {
+    bubbles: true,
+    cancelable: true,
+    key: options.key ?? '',
+    code: options.code ?? '',
+  })
+}
+
+/**
+ * Create a mock input event.
+ *
+ * @example
+ * const inputEvent = createMockInputEvent('hello')
+ */
+export function createMockInputEvent(value: string): Event {
+  const event = new Event('input', { bubbles: true })
+  Object.defineProperty(event, 'target', {
+    value: { value },
+    writable: false,
+  })
+  return event
+}
+
+/**
+ * Assert that a signal has a specific value.
+ *
+ * @example
+ * assertSignalValue(count, 5)
+ */
+export function assertSignalValue<T>(signal: Signal<T>, expected: T): void {
+  const actual = signal()
+  if (actual !== expected) {
+    throw new Error(`Expected signal to be ${expected}, but got ${actual}`)
+  }
+}
+
+/**
+ * Assert that a signal has changed.
+ *
+ * @example
+ * count.set(5)
+ * assertSignalChanged(count, 5)
+ */
+export function assertSignalChanged<T>(signal: Signal<T>, expected: T): void {
+  assertSignalValue(signal, expected)
+}
+
+/**
+ * Create a test wrapper for a component.
+ *
+ * @example
+ * const wrapper = createTestWrapper(MyComponent)
+ * const { querySelector } = wrapper.render({ name: 'John' })
+ */
+export function createTestWrapper<T extends Record<string, any>>(
+  component: (props: T) => Child
+) {
+  return {
+    render: (props: T) => testRender(() => component(props)),
+  }
+}
+
+/**
+ * Create a mock fetch for API testing (with restore function).
+ *
+ * @example
+ * const mock = createMockFetchWithRestore({
+ *   '/api/users': { users: [{ id: 1, name: 'John' }] },
+ * })
+ *
+ * // After test
+ * mock.restore()
+ */
+export function createMockFetchWithRestore(responses: Record<string, any>): { restore: () => void } {
+  const originalFetch = globalThis.fetch
+
+  globalThis.fetch = async (url: string | URL | Request) => {
+    const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
+    const response = responses[urlStr]
+
+    if (response === undefined) {
+      return new Response('Not Found', { status: 404 })
+    }
+
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  return {
+    restore: () => {
+      globalThis.fetch = originalFetch
+    },
+  }
+}
+
+/**
+ * Create a mock timer for testing.
+ *
+ * @example
+ * const timer = createMockTimer()
+ *
+ * // Use in test
+ * setTimeout(() => { ... }, 1000)
+ * timer.advance(1000) // Fast forward 1 second
+ *
+ * timer.restore()
+ */
+export function createMockTimer(): {
+  advance: (ms: number) => void
+  restore: () => void
+} {
+  const originalSetTimeout = globalThis.setTimeout
+  const originalSetInterval = globalThis.setInterval
+  const originalClearTimeout = globalThis.clearTimeout
+  const originalClearInterval = globalThis.clearInterval
+
+  let timeouts: Array<{ id: number; fn: Function; delay: number }> = []
+  let intervals: Array<{ id: number; fn: Function; delay: number }> = []
+  let nextId = 1
+
+  globalThis.setTimeout = ((fn: Function, delay: number) => {
+    const id = nextId++
+    timeouts.push({ id, fn, delay })
+    return id as any
+  }) as any
+
+  globalThis.setInterval = ((fn: Function, delay: number) => {
+    const id = nextId++
+    intervals.push({ id, fn, delay })
+    return id as any
+  }) as any
+
+  globalThis.clearTimeout = ((id: number) => {
+    timeouts = timeouts.filter((t) => t.id !== id)
+  }) as any
+
+  globalThis.clearInterval = ((id: number) => {
+    intervals = intervals.filter((i) => i.id !== id)
+  }) as any
+
+  return {
+    advance: (ms: number) => {
+      // Run pending timeouts
+      const pendingTimeouts = timeouts.filter((t) => t.delay <= ms)
+      timeouts = timeouts.filter((t) => t.delay > ms)
+      for (const t of pendingTimeouts) {
+        t.fn()
+      }
+
+      // Run intervals
+      for (const i of intervals) {
+        i.fn()
+      }
+    },
+    restore: () => {
+      globalThis.setTimeout = originalSetTimeout
+      globalThis.setInterval = originalSetInterval
+      globalThis.clearTimeout = originalClearTimeout
+      globalThis.clearInterval = originalClearInterval
+      timeouts = []
+      intervals = []
+    },
+  }
+}

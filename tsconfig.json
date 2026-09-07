@@ -13,8 +13,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "outDir": "dist",
-    "composite": true
+    "outDir": "dist"
   },
   "include": ["packages/*/src"],
   "exclude": ["node_modules", "dist"]
