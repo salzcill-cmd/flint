@@ -1,14 +1,12 @@
 # Flint vs React vs Vue vs Svelte vs Solid
 
-> [Bahasa Indonesia](COMPARISON.id.md) | English
-
-Real code comparisons. Same features, different frameworks. Find the one that fits how you think.
+Perbandingan kode nyata. Fitur yang sama, framework berbeda. Cari yang cocok dengan cara berpikir kamu.
 
 ---
 
 ## Hello World
 
-The smallest possible app in each framework.
+Aplikasi paling kecil di setiap framework.
 
 ### Flint
 
@@ -20,7 +18,7 @@ function App() {
 render(App, '#app')
 ```
 
-No imports. Just write a function and render it.
+Tidak perlu import. Tulis fungsi dan render.
 
 ### React
 
@@ -33,7 +31,7 @@ function App() {
 }
 ```
 
-You need to import `useState` and call it at the top of your component.
+Kamu perlu import `useState` dan panggil di awal component.
 
 ### Vue
 
@@ -48,7 +46,7 @@ const name = ref('World')
 </template>
 ```
 
-Vue splits logic and template into separate blocks.
+Vue memisahkan logika dan template ke blok terpisah.
 
 ### Svelte
 
@@ -60,7 +58,7 @@ Vue splits logic and template into separate blocks.
 <h1>Hello, {name}!</h1>
 ```
 
-Svelte uses a compiler. You write normal JavaScript and the framework handles reactivity.
+Svelte pakai compiler. Kamu tulis JavaScript biasa dan framework menangani reaktivitas.
 
 ### Solid
 
@@ -73,13 +71,13 @@ function App() {
 }
 ```
 
-Solid uses function calls to read signals, just like Flint.
+Solid pakai fungsi untuk membaca signal, sama seperti Flint.
 
 ---
 
 ## Counter
 
-A counter with increment, decrement, reset, and a derived value.
+Counter dengan increment, decrement, reset, dan value turunan.
 
 ### Flint
 
@@ -107,7 +105,7 @@ function App() {
 }
 ```
 
-One object holds everything. The `computed` and `actions` reference `s.count` directly — no special syntax.
+Satu object menampung semua. `computed` dan `actions` merujuk ke `s.count` langsung — tidak ada syntax khusus.
 
 ### React
 
@@ -133,7 +131,7 @@ function App() {
 }
 ```
 
-React requires `useMemo` to avoid recalculating `doubled` on every render, and `useCallback` to keep functions stable. Miss a dependency and you get bugs.
+React butuh `useMemo` agar `doubled` tidak dihitung ulang setiap render, dan `useCallback` agar fungsi tetap stabil. Lupa satu dependency dan kamu dapat bug.
 
 ### Vue
 
@@ -159,7 +157,7 @@ const reset = () => count.value = 0
 </template>
 ```
 
-Vue is clean. You define reactive values with `ref()`, read them with `.value` in the script, and the template handles the rest.
+Vue bersih. Kamu define value reaktif pakai `ref()`, baca pakai `.value` di script, dan template menangani sisanya.
 
 ### Svelte
 
@@ -178,7 +176,7 @@ Vue is clean. You define reactive values with `ref()`, read them with `.value` i
 </div>
 ```
 
-Svelte uses the `$:` label for reactive declarations. The compiler turns this into fine-grained updates under the hood.
+Svelte pakai label `$:` untuk deklarasi reaktif. Compiler mengubahnya jadi update yang presisi.
 
 ### Solid
 
@@ -201,13 +199,13 @@ function App() {
 }
 ```
 
-Solid and Flint are nearly identical. Both run the component once and track signals individually.
+Solid dan Flint nyaris identik. Keduanya menjalankan component sekali dan melacak signal secara individual.
 
 ---
 
 ## Two-Way Binding
 
-Binding an input to a signal without boilerplate.
+Mengikat input ke signal tanpa boilerplate.
 
 ### Flint
 
@@ -224,10 +222,10 @@ function App() {
 }
 ```
 
-Or with the `bind` helper:
+Atau pakai helper `bind`:
 
 ```jsx
-<Input bind={name} placeholder="Enter name" />
+<Input bind={name} placeholder="Masukkan nama" />
 ```
 
 ### React
@@ -246,7 +244,7 @@ function App() {
 }
 ```
 
-React requires writing the onChange handler every time. No built-in shorthand.
+React mengharuskan kamu menulis handler onChange setiap kali. Tidak ada shorthand bawaan.
 
 ### Vue
 
@@ -262,7 +260,7 @@ const name = ref('')
 </template>
 ```
 
-Vue's `v-model` is the cleanest two-way binding syntax.
+`v-model` Vue adalah syntax two-way binding yang paling bersih.
 
 ### Svelte
 
@@ -275,7 +273,7 @@ Vue's `v-model` is the cleanest two-way binding syntax.
 <p>Hello, {name}</p>
 ```
 
-Svelte's `bind:` directive works similarly to Vue's `v-model`.
+Direktif `bind:` Svelte bekerja mirip `v-model` Vue.
 
 ### Solid
 
@@ -293,13 +291,13 @@ function App() {
 }
 ```
 
-Solid requires writing the handler manually, like Flint without the `bind` helper.
+Solid mengharuskan kamu menulis handler secara manual, seperti Flint tanpa helper `bind`.
 
 ---
 
 ## Conditional Rendering
 
-Show different content based on a condition.
+Menampilkan konten berbeda berdasarkan kondisi.
 
 ### Flint
 
@@ -310,11 +308,11 @@ function App() {
   return (
     <div>
       <When condition={isLoggedIn()}>
-        <p>Welcome back!</p>
+        <p>Selamat datang kembali!</p>
         <button onClick={() => isLoggedIn.set(false)}>Logout</button>
       </When>
       <When condition={!isLoggedIn()}>
-        <p>Please log in</p>
+        <p>Mohon login</p>
         <button onClick={() => isLoggedIn.set(true)}>Login</button>
       </When>
     </div>
@@ -322,7 +320,7 @@ function App() {
 }
 ```
 
-`<When>` reads like plain English. No special syntax to learn.
+`<When>` terbaca seperti bahasa Inggris biasa. Tidak ada syntax khusus yang perlu dipelajari.
 
 ### React
 
@@ -335,12 +333,12 @@ function App() {
     <div>
       {isLoggedIn ? (
         <>
-          <p>Welcome back!</p>
+          <p>Selamat datang kembali!</p>
           <button onClick={() => setIsLoggedIn(false)}>Logout</button>
         </>
       ) : (
         <>
-          <p>Please log in</p>
+          <p>Mohon login</p>
           <button onClick={() => setIsLoggedIn(true)}>Login</button>
         </>
       )}
@@ -349,7 +347,7 @@ function App() {
 }
 ```
 
-React uses ternary expressions or `&&` for conditionals. Fragments (`<>...</>`) are needed when returning multiple elements.
+React pakai ekspresi ternary atau `&&` untuk kondisional. Fragment (`<>...</>`) diperlukan saat mengembalikan banyak element.
 
 ### Vue
 
@@ -362,18 +360,18 @@ const isLoggedIn = ref(false)
 <template>
   <div>
     <template v-if="isLoggedIn">
-      <p>Welcome back!</p>
+      <p>Selamat datang kembali!</p>
       <button @click="isLoggedIn = false">Logout</button>
     </template>
     <template v-else>
-      <p>Please log in</p>
+      <p>Mohon login</p>
       <button @click="isLoggedIn = true">Login</button>
     </template>
   </div>
 </template>
 ```
 
-Vue's `v-if` and `v-else` directives are clear, but they live in the template rather than in JavaScript logic.
+Direktif `v-if` dan `v-else` Vue jelas, tapi ada di template alih-alih di logika JavaScript.
 
 ### Svelte
 
@@ -384,16 +382,16 @@ Vue's `v-if` and `v-else` directives are clear, but they live in the template ra
 
 <div>
   {#if isLoggedIn}
-    <p>Welcome back!</p>
+    <p>Selamat datang kembali!</p>
     <button on:click={() => isLoggedIn = false}>Logout</button>
   {:else}
-    <p>Please log in</p>
+    <p>Mohon login</p>
     <button on:click={() => isLoggedIn = true}>Login</button>
   {/if}
 </div>
 ```
 
-Svelte uses `{#if}` blocks, which compile to efficient DOM updates.
+Svelte pakai blok `{#if}` yang dikompilasi jadi update DOM yang efisien.
 
 ### Solid
 
@@ -408,12 +406,12 @@ function App() {
         when={isLoggedIn()}
         fallback={
           <>
-            <p>Please log in</p>
+            <p>Mohon login</p>
             <button onClick={() => setIsLoggedIn(true)}>Login</button>
           </>
         }
       >
-        <p>Welcome back!</p>
+        <p>Selamat datang kembali!</p>
         <button onClick={() => setIsLoggedIn(false)}>Logout</button>
       </Show>
     </div>
@@ -421,21 +419,21 @@ function App() {
 }
 ```
 
-Solid uses `<Show>` with a `when` prop and `fallback` prop. It's similar to Flint's `<Show>`.
+Solid pakai `<Show>` dengan prop `when` dan `fallback`. Mirip `<Show>` Flint.
 
 ---
 
 ## List Rendering
 
-Render a list of items with proper keying.
+Merender list item dengan key yang benar.
 
 ### Flint
 
 ```jsx
 const items = state([
-  { id: 1, name: 'Apple' },
-  { id: 2, name: 'Banana' },
-  { id: 3, name: 'Cherry' },
+  { id: 1, name: 'Apel' },
+  { id: 2, name: 'Pisang' },
+  { id: 3, name: 'Ceri' },
 ])
 
 function App() {
@@ -449,16 +447,16 @@ function App() {
 }
 ```
 
-`<For>` tracks each item by its key. Only the changed item re-renders.
+`<For>` melacak setiap item berdasarkan key-nya. Hanya item yang berubah yang re-render.
 
 ### React
 
 ```jsx
 function App() {
   const items = [
-    { id: 1, name: 'Apple' },
-    { id: 2, name: 'Banana' },
-    { id: 3, name: 'Cherry' },
+    { id: 1, name: 'Apel' },
+    { id: 2, name: 'Pisang' },
+    { id: 3, name: 'Ceri' },
   ]
 
   return (
@@ -471,16 +469,16 @@ function App() {
 }
 ```
 
-React uses `.map()` to render lists. You manage keys manually.
+React pakai `.map()` untuk merender list. Kamu mengelola key secara manual.
 
 ### Vue
 
 ```vue
 <script setup>
 const items = [
-  { id: 1, name: 'Apple' },
-  { id: 2, name: 'Banana' },
-  { id: 3, name: 'Cherry' },
+  { id: 1, name: 'Apel' },
+  { id: 2, name: 'Pisang' },
+  { id: 3, name: 'Ceri' },
 ]
 </script>
 
@@ -493,16 +491,16 @@ const items = [
 </template>
 ```
 
-Vue's `v-for` directive handles list rendering with keying.
+Direktif `v-for` Vue menangani list rendering dengan keying.
 
 ### Svelte
 
 ```svelte
 <script>
   const items = [
-    { id: 1, name: 'Apple' },
-    { id: 2, name: 'Banana' },
-    { id: 3, name: 'Cherry' },
+    { id: 1, name: 'Apel' },
+    { id: 2, name: 'Pisang' },
+    { id: 3, name: 'Ceri' },
   ]
 </script>
 
@@ -513,7 +511,7 @@ Vue's `v-for` directive handles list rendering with keying.
 </ul>
 ```
 
-Svelte's `{#each}` block with a key expression.
+Blok `{#each}` Svelte dengan ekspresi key.
 
 ### Solid
 
@@ -522,9 +520,9 @@ import { For } from 'solid-js'
 
 function App() {
   const items = [
-    { id: 1, name: 'Apple' },
-    { id: 2, name: 'Banana' },
-    { id: 3, name: 'Cherry' },
+    { id: 1, name: 'Apel' },
+    { id: 2, name: 'Pisang' },
+    { id: 3, name: 'Ceri' },
   ]
 
   return (
@@ -537,13 +535,13 @@ function App() {
 }
 ```
 
-Solid's `<For>` is identical to Flint's `<For>`.
+`<For>` Solid identik dengan `<For>` Flint.
 
 ---
 
 ## Side Effects
 
-Run code when state changes.
+Menjalankan kode saat state berubah.
 
 ### Flint
 
@@ -555,7 +553,7 @@ effect(() => {
 })
 ```
 
-No dependency array. The effect automatically tracks `count()` and re-runs when it changes.
+Tidak ada dependency array. Effect secara otomatis melacak `count()` dan menjalankan ulang saat berubah.
 
 ### React
 
@@ -573,7 +571,7 @@ function App() {
 }
 ```
 
-React's `useEffect` requires a dependency array. Forget one and you get stale closures. Add the wrong one and you get infinite loops.
+`useEffect` React membutuhkan dependency array. Lupa satu dan kamu dapat closure yang stale. Salah tambah satu dan kamu dapat infinite loop.
 
 ### Vue
 
@@ -589,7 +587,7 @@ watch(count, (newVal) => {
 </script>
 ```
 
-Vue's `watch` is explicit about what you're watching.
+`watch` Vue eksplisit tentang apa yang kamu tonton.
 
 ### Svelte
 
@@ -603,7 +601,7 @@ Vue's `watch` is explicit about what you're watching.
 </script>
 ```
 
-Svelte's `$:` label runs reactive code whenever its dependencies change.
+Label `$:` Svelte menjalankan kode reaktif setiap kali dependency-nya berubah.
 
 ### Solid
 
@@ -621,13 +619,13 @@ function App() {
 }
 ```
 
-Solid's `createEffect` works exactly like Flint's `effect()`.
+`createEffect` Solid bekerja persis seperti `effect()` Flint.
 
 ---
 
 ## Form Handling
 
-Building a form with validation.
+Membangun formulir dengan validasi.
 
 ### Flint
 
@@ -654,7 +652,7 @@ function App() {
 }
 ```
 
-`useForm` handles state, validation, and submission. You define the shape, the rules, and the handler.
+`useForm` menangani state, validasi, dan submission. Kamu define bentuk, aturannya, dan handler-nya.
 
 ### React
 
@@ -668,9 +666,9 @@ function App() {
 
   const validate = () => {
     const errs = {}
-    if (!form.email) errs.email = 'Required'
-    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Invalid email'
-    if (!form.password) errs.password = 'Required'
+    if (!form.email) errs.email = 'Wajib diisi'
+    else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Email tidak valid'
+    if (!form.password) errs.password = 'Wajib diisi'
     return errs
   }
 
@@ -698,7 +696,7 @@ function App() {
 }
 ```
 
-React requires manual state management for every field, error, and loading state.
+React mengharuskan manajemen state manual untuk setiap field, error, dan loading state.
 
 ### Vue
 
@@ -710,8 +708,8 @@ const form = reactive({ email: '', password: '' })
 const errors = reactive({})
 
 const validate = () => {
-  errors.email = !form.email ? 'Required' : !/\S+@\S+\.\S+/.test(form.email) ? 'Invalid email' : ''
-  errors.password = !form.password ? 'Required' : ''
+  errors.email = !form.email ? 'Wajib diisi' : !/\S+@\S+\.\S+/.test(form.email) ? 'Email tidak valid' : ''
+  errors.password = !form.password ? 'Wajib diisi' : ''
 }
 
 const handleSubmit = async () => {
@@ -732,7 +730,7 @@ const handleSubmit = async () => {
 </template>
 ```
 
-Vue keeps it clean with `reactive` and `v-model`, but you still write validation manually.
+Vue tetap bersih dengan `reactive` dan `v-model`, tapi kamu tetap menulis validasi secara manual.
 
 ### Svelte
 
@@ -744,9 +742,9 @@ Vue keeps it clean with `reactive` and `v-model`, but you still write validation
 
   const validate = () => {
     errors = {}
-    if (!email) errors.email = 'Required'
-    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Invalid email'
-    if (!password) errors.password = 'Required'
+    if (!email) errors.email = 'Wajib diisi'
+    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = 'Email tidak valid'
+    if (!password) errors.password = 'Wajib diisi'
   }
 
   const handleSubmit = async () => {
@@ -765,7 +763,7 @@ Vue keeps it clean with `reactive` and `v-model`, but you still write validation
 </form>
 ```
 
-Svelte is concise, but form handling still requires manual wiring.
+Svelte ringkas, tapi form handling tetap membutuhkan wiring manual.
 
 ### Solid
 
@@ -779,9 +777,9 @@ function App() {
 
   const validate = () => {
     const errs = {}
-    if (!email()) errs.email = 'Required'
-    else if (!/\S+@\S+\.\S+/.test(email())) errs.email = 'Invalid email'
-    if (!password()) errs.password = 'Required'
+    if (!email()) errs.email = 'Wajib diisi'
+    else if (!/\S+@\S+\.\S+/.test(email())) errs.email = 'Email tidak valid'
+    if (!password()) errs.password = 'Wajib diisi'
     setErrors(errs)
   }
 
@@ -804,58 +802,58 @@ function App() {
 }
 ```
 
-Solid requires manual state for each field. No built-in form helper.
+Solid membutuhkan state manual untuk setiap field. Tidak ada helper form bawaan.
 
 ---
 
-## Summary
+## Ringkasan
 
-| Feature | Flint | React | Vue | Svelte | Solid |
-|---------|-------|-------|-----|--------|-------|
+| Fitur | Flint | React | Vue | Svelte | Solid |
+|-------|-------|-------|-----|--------|-------|
 | State | `state()` | `useState()` | `ref()` | `let` | `createSignal()` |
 | Computed | `computed()` | `useMemo()` | `computed()` | `$:` | `createMemo()` |
 | Effect | `effect()` | `useEffect()` | `watch()` | `$:` | `createEffect()` |
 | Two-way binding | `bind={}` | Manual | `v-model` | `bind:` | Manual |
-| Conditional | `<When>` | Ternary | `v-if` | `{#if}` | `<Show>` |
+| Kondisional | `<When>` | Ternary | `v-if` | `{#if}` | `<Show>` |
 | List | `<For>` | `.map()` | `v-for` | `{#each}` | `<For>` |
-| Form helper | `useForm()` | Manual | Manual | Manual | Manual |
-| Bundle size | ~5KB | ~40KB | ~30KB | ~3KB | ~7KB |
-| Learning curve | Low | Medium | Medium | Low | Medium |
-| TypeScript | Built-in | Separate | Built-in | Separate | Built-in |
-| SSR | Built-in | Next.js | Nuxt | SvelteKit | SolidStart |
+| Helper form | `useForm()` | Manual | Manual | Manual | Manual |
+| Ukuran bundle | ~5KB | ~40KB | ~30KB | ~3KB | ~7KB |
+| Kurva belajar | Rendah | Sedang | Sedang | Rendah | Sedang |
+| TypeScript | Bawaan | Terpisah | Bawaan | Terpisah | Bawaan |
+| SSR | Bawaan | Next.js | Nuxt | SvelteKit | SolidStart |
 
 ---
 
-## Code Length
+## Panjang Kode
 
-Lines of code for the same feature:
+Baris kode untuk fitur yang sama:
 
-| Feature | Flint | React | Vue | Svelte | Solid |
-|---------|-------|-------|-----|--------|-------|
+| Fitur | Flint | React | Vue | Svelte | Solid |
+|-------|-------|-------|-----|--------|-------|
 | Hello World | 4 | 8 | 6 | 3 | 8 |
 | Counter | 12 | 18 | 14 | 8 | 14 |
 | Form | 10 | 30 | 20 | 16 | 25 |
 | List + Filter | 15 | 25 | 18 | 12 | 18 |
 
-Flint averages 30-40% less code than React. The gap widens for complex features like forms and state management.
+Flint rata-rata 30-40% lebih sedikit kode dari React. Jurangnya melebar untuk fitur kompleks seperti form dan state management.
 
 ---
 
-## When to Pick What
+## Kapan Memilih Mana
 
-**Pick Flint** if you want React's syntax with better performance, less boilerplate, and built-in everything.
+**Pilih Flint** kalau kamu mau syntax React dengan performa lebih baik, boilerplate lebih sedikit, dan semua fitur bawaan.
 
-**Pick React** if you need the largest ecosystem, the most job listings, and don't mind writing more code.
+**Pilih React** kalau kamu butuh ekosistem terbesar, lowongan kerja paling banyak, dan tidak masalah menulis lebih banyak kode.
 
-**Pick Vue** if you like templates, want great documentation, and prefer a gentle learning curve.
+**Pilih Vue** kalau kamu suka template, mau dokumentasi yang bagus, dan lebih suka kurva belajar yang landai.
 
-**Pick Svelte** if you want the smallest bundle size and the most "just write JavaScript" experience.
+**Pilih Svelte** kalau kamu mau ukuran bundle paling kecil dan pengalaman "tulis JavaScript saja" yang paling murni.
 
-**Pick Solid** if you want fine-grained reactivity like Flint but prefer a more established framework.
+**Pilih Solid** kalau kamu mau reaktivitas presisi seperti Flint tapi lebih suka framework yang lebih mapan.
 
 ---
 
-## Try Flint
+## Coba Flint
 
 ```bash
 npx create-flint my-app
@@ -863,4 +861,4 @@ cd my-app
 npm run dev
 ```
 
-Five minutes to try it. You'll know if it fits.
+Lima menit untuk mencoba. Kamu akan tahu apakah ini cocok.

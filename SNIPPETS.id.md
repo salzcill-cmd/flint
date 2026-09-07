@@ -1,33 +1,31 @@
-# Flint Quick Start Snippets
+# Flint Potongan Kode Cepat
 
-> [Bahasa Indonesia](SNIPPETS.id.md) | English
+> Pola kode siap tempel untuk kecepatan maksimal
 
-Copy-paste ready code patterns for maximum speed
-
-## Table of Contents
+## Daftar Isi
 
 - [Hello World](#hello-world)
 - [Counter](#counter)
-- [Form](#form)
+- [Formulir](#formulir)
 - [List](#list)
-- [Conditional](#conditional)
-- [Async Data](#async-data)
+- [Kondisional](#kondisional)
+- [Data Async](#data-async)
 - [Store](#store)
 - [Router](#router)
 - [Modal](#modal)
-- [Tabs](#tabs)
-- [Theme](#theme)
-- [Auth](#auth)
+- [Tab](#tab)
+- [Tema](#tema)
+- [Autentikasi](#autentikasi)
 
 ---
 
 ## Hello World
 
 ```jsx
-// Minimal Flint app — 5 lines
+// Aplikasi Flint minimal — 5 baris
 function App() {
-  const name = state('World')
-  return <h1>Hello, {name()}!</h1>
+  const name = state('Dunia')
+  return <h1>Halo, {name()}!</h1>
 }
 render(App, '#app')
 ```
@@ -37,7 +35,7 @@ render(App, '#app')
 ## Counter
 
 ```jsx
-// Counter with model() — one object for everything
+// Counter dengan model() — satu object untuk semua
 const counter = model({
   state: { count: 0, step: 1 },
   computed: { doubled: (s) => s.count * 2 },
@@ -55,7 +53,7 @@ function App() {
       <button onClick={counter.decrement}>-</button>
       <button onClick={counter.increment}>+</button>
       <button onClick={counter.reset}>Reset</button>
-      <p>Doubled: {counter.doubled()}</p>
+      <p>Dobel: {counter.doubled()}</p>
     </div>
   )
 }
@@ -63,10 +61,10 @@ function App() {
 
 ---
 
-## Form
+## Formulir
 
 ```jsx
-// Form with validation — useForm() does everything
+// Formulir dengan validasi — useForm() menangani semua
 const form = useForm(
   { email: '', password: '', remember: false },
   {
@@ -75,7 +73,7 @@ const form = useForm(
   },
   async (values) => {
     await login(values)
-    console.log('Logged in!')
+    console.log('Login berhasil!')
   }
 )
 
@@ -86,10 +84,10 @@ function App() {
       <Input {...form.field('password')} label="Password" type="password" />
       <label>
         <input type="checkbox" {...form.field('remember')} />
-        Remember me
+        Ingat saya
       </label>
       <button disabled={!form.state.isValid() || form.state.isSubmitting()}>
-        {form.state.isSubmitting() ? 'Logging in...' : 'Login'}
+        {form.state.isSubmitting() ? 'Masuk...' : 'Login'}
       </button>
     </form>
   )
@@ -101,7 +99,7 @@ function App() {
 ## List
 
 ```jsx
-// Todo list with add/delete/toggle
+// Todo list dengan tambah/hapus/toggle
 const todos = $store({
   items: [],
   newTodo: '',
@@ -146,7 +144,7 @@ function App() {
           </li>
         ))}
       </ul>
-      <p>{todos.remaining} items left</p>
+      <p>{todos.remaining} item tersisa</p>
     </div>
   )
 }
@@ -154,10 +152,10 @@ function App() {
 
 ---
 
-## Conditional
+## Kondisional
 
 ```jsx
-// Show/Hide with When
+// Tampilkan/Sembunyikan dengan When
 const isVisible = state(true)
 
 function App() {
@@ -165,12 +163,12 @@ function App() {
     <div>
       <When condition={isVisible()}>
         <div class="card">
-          <h2>Visible Content</h2>
-          <button onClick={() => isVisible.set(false)}>Hide</button>
+          <h2>Konten Terlihat</h2>
+          <button onClick={() => isVisible.set(false)}>Sembunyikan</button>
         </div>
       </When>
       <When condition={!isVisible()}>
-        <button onClick={() => isVisible.set(true)}>Show</button>
+        <button onClick={() => isVisible.set(true)}>Tampilkan</button>
       </When>
     </div>
   )
@@ -179,10 +177,10 @@ function App() {
 
 ---
 
-## Async Data
+## Data Async
 
 ```jsx
-// Fetch data with useAsync
+// Ambil data dengan useAsync
 function App() {
   const { data: users, isLoading, error } = useAsync(
     () => fetch('/api/users').then(r => r.json())
@@ -206,7 +204,7 @@ function App() {
 ## Store
 
 ```jsx
-// Global store with createStore
+// Store global dengan createStore
 const useAuthStore = createStore({
   user: null,
   token: null,
@@ -237,7 +235,7 @@ function App() {
   return (
     <div>
       <When condition={isLoggedIn()}>
-        <p>Welcome, {user().name}!</p>
+        <p>Selamat datang, {user().name}!</p>
         <button onClick={logout}>Logout</button>
       </When>
       <When condition={!isLoggedIn()}>
@@ -255,13 +253,13 @@ function App() {
 ## Router
 
 ```jsx
-// SPA routing with Router
+// Routing SPA dengan Router
 import { Router, Link, useNavigate } from 'flint'
 
 const routes = [
   { path: '/', component: Home },
-  { path: '/about', component: About },
-  { path: '/users/:id', component: UserProfile },
+  { path: '/tentang', component: About },
+  { path: '/pengguna/:id', component: UserProfile },
   { path: '*', component: NotFound },
 ]
 
@@ -269,8 +267,8 @@ function App() {
   return (
     <Router routes={routes}>
       <nav>
-        <Link to="/">Home</Link>
-        <Link to="/about">About</Link>
+        <Link to="/">Beranda</Link>
+        <Link to="/tentang">Tentang</Link>
       </nav>
       <Outlet />
     </Router>
@@ -279,7 +277,7 @@ function App() {
 
 function UserProfile() {
   const params = useParams()
-  return <h1>User {params.id}</h1>
+  return <h1>Pengguna {params.id}</h1>
 }
 ```
 
@@ -288,18 +286,18 @@ function UserProfile() {
 ## Modal
 
 ```jsx
-// Modal with state toggle
+// Modal dengan toggle state
 const showModal = state(false)
 
 function App() {
   return (
     <div>
-      <button onClick={() => showModal.set(true)}>Open Modal</button>
+      <button onClick={() => showModal.set(true)}>Buka Modal</button>
 
       <Modal open={showModal()} onClose={() => showModal.set(false)}>
-        <h2>Modal Title</h2>
-        <p>Modal content goes here.</p>
-        <button onClick={() => showModal.set(false)}>Close</button>
+        <h2>Judul Modal</h2>
+        <p>Isi modal ada di sini.</p>
+        <button onClick={() => showModal.set(false)}>Tutup</button>
       </Modal>
     </div>
   )
@@ -308,11 +306,11 @@ function App() {
 
 ---
 
-## Tabs
+## Tab
 
 ```jsx
-// Tab navigation
-const activeTab = state('home')
+// Navigasi tab
+const activeTab = state('beranda')
 
 function App() {
   return (
@@ -321,9 +319,9 @@ function App() {
         value={activeTab()}
         onChange={activeTab.set}
         items={[
-          { key: 'home', label: 'Home', content: <Home /> },
-          { key: 'settings', label: 'Settings', content: <Settings /> },
-          { key: 'profile', label: 'Profile', content: <Profile /> },
+          { key: 'beranda', label: 'Beranda', content: <Home /> },
+          { key: 'pengaturan', label: 'Pengaturan', content: <Settings /> },
+          { key: 'profil', label: 'Profil', content: <Profile /> },
         ]}
       />
     </div>
@@ -333,17 +331,17 @@ function App() {
 
 ---
 
-## Theme
+## Tema
 
 ```jsx
-// Dark/Light theme toggle
+// Toggle tema Gelap/Terang
 const theme = useLocalStorage('theme', 'light')
 
 function App() {
   return (
     <div class={theme() === 'dark' ? 'dark' : 'light'}>
       <button onClick={() => theme.set(theme() === 'dark' ? 'light' : 'dark')}>
-        Toggle Theme
+        Ganti Tema
       </button>
     </div>
   )
@@ -352,10 +350,10 @@ function App() {
 
 ---
 
-## Auth
+## Autentikasi
 
 ```jsx
-// Complete auth flow with forms
+// Alur autentikasi lengkap dengan formulir
 const auth = useForm(
   { email: '', password: '' },
   {
@@ -367,7 +365,7 @@ const auth = useForm(
       method: 'POST',
       body: JSON.stringify(values),
     })
-    if (!res.ok) throw new Error('Login failed')
+    if (!res.ok) throw new Error('Login gagal')
     const data = await res.json()
     localStorage.setItem('token', data.token)
   }
@@ -388,6 +386,6 @@ function App() {
 
 ---
 
-## More Snippets
+## Potongan Kode Lainnya
 
-See [COMPARISON.md](../COMPARISON.md) for comparisons with React, Vue, Svelte, and Solid.
+Lihat [COMPARISON.id.md](../COMPARISON.id.md) untuk perbandingan dengan React, Vue, Svelte, dan Solid.

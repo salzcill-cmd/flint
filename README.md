@@ -1,5 +1,7 @@
 # Flint
 
+> [Bahasa Indonesia](README.id.md) | English
+
 A JavaScript framework built around one idea: you write less code, and it runs faster.
 
 Flint uses fine-grained signals instead of a virtual DOM. When state changes, only the exact DOM node that depends on it updates. No diffing, no reconciliation, no wasted work.
