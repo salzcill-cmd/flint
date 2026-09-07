@@ -874,3 +874,18 @@ export type {
   EffectEventOptions,
   EffectEventReturn,
 } from './hooks/effect-event.js'
+
+// API Helpers (v4.2)
+export {
+  $api,
+  $http,
+  $query,
+  $mutation,
+  $fetch,
+  $submit,
+} from './api/index.js'
+export type {
+  FetchOptions,
+  ApiResult,
+  ApiState,
+} from './api/index.js'

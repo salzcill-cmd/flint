@@ -4,5 +4,17 @@
 export * from '@flint/runtime'
 
 // Re-export store
-export { create } from '@flint/store'
-export type { StoreApi, StateCreator } from '@flint/store'
+export { create, useStore, immer, logger, persist, devtools } from '@flint/store'
+export type { StoreApi, StateCreator, Middleware } from '@flint/store'
+
+// Re-export reactivity aliases
+export {
+  createSignal,
+  createEffect,
+  createMemo,
+  createStore,
+  batch,
+  createResource,
+  from,
+  produce,
+} from '@flint/reactivity'

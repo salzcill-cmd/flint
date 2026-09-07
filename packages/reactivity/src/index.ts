@@ -5,7 +5,6 @@ export {
   computed,
   effect,
   watch,
-  batch,
   flushSync,
   untrack,
   captureScope,
@@ -106,3 +105,15 @@ export type {
   IsAny,
   IsUnknown,
 } from './types-helpers.js'
+
+// Solid/React Compatibility Aliases (v4.2)
+export {
+  createSignal,
+  createEffect,
+  createMemo,
+  createStore,
+  batch,
+  createResource,
+  from,
+  produce,
+} from './compat.js'
