@@ -1,5 +1,4 @@
-// Flint Vite Plugin — Enhanced with HMR
-// Transforms JSX files and provides HMR support
+// Flint Vite Plugin v4 — Enhanced with auto-imports and better DX
 
 import type { Plugin, ViteDevServer, HmrContext } from 'vite'
 import { parse, transform } from '@flint/compiler'
@@ -9,11 +8,48 @@ export interface FlintPluginOptions {
   dev?: boolean
   /** File extensions to transform */
   extensions?: string[]
+  /** Auto-import flint symbols (default: true) */
+  autoImport?: boolean
+  /** Enable React-compatible mode (allows React imports) */
+  reactCompat?: boolean
+}
+
+/**
+ * Auto-import flint symbols without explicit import statements.
+ * The compiler detects used symbols and adds imports automatically.
+ */
+const FLINT_AUTO_IMPORTS = {
+  'flint': [
+    'state', 'computed', 'effect', 'watch', 'batch', 'flushSync',
+    'reactive', 'model', 'bind', 'createRef', 'shallowRef', 'derive',
+    'signals', 'poll', 'watchDebounced', 'watchThrottled',
+    'Show', 'When', 'For', 'ForEach', 'Index', 'Switch', 'Match',
+    'Portal', 'Suspense', 'ErrorBoundary', 'Activity', 'KeepAlive',
+    'memo', 'lazy', 'createMemo', 'createEffect',
+    'ref', 'useSignal', 'cn', 'createStyles', 'cx',
+    'onMount', 'onUpdate', 'onDestroy',
+    'render', 'h', 'track', 'trackAttribute', 'trackEvent',
+    'createRouter', 'navigate', 'Link', 'Outlet',
+    'createForm', 'validators',
+    'useTransition', 'useDeferredValue', 'useId',
+    'useOptimistic', 'useOptimisticAction',
+    'useEffectEvent', 'useEffectEventDebounced', 'useEffectEventThrottled',
+    'useFocusTrap', 'useKeyboard', 'useAriaLive', 'useReducedMotion',
+    'useSEO', 'useStructuredData',
+    'preload', 'preinit', 'prefetchDNS', 'preconnect',
+    'escapeHtml', 'sanitizeInput', 'safeUrl',
+    'createServerAction', 'createServerComponent',
+  ],
+  'flint/store': [
+    'create', 'createStore', 'logger', 'persist', 'devtools', 'immer',
+    'createSelector', 'useStore',
+  ],
 }
 
 export default function flint(options: FlintPluginOptions = {}): Plugin {
   const extensions = options.extensions ?? ['.jsx', '.tsx']
   const isDev = options.dev ?? process.env.NODE_ENV !== 'production'
+  const autoImport = options.autoImport ?? true
 
   return {
     name: 'flint',
@@ -36,22 +72,18 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
       try {
         const { ast } = parse(code, {
           sourceType: 'module',
-          // Deterministic TS detection by extension (.ts/.tsx) — plain .js
-          // files are no longer reprinted through esbuild unnecessarily.
           filename: cleanId,
         })
 
         const result = transform(ast, code, {
           filename: id,
           dev: isDev,
+          autoImport,
         })
 
         let finalCode = result.code
 
-        // Dev-only: auto-wire HMR. Injected AFTER the transform so the
-        // import is added to the already-generated code. Modules that use
-        // acceptHMR()/onHMRDispose() self-accept; everything else falls
-        // through to Vite's default bubbling (full reload) — always correct.
+        // Dev-only: auto-wire HMR
         if (isDev) {
           finalCode =
             `import { __flintHMR__ } from 'flint'\n` +
@@ -101,7 +133,6 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
         },
       })
 
-      // Return the modules to update
       return ctx.modules
     },
 
@@ -112,7 +143,7 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
       })
     },
 
-    // Resolve 'flint' imports to @flint/runtime
+    // Resolve 'flint' imports
     resolveId(id) {
       if (id === 'flint') {
         return '\0flint:runtime'
@@ -151,7 +182,6 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
       if (id === '\0flint:testing') {
         return 'export * from "@flint/runtime/testing"'
       }
-      // Generic fallback: flint/<module> → @flint/runtime/<module>
       if (id.startsWith('\0flint:')) {
         const moduleName = id.slice(8)
         return `export * from "@flint/runtime/${moduleName}"`

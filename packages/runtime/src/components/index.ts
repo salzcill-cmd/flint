@@ -1,5 +1,5 @@
-// Flint Runtime — Built-in Components v2
-// Show, For, Index, Switch, Match, Portal, Suspense, Memo, cloneElement
+// Flint Runtime — Built-in Components v4
+// Show, When, For, Index, Switch, Match, Portal, Suspense, Memo, cloneElement
 
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
@@ -60,6 +60,37 @@ export function Show(props: {
   }
   if (props.fallback != null) {
     return toChildren(props.fallback)
+  }
+  return null
+}
+
+// ─── When — Simplified Conditional Rendering ────────────────────
+
+/**
+ * Simplified conditional rendering. More concise than Show.
+ *
+ * @example
+ * // Before:
+ * <Show when={isLoggedIn()} fallback={<Login />}>
+ *   <Dashboard />
+ * </Show>
+ *
+ * // After (simplified):
+ * <When condition={isLoggedIn()} else={<Login />}>
+ *   <Dashboard />
+ * </When>
+ */
+export function When(props: {
+  condition: boolean | (() => boolean)
+  else?: Renderable
+  children: Renderable
+}): Child {
+  const cond = typeof props.condition === 'function' ? props.condition() : props.condition
+  if (cond) {
+    return toChildren(props.children)
+  }
+  if (props.else != null) {
+    return toChildren(props.else)
   }
   return null
 }

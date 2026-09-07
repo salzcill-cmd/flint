@@ -1,7 +1,7 @@
 {
   "name": "@flint/store",
-  "version": "3.3.1",
-  "description": "Flint Store — Zustand-compatible state management with reactive signals",
+  "version": "4.0.0",
+  "description": "Flint Store — simplified createStore with reactive signals",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

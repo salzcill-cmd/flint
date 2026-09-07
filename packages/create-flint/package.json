@@ -1,7 +1,7 @@
 {
   "name": "create-flint",
-  "version": "3.3.1",
-  "description": "Scaffold a new Flint project with npx create-flint",
+  "version": "4.0.0",
+  "description": "Scaffold Flint projects — model(), reactive, auto-imports",
   "type": "module",
   "bin": {
     "create-flint": "dist/index.js"

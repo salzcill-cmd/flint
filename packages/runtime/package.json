@@ -1,7 +1,7 @@
 {
   "name": "@flint/runtime",
-  "version": "3.3.1",
-  "description": "Flint runtime — complete framework with i18n, PWA, query, SEO, a11y, hooks",
+  "version": "4.0.0",
+  "description": "Flint runtime — view(), When, reactive, model, bind, derive + full framework",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",

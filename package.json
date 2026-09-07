@@ -1,8 +1,8 @@
 {
   "name": "flint-monorepo",
   "private": true,
-  "version": "3.3.0",
-  "description": "Flint — Write less. Ship faster. Build beautifully. A complete JavaScript framework.",
+  "version": "4.0.0",
+  "description": "Flint v4 — model(), reactive, view(), When, auto-imports. Write less. Ship faster. Build beautifully.",
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm -r --parallel dev",

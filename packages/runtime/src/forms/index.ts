@@ -1,5 +1,5 @@
-// Flint Runtime — Forms & Validation
-// Form state management, validation, and field bindings
+// Flint Runtime — Forms & Validation v4
+// Simplified form handling with useForm() and field()
 
 import { state, computed, batch } from '@flint/reactivity'
 import type { Signal, Computed } from '@flint/reactivity'
@@ -58,6 +58,10 @@ export interface FormHelpers<T> {
   reset: () => void
   submit: () => Promise<void>
   getFieldState: (name: keyof T) => FieldState
+  /** Submit handler for <form onSubmit> */
+  handleSubmit: (e?: Event) => Promise<void>
+  /** Bind to <form> element */
+  formProps: () => { onSubmit: (e: Event) => Promise<void> }
 }
 
 // ─── Built-in Validators ────────────────────────────────────────
@@ -175,7 +179,7 @@ export const validators = {
   },
 }
 
-// ─── createForm ─────────────────────────────────────────────────
+// ─── createForm (original API) ──────────────────────────────────
 
 export function createForm<T extends Record<string, any>>(
   options: FormOptions<T>
@@ -348,6 +352,18 @@ export function createForm<T extends Record<string, any>>(
     }
   }
 
+  const handleSubmit = async (e?: Event) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    await submit()
+  }
+
+  const formProps = () => ({
+    onSubmit: handleSubmit,
+  })
+
   return {
     state: {
       values,
@@ -369,5 +385,70 @@ export function createForm<T extends Record<string, any>>(
     reset,
     submit,
     getFieldState,
+    handleSubmit,
+    formProps,
   }
+}
+
+// ─── useForm() — Simplified Form Hook ───────────────────────────
+
+/**
+ * Simplified form creation with automatic validation.
+ *
+ * @example
+ * // Before (verbose):
+ * const form = createForm({
+ *   initialValues: { email: '', password: '' },
+ *   validators: {
+ *     email: validators.required(),
+ *     password: validators.required(),
+ *   },
+ *   onSubmit: async (values) => { await login(values) },
+ * })
+ *
+ * // After (simplified with useForm):
+ * const form = useForm({
+ *   email: '',
+ *   password: '',
+ * }, {
+ *   email: [v.required(), v.email()],
+ *   password: v.required(),
+ * }, async (values) => { await login(values) })
+ *
+ * // In JSX:
+ * <form {...form.formProps()}>
+ *   <input {...field('email')} />
+ *   <input {...field('password')} type="password" />
+ *   <button disabled={!form.state.isValid()}>Login</button>
+ * </form>
+ */
+export function useForm<T extends Record<string, any>>(
+  initialValues: T,
+  fieldValidators?: Validators<T> | Record<string, Validator | Validator[]>,
+  onSubmit?: (values: T) => void | Promise<void>
+): FormHelpers<T> {
+  return createForm({
+    initialValues,
+    validators: fieldValidators as Validators<T>,
+    onSubmit: onSubmit ?? (() => {}),
+  })
+}
+
+// ─── field() — Quick Field Binding ──────────────────────────────
+
+/**
+ * Quick field binding helper for use with useForm.
+ *
+ * @example
+ * const { field, state } = useForm({ name: '', email: '' })
+ *
+ * <input {...field('name')} />
+ * <input {...field('email')} type="email" />
+ * {state.errors().name && <span>{state.errors().name}</span>}
+ */
+export function fieldBinding<T extends Record<string, any>>(
+  form: FormHelpers<T>,
+  name: keyof T
+): FieldBinding {
+  return form.field(name)
 }

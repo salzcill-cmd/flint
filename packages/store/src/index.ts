@@ -1,7 +1,6 @@
-// Flint Store — Zustand-compatible API with reactive signals
-// Provides create() for store creation, middleware support, and devtools integration
+// Flint Store v4 — Zustand-compatible API with simplified createStore
 
-import { state, type Signal } from '@flint/reactivity'
+import { state, computed, effect, type Signal } from '@flint/reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -37,14 +36,8 @@ class Store<T extends object> implements StoreApi<T> {
 
   constructor(initialState: T) {
     this._value = initialState
-    // Create a signal that reads from the store
-    const getRef = () => this._value
-    this._signal = state(initialState) as Signal<T>
-    // Override to always return current value
     const self = this
-    const original = this._signal
     this._signal = (() => self._value) as Signal<T>
-    // Copy over the brand symbol
     ;(this._signal as any)[Symbol.for('flint.signal')] = true
   }
 
@@ -109,6 +102,135 @@ export function create<T extends object>(
   store.setState(() => initialState)
 
   return store
+}
+
+// ─── createStore() — Simplified API ─────────────────────────────
+
+/**
+ * Create a store with simplified syntax.
+ * Supports both object and function syntax.
+ *
+ * @example
+ * // Object syntax (simplified):
+ * const useStore = createStore({
+ *   count: 0,
+ *   name: 'Flint',
+ *   increment() { this.count++ },
+ *   decrement() { this.count-- },
+ * })
+ *
+ * // Usage:
+ * useStore.count()  // read
+ * useStore.increment()  // call action
+ *
+ * // Function syntax (Zustand-compatible):
+ * const useStore = createStore((set, get) => ({
+ *   count: 0,
+ *   increment: () => set(s => ({ count: s.count + 1 })),
+ * }))
+ */
+export function createStore<T extends Record<string, any>>(
+  config: T | StateCreator<T>,
+  middlewares?: Middleware<T>[]
+): T & StoreApi<T> {
+  if (typeof config === 'function') {
+    // Function syntax — Zustand-compatible
+    const store = create(config as StateCreator<T>, middlewares)
+    return Object.assign({}, config as any, store) as T & StoreApi<T>
+  }
+
+  // Object syntax — simplified
+  const stateKeys: string[] = []
+  const actionKeys: string[] = []
+  const computedKeys: string[] = []
+
+  for (const [key, value] of Object.entries(config)) {
+    if (typeof value === 'function') {
+      // Check if it looks like a computed (has no parameters)
+      if (value.length === 0 && key.startsWith('get')) {
+        computedKeys.push(key)
+      } else {
+        actionKeys.push(key)
+      }
+    } else {
+      stateKeys.push(key)
+    }
+  }
+
+  // Build Zustand-compatible state creator
+  const stateCreator: StateCreator<T> = (set, get) => {
+    const stateObj: any = {}
+
+    // Initialize state
+    for (const key of stateKeys) {
+      stateObj[key] = (config as any)[key]
+    }
+
+    // Add actions
+    for (const key of actionKeys) {
+      stateObj[key] = (...args: any[]) => {
+        const action = (config as any)[key]
+        const currentState = get()
+        action.call(stateObj, ...args)
+        // Check if state was mutated
+        const newState = get()
+        if (newState !== currentState) {
+          set(stateObj)
+        }
+      }
+    }
+
+    return stateObj as T
+  }
+
+  const store = create<T>(stateCreator, middlewares)
+
+  // Create reactive signals for each state key
+  const signals: Record<string, Signal<any>> = {}
+  for (const key of stateKeys) {
+    signals[key] = state((config as any)[key])
+  }
+
+  // Create reactive computeds (use computed from reactivity)
+  const computeds: Record<string, () => any> = {}
+  for (const key of computedKeys) {
+    const sig = computed(() => {
+      const currentState = store.getState()
+      return (config as any)[key].call(currentState)
+    })
+    computeds[key] = sig
+  }
+
+  // Build the result object
+  const result: any = {}
+
+  // Expose state as signals
+  for (const key of stateKeys) {
+    result[key] = signals[key]
+  }
+
+  // Expose computed as readable signals
+  for (const key of computedKeys) {
+    result[key] = computeds[key]
+  }
+
+  // Expose actions
+  for (const key of actionKeys) {
+    result[key] = (...args: any[]) => {
+      const currentState = store.getState()
+      const action = (config as any)[key]
+      action.call(result, ...args)
+    }
+  }
+
+  // Expose store methods
+  result.getState = store.getState.bind(store)
+  result.setState = store.setState.bind(store)
+  result.subscribe = store.subscribe.bind(store)
+  result.destroy = store.destroy.bind(store)
+  result.signal = store.signal.bind(store)
+
+  return result
 }
 
 // ─── Middleware ──────────────────────────────────────────────────
@@ -206,41 +328,11 @@ export function devtools<T extends object>(
   }
 }
 
-/**
- * Immer-compatible middleware: allows mutable draft updates.
- * Deep clones state before passing to the updater function.
- *
- * @example
- * const store = create((set, get) => ({
- *   users: [],
- * }), [immer()])
- *
- * // Mutate draft directly
- * store.setState((state) => {
- *   state.users.push({ name: 'John' })
- * })
- */
-/**
- * Immer-compatible middleware: allows mutable draft updates.
- * Deep clones state before passing to the updater function.
- *
- * @example
- * const store = create((set, get) => ({
- *   users: [],
- * }), [immer()])
- *
- * // Mutate draft directly
- * store.setState((state) => {
- *   state.users.push({ name: 'John' })
- * })
- */
 export function immer<T extends object>(): Middleware<T> {
   return (stateCreator) => (set, get, store) => {
     const wrappedSet = (partial: SetState<T>) => {
       if (typeof partial === 'function') {
         const current = get()
-        // Clone state for immer-style draft mutations
-        // Use JSON clone for compatibility (handles cycles via replacer if needed)
         const draft = JSON.parse(JSON.stringify(current))
         const result = (partial as (draft: T) => T)(draft as T)
         set(result !== undefined ? result : draft)

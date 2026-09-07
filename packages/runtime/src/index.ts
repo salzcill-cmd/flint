@@ -5,9 +5,11 @@
 export { h, render, track, trackAttribute, trackEvent, trackChildren, trackComponent } from './renderer/index.js'
 export type { Child, Component, Props, ReactiveNode } from './renderer/index.js'
 
-// Component system
+// Component system (v4 — simplified)
 export {
   component,
+  view,
+  withModel,
   onMount,
   onUpdate,
   onDestroy,
@@ -29,13 +31,10 @@ export {
 } from './inject/index.js'
 export type { InjectionKey, InjectionContext } from './inject/index.js'
 
-// React 19+ Utilities
+// React 19+ Utilities (from hooks)
 export {
-  createRef,
   assignRef,
   mergeRefs,
-  reactive,
-  shallowRef,
   readonly,
   shallowReadonly,
   toRef,
@@ -49,9 +48,10 @@ export {
   applyTransition,
 } from './hooks/utilities.js'
 
-// Built-in Components
+// Built-in Components (v4 — added When)
 export {
   Show,
+  When,
   For,
   ForEach,
   Index,
@@ -66,6 +66,24 @@ export {
   createEffect,
   trackPromise,
 } from './components/index.js'
+
+// Simplified UI Components (v4)
+export {
+  Text,
+  Input,
+  Button,
+  Card,
+  Tabs,
+  Modal,
+  Accordion,
+  Alert,
+  Spinner,
+  Badge,
+  Divider,
+  Stack,
+  Grid,
+  EmptyState,
+} from './components/ui.js'
 
 // Lazy Loading & Error Boundaries
 export {
@@ -86,7 +104,6 @@ export type {
 
 // Refs
 export { ref, useSignal } from './ref/index.js'
-export type { Ref } from './ref/index.js'
 
 // Styling
 export {
@@ -111,9 +128,19 @@ export type {
   Theme,
 } from './styles/index.js'
 
+// Styling Shortcuts (v4)
+export {
+  sx,
+  css,
+  clsx,
+  tw,
+} from './styles/shortcuts.js'
+
 // Forms & Validation
 export {
   createForm,
+  useForm,
+  fieldBinding,
   validators,
 } from './forms/index.js'
 export type {
@@ -128,6 +155,24 @@ export type {
   FormOptions,
   FormHelpers,
 } from './forms/index.js'
+
+// Error Messages (v4)
+export {
+  ERROR_CODES,
+  flintError,
+  throwFlintErrorBeginner,
+  flintWarning,
+  isValidComponent,
+  isValidElement,
+  isSignal,
+  isComputed,
+  warnComponentNaming,
+  warnHookConditional,
+  warnUnknownProp,
+  warnInvalidChild,
+  QUICK_HELP,
+} from './errors/beginner.js'
+export type { FlintErrorCode } from './errors/beginner.js'
 
 // Router v2
 export {
@@ -179,6 +224,21 @@ export type {
   DataLoader,
   HydrationOptions,
 } from './ssr/index.js'
+
+// use() Hook (v4)
+export {
+  useAsync,
+  useDebounce,
+  useThrottle,
+  usePrevious,
+  useToggle,
+  useCounter,
+  useLocalStorage,
+  useMediaQuery,
+  useOnline,
+  useDarkMode,
+} from './hooks/use.js'
+export type { UseResult, UseContextResult } from './hooks/use.js'
 
 // DevTools
 export {
@@ -523,7 +583,7 @@ export type {
 export { cn } from './utils/classnames.js'
 export type { ClassValue } from './utils/classnames.js'
 
-// Re-export reactivity
+// Re-export reactivity (v4 — simplified APIs)
 export {
   state,
   computed,
@@ -536,6 +596,18 @@ export {
   createSelector,
   createRoot,
   onCleanup,
+  // NEW v4 simplified APIs
+  reactive,
+  model,
+  bind,
+  createRef,
+  shallowRef,
+  derive,
+  signals,
+  poll,
+  watchDebounced,
+  watchThrottled,
+  computedSet,
 } from '@flint/reactivity'
 export type {
   Signal,
@@ -544,6 +616,10 @@ export type {
   CleanupFn,
   Selector,
   Scope,
+  ReactiveProxy,
+  Ref,
+  Writable,
+  Readable,
 } from '@flint/reactivity'
 
 // Developer Experience

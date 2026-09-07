@@ -1,13 +1,6 @@
-// Flint Compiler — JSX Transformer v3
+// Flint Compiler — JSX Transformer v4
 // Transforms JSX AST into Flint runtime calls with fine-grained reactivity
-// Supports source maps for debugging
-//
-// Transformations:
-//   <div>...</div>          → h("div", null, ...)
-//   <div class="x">...</div> → h("div", { class: "x" }, ...)
-//   <Comp prop={v} />       → h(Comp, { prop: v })
-//   <div>{expr}</div>       → h("div", null, track(() => expr))
-//   <div onClick={fn}>      → h("div", { onClick: trackEvent(fn) })
+// Supports source maps, auto-imports, and simplified syntax
 
 import type * as acorn from 'acorn'
 
@@ -99,12 +92,16 @@ export interface TransformOptions {
   filename?: string
   dev?: boolean
   sourceMaps?: boolean
+  /** Auto-import flint functions (default: true) */
+  autoImport?: boolean
 }
 
 export interface TransformResult {
   code: string
   ast: ASTNode
   map?: SourceMap
+  /** List of auto-imported symbols */
+  imports?: string[]
 }
 
 export interface SourceMap {
@@ -124,11 +121,6 @@ class SourceMapGenerator {
   private names: string[] = []
   private sources: string[] = []
   private sourcesContent: (string | null)[] = []
-  private currentLine = 1
-  private currentColumn = 0
-  private sourceIndex = 0
-  private originalLine = 1
-  private originalColumn = 0
 
   constructor(source?: string, filename?: string) {
     if (source) {
@@ -152,21 +144,14 @@ class SourceMapGenerator {
     ])
   }
 
-  setSourceContent(sourceIndex: number, content: string | null): void {
-    this.sourcesContent[sourceIndex] = content
-  }
-
   generate(): SourceMap {
-    // Encode mappings using VLQ encoding
-    const encodedMappings = this.encodeMappings()
-
     return {
       version: 3,
       file: 'output.js',
       sources: this.sources,
       sourcesContent: this.sourcesContent,
       names: this.names,
-      mappings: encodedMappings,
+      mappings: this.encodeMappings(),
     }
   }
 
@@ -270,8 +255,6 @@ function getNodeKeys(node: ASTNode): string[] {
         keys.push('left', 'right')
         break
       case 'UnaryExpression':
-        keys.push('argument')
-        break
       case 'UpdateExpression':
         keys.push('argument')
         break
@@ -349,8 +332,6 @@ function getNodeKeys(node: ASTNode): string[] {
         keys.push('init', 'test', 'update', 'body')
         break
       case 'WhileStatement':
-        keys.push('test', 'body')
-        break
       case 'DoWhileStatement':
         keys.push('test', 'body')
         break
@@ -426,12 +407,9 @@ function getNodeKeys(node: ASTNode): string[] {
 
 // ─── Code Generator ─────────────────────────────────────────────
 
-function generate(node: ASTNode | null | undefined, code: string, options?: { inJSXExpression?: boolean }): string {
+function generate(node: ASTNode | null | undefined, code: string): string {
   if (!node || typeof node !== 'object') return ''
   if (!node.type) return ''
-
-  const start = node.start ?? 0
-  const end = node.end ?? code.length
 
   switch (node.type) {
     case 'JSXElement':
@@ -439,36 +417,28 @@ function generate(node: ASTNode | null | undefined, code: string, options?: { in
     case 'JSXFragment':
       return generateJSXFragment(node as JSXFragment, code)
     default:
-      return code.slice(start, end)
+      return code.slice(node.start ?? 0, node.end ?? code.length)
   }
 }
 
 function isLikelyReactive(exprNode: ASTNode | null | undefined, code: string): boolean {
   if (!exprNode || typeof exprNode !== 'object') return false
 
-  // Function calls are likely reactive (signal reads)
   if (exprNode.type === 'CallExpression') return true
-  // Member expressions like state.value
   if (exprNode.type === 'MemberExpression') return true
-  // Identifier references (could be a signal)
   if (exprNode.type === 'Identifier') return true
-  // Binary/logical expressions with reactive parts
   if (exprNode.type === 'BinaryExpression' || exprNode.type === 'LogicalExpression') {
     return isLikelyReactive(exprNode.left, code) || isLikelyReactive(exprNode.right, code)
   }
-  // Conditional expressions
   if (exprNode.type === 'ConditionalExpression') {
     return isLikelyReactive(exprNode.consequent, code) || isLikelyReactive(exprNode.alternate, code)
   }
-  // Template literals
   if (exprNode.type === 'TemplateLiteral') {
     return exprNode.expressions.some((e: ASTNode) => isLikelyReactive(e, code))
   }
-  // Arrow functions and function expressions are NOT reactive (they create new closures)
   if (exprNode.type === 'ArrowFunctionExpression' || exprNode.type === 'FunctionExpression') {
     return false
   }
-  // Assignment expressions
   if (exprNode.type === 'AssignmentExpression') return true
 
   return false
@@ -478,7 +448,6 @@ function generateJSXElement(node: JSXElement, code: string): string {
   const tag = getJSXTagName(node.openingElement.name, code)
   const isComponent = isJSXComponent(node.openingElement.name)
 
-  // Separate static vs reactive attributes
   const { staticProps, reactiveCalls } = separateAttributes(
     node.openingElement.attributes,
     code,
@@ -497,18 +466,14 @@ function generateJSXElement(node: JSXElement, code: string): string {
   }
   result += ')'
 
-  // For DOM elements (not components), add reactive tracking calls after h()
+  // For DOM elements, add reactive tracking calls after h()
   if (!isComponent && reactiveCalls.length > 0) {
-    // Wrap in IIFE to capture element reference
     result = `(() => { const __el = ${result}; ${reactiveCalls.join('; ')}; return __el })()`
   }
 
   return result
 }
 
-/**
- * Separate attributes into static (can go in props object) and reactive (need trackAttribute/trackEvent calls).
- */
 function separateAttributes(
   attributes: (JSXAttribute | JSXSpreadAttribute)[],
   code: string,
@@ -529,22 +494,16 @@ function separateAttributes(
       const name = attr.name.name
 
       if (attr.value === null) {
-        // Boolean attribute: <div disabled />
         staticProps.push(`${name}: true`)
       } else if (attr.value.type === 'Literal') {
-        // Static string: <div class="x" />
         staticProps.push(`${name}: ${JSON.stringify(attr.value.value)}`)
       } else if (attr.value.type === 'JSXExpressionContainer') {
         const expr = generate(attr.value.expression, code)
         const isReactive = isLikelyReactive(attr.value.expression, code)
 
-        // For components, always pass as prop (components handle their own reactivity)
         if (isComponent) {
           staticProps.push(`${name}: ${expr}`)
         } else if (isReactive) {
-          // For DOM elements with reactive expressions:
-          // Event handlers → trackEvent()
-          // Other attributes → trackAttribute()
           if (/^on[A-Z]/.test(name)) {
             const eventName = name.slice(2).toLowerCase()
             reactiveCalls.push(
@@ -556,7 +515,6 @@ function separateAttributes(
             )
           }
         } else {
-          // Static expression — put in props object
           staticProps.push(`${name}: ${expr}`)
         }
       }
@@ -588,46 +546,9 @@ function getJSXTagName(name: JSXTagName, code: string): string {
 
 function isJSXComponent(name: JSXTagName): boolean {
   if (name.type === 'JSXIdentifier') {
-    // Components start with uppercase
     return name.name[0] === name.name[0].toUpperCase()
   }
   return name.type === 'JSXMemberExpression'
-}
-
-function generateJSXAttributes(attributes: (JSXAttribute | JSXSpreadAttribute)[], code: string): string {
-  if (!attributes || attributes.length === 0) return 'null'
-
-  const props: string[] = []
-  let hasSpread = false
-
-  for (const attr of attributes) {
-    if (attr.type === 'JSXSpreadAttribute') {
-      hasSpread = true
-      const arg = generate(attr.argument, code)
-      if (props.length > 0) {
-        props.push(`...(${arg} || {})`)
-      } else {
-        props.push(`...${arg}`)
-      }
-    } else if (attr.type === 'JSXAttribute') {
-      const name = attr.name.name
-      if (attr.value === null) {
-        // Boolean attribute: <div disabled />
-        props.push(`${name}: true`)
-      } else if (attr.value.type === 'JSXExpressionContainer') {
-        const expr = generate(attr.value.expression, code)
-        props.push(`${name}: ${expr}`)
-      } else if (attr.value.type === 'Literal') {
-        props.push(`${name}: ${JSON.stringify(attr.value.value)}`)
-      }
-    }
-  }
-
-  if (props.length === 0) return 'null'
-  if (hasSpread && props.length > 1) {
-    return `{ ${props.join(', ')} }`
-  }
-  return `{ ${props.join(', ')} }`
 }
 
 function generateJSXChildren(children: ASTNode[], code: string): string {
@@ -637,16 +558,13 @@ function generateJSXChildren(children: ASTNode[], code: string): string {
 
   for (const child of children) {
     if (child.type === 'JSXText') {
-      const text = child.value
-        .replace(/\n\s*/g, ' ')
-        .trim()
+      const text = child.value.replace(/\n\s*/g, ' ').trim()
       if (text) {
         parts.push(JSON.stringify(text))
       }
     } else if (child.type === 'JSXExpressionContainer') {
       if (child.expression.type !== 'JSXEmptyExpression') {
         const expr = generate(child.expression, code)
-        // Wrap reactive expressions in track() for fine-grained DOM updates
         if (isLikelyReactive(child.expression, code)) {
           parts.push(`track(() => ${expr})`)
         } else {
@@ -663,6 +581,55 @@ function generateJSXChildren(children: ASTNode[], code: string): string {
   return `[${parts.join(', ')}]`
 }
 
+// ─── Auto-Import Detection ──────────────────────────────────────
+
+const FLINT_SYMBOLS = [
+  'state', 'computed', 'effect', 'watch', 'batch', 'flushSync',
+  'reactive', 'model', 'bind', 'createRef', 'shallowRef', 'derive',
+  'signals', 'poll', 'watchDebounced', 'watchThrottled',
+  'Show', 'For', 'ForEach', 'Index', 'Switch', 'Match',
+  'Portal', 'Suspense', 'ErrorBoundary', 'Activity', 'KeepAlive',
+  'memo', 'lazy', 'createMemo', 'createEffect', 'trackPromise',
+  'ref', 'useSignal', 'cn', 'createStyles', 'cx',
+  'onMount', 'onUpdate', 'onDestroy',
+  'render', 'h', 'track', 'trackAttribute', 'trackEvent',
+  'createRouter', 'navigate', 'Link', 'Outlet',
+  'createForm', 'validators',
+  'useTransition', 'useDeferredValue', 'useId',
+  'useOptimistic', 'useOptimisticAction',
+  'useEffectEvent', 'useEffectEventDebounced', 'useEffectEventThrottled',
+  'useFocusTrap', 'useKeyboard', 'useAriaLive', 'useReducedMotion',
+  'useSEO', 'useStructuredData',
+  'preload', 'preinit', 'prefetchDNS', 'preconnect',
+  'escapeHtml', 'sanitizeInput', 'safeUrl',
+  'createServerAction', 'createServerComponent',
+]
+
+function detectUsedSymbols(code: string): string[] {
+  const used: string[] = []
+  for (const sym of FLINT_SYMBOLS) {
+    // Check if symbol is used as identifier (word boundary)
+    const regex = new RegExp(`\\b${sym}\\b`)
+    if (regex.test(code)) {
+      used.push(sym)
+    }
+  }
+  return used
+}
+
+function detectExistingImports(code: string): Set<string> {
+  const imported = new Set<string>()
+  const regex = /import\s+{([^}]+)}\s+from\s+['"][^'"]+['"]/g
+  let match
+  while ((match = regex.exec(code)) !== null) {
+    const specs = match[1].split(',').map(s => s.trim().split(/\s+as\s+/)[0].trim())
+    for (const spec of specs) {
+      if (spec) imported.add(spec)
+    }
+  }
+  return imported
+}
+
 // ─── Transformer ────────────────────────────────────────────────
 
 export function transform(ast: ASTNode, code: string, options: TransformOptions = {}): TransformResult {
@@ -670,7 +637,6 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
   const imports: string[] = []
   let hasFlintImport = false
   let hasJSX = false
-  let needsTrack = false
 
   // First pass: detect JSX and check for existing flint imports
   walk(ast, null, {
@@ -686,7 +652,6 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
   })
 
   if (!hasJSX) {
-    // No JSX, return original code
     return { code, ast }
   }
 
@@ -714,9 +679,25 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
     transformedCode = transformedCode.slice(0, r.start) + r.replacement + transformedCode.slice(r.end)
   }
 
-  // Add h import if needed
-  if (hasJSX && !hasFlintImport) {
+  // Auto-import flint symbols if enabled
+  if (options.autoImport !== false && hasJSX && !hasFlintImport) {
+    const usedSymbols = detectUsedSymbols(transformedCode)
+    const existingImports = detectExistingImports(transformedCode)
+
+    // Core h/track imports always needed
+    const coreImports = ['h', 'track', 'trackAttribute', 'trackEvent']
+    const additionalImports = usedSymbols.filter(s => !coreImports.includes(s) && !existingImports.has(s))
+
+    if (additionalImports.length > 0) {
+      transformedCode = `import { ${coreImports.join(', ')}, ${additionalImports.join(', ')} } from 'flint'\n` + transformedCode
+      imports.push(...coreImports, ...additionalImports)
+    } else {
+      transformedCode = hImport + '\n' + transformedCode
+      imports.push(...coreImports)
+    }
+  } else if (hasJSX && !hasFlintImport) {
     transformedCode = hImport + '\n' + transformedCode
+    imports.push('h', 'track', 'trackAttribute', 'trackEvent')
   }
 
   // Generate source map if requested
@@ -724,9 +705,7 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
   if (options.sourceMaps !== false) {
     const generator = new SourceMapGenerator(code, options.filename)
 
-    // Add mappings for each JSX transformation
     for (const r of replacements) {
-      // Map generated positions back to original
       const originalStart = getOriginalPosition(code, r.start)
       const generatedLine = transformedCode.slice(0, transformedCode.indexOf(r.replacement)).split('\n').length
       const generatedColumn = transformedCode.indexOf(r.replacement) % (transformedCode.split('\n')[generatedLine - 1]?.length || 1)
@@ -742,7 +721,7 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
     sourceMap = generator.generate()
   }
 
-  return { code: transformedCode, ast, map: sourceMap }
+  return { code: transformedCode, ast, map: sourceMap, imports }
 }
 
 function getOriginalPosition(code: string, offset: number): { line: number; column: number } {
