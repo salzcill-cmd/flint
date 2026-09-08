@@ -257,6 +257,78 @@ export {
 } from './middleware/logger.js'
 export type { LogLevel, LogConfig, LogEntry } from './middleware/logger.js'
 
+// ─── Security ───────────────────────────────────────────────────
+
+export {
+  helmet,
+  csrf,
+  generateCsrfToken,
+  setCsrfCookie,
+} from './middleware/security.js'
+export type { HelmetConfig, CorsConfig, CsrfConfig } from './middleware/security.js'
+
+// ─── Health Checks ──────────────────────────────────────────────
+
+export {
+  healthCheck,
+  registerHealthCheck,
+  unregisterHealthCheck,
+  createDatabaseCheck,
+  createMemoryCheck,
+  createDiskCheck,
+} from './middleware/health.js'
+export type { HealthCheckConfig, HealthStatus, CheckResult } from './middleware/health.js'
+
+// ─── Graceful Shutdown ──────────────────────────────────────────
+
+export {
+  GracefulShutdown,
+  createShutdownManager,
+  gracefulShutdown,
+} from './middleware/shutdown.js'
+export type { ShutdownConfig } from './middleware/shutdown.js'
+
+// ─── Environment Configuration ──────────────────────────────────
+
+export {
+  Environment,
+  validateEnv,
+  loadEnvFile,
+  getEnv,
+  isProduction,
+  isDevelopment,
+  isTest,
+  baseEnvSchema,
+  databaseEnvSchema,
+  authEnvSchema,
+  productionEnvSchema,
+} from './middleware/env.js'
+export type { EnvConfig } from './middleware/env.js'
+
+// ─── Session Management ─────────────────────────────────────────
+
+export {
+  SessionManager,
+  MemoryStore,
+  session,
+  createSessionManager,
+  getSession,
+  setSessionData,
+  getSessionData,
+} from './middleware/session.js'
+export type { SessionConfig, Session, SessionStore } from './middleware/session.js'
+
+// ─── Job Queue ──────────────────────────────────────────────────
+
+export {
+  JobQueue,
+  createJobQueue,
+  sendEmailJob,
+  sendSmsJob,
+  webhookJob,
+} from './queue.js'
+export type { JobConfig, Job, JobHandler } from './queue.js'
+
 // ─── Re-export Hono types ──────────────────────────────────────
 
 export type { Hono } from 'hono'
