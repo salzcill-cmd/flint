@@ -500,7 +500,8 @@ export function $form<T extends Record<string, any>>(
   const isValid = computed(() => {
     if (!validators) return true
     for (const [field, validator] of Object.entries(validators)) {
-      const error = validator(values[field])
+      if (!validator) continue
+      const error = validator(values[field as keyof T])
       if (error) return false
     }
     return true
@@ -510,8 +511,9 @@ export function $form<T extends Record<string, any>>(
     if (!validators) return true
     let valid = true
     for (const [field, validator] of Object.entries(validators)) {
-      const error = validator(values[field])
-      errors[field] = error
+      if (!validator) continue
+      const error = validator(values[field as keyof T])
+      errors[field as keyof T] = error || undefined
       if (error) valid = false
     }
     return valid
@@ -522,7 +524,7 @@ export function $form<T extends Record<string, any>>(
     if (!validate()) return
     isSubmitting.set(true)
     try {
-      await onSubmit?.(values)
+      await onSubmit?.(values as T)
     } finally {
       isSubmitting.set(false)
     }
@@ -530,27 +532,29 @@ export function $form<T extends Record<string, any>>(
 
   const set = (field: keyof T) => (e: Event) => {
     const target = e.target as HTMLInputElement
-    values[field] = target.value
-    if (validators?.[field]) {
-      errors[field] = validators[field](target.value)
+    values[field as keyof T] = target.value as any
+    const validatorFn = validators?.[field as keyof T]
+    if (validatorFn) {
+      const error = validatorFn(target.value)
+      errors[field as keyof T] = error || undefined
     }
   }
 
   const reset = () => {
     for (const [key, value] of Object.entries(initialValues)) {
-      values[key] = value
+      values[key as keyof T] = value as any
     }
     for (const key of Object.keys(errors)) {
-      delete errors[key]
+      delete (errors as any)[key]
     }
     isSubmitting.set(false)
   }
 
   return {
-    values,
+    values: values as T,
     errors,
-    isSubmitting,
-    isValid,
+    isSubmitting: isSubmitting as any,
+    isValid: isValid as any,
     submit,
     set,
     reset,

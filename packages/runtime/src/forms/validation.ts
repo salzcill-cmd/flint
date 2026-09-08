@@ -6,8 +6,8 @@ import type { Signal } from '@flint/reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 
-export interface FormSchema<T = any> {
-  [K in keyof T]?: ValidationRule<T[K]>[]
+export type FormSchema<T = any> = {
+  [K in keyof T]?: ValidationRule[]
 }
 
 export interface ValidationRule<T = any> {
@@ -279,7 +279,7 @@ export function useForm<T extends Record<string, any>>(
 
   // Validate single field
   async function validateField(name: keyof T): Promise<boolean> {
-    const fieldRules = validationSchema[name]
+    const fieldRules = (validationSchema as any)[name]
     if (!fieldRules) return true
 
     const value = values()[name]
@@ -313,7 +313,7 @@ export function useForm<T extends Record<string, any>>(
     const fieldNames = Object.keys(validationSchema) as Array<keyof T>
 
     for (const name of fieldNames) {
-      const fieldRules = validationSchema[name]
+      const fieldRules = (validationSchema as any)[name]
       if (!fieldRules) continue
 
       const value = values()[name]

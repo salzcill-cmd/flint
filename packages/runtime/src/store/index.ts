@@ -219,7 +219,7 @@ export function createStore<T extends Record<string, any>>(
     }
 
     // Execute action
-    return actions[action](actionContext, payload)
+    return actions[action](actionContext as any, payload)
   }
 
   // Create store object
@@ -364,8 +364,8 @@ function savePersistedState<T>(
     const key = Array.isArray(config) ? `flint-store-${storeName}` : (config.key || `flint-store-${storeName}`)
 
     const toSave = paths
-      ? Object.fromEntries(paths.filter(p => p in state).map(p => [p, (state as any)[p]]))
-      : state
+      ? Object.fromEntries(paths.filter(p => p in (state as object)).map(p => [p, (state as any)[p]]))
+      : state as any
 
     const serializer = Array.isArray(config)
       ? { serialize: JSON.stringify }
@@ -517,13 +517,13 @@ export function createPersistMiddleware<T>(
       const saved = localStorage.getItem(config.key || `flint-store-${store.$name}`)
       if (saved) {
         const parsed = config.serializer?.deserialize(saved) ?? JSON.parse(saved)
-        Object.assign(store.state, parsed)
+        Object.assign(store.state as any, parsed)
       }
     },
     onMutation: (store, mutation, payload) => {
       // Save state on mutation
       const stateToSave: Record<string, any> = {}
-      const paths = config.paths || Object.keys(store.state)
+      const paths = config.paths || Object.keys(store.state as any)
       for (const key of paths) {
         stateToSave[key] = (store.state as any)[key]
       }

@@ -73,9 +73,6 @@ export {
   Input,
   Button,
   Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
   Tabs,
   Modal,
   Accordion,
@@ -866,13 +863,6 @@ export {
   lazyRoute,
   createNestedRoutes,
 } from './router/advanced.js'
-export type {
-  Route as AdvancedRoute,
-  RouteGuard,
-  RouterOptions,
-  Router,
-  Location as RouterLocation,
-} from './router/advanced.js'
 
 // Enterprise Form Validation (v5)
 export {
@@ -882,15 +872,6 @@ export {
   fieldProps,
   selectProps,
   textareaProps,
-} from './forms/validation.js'
-export type {
-  FormSchema,
-  ValidationRule,
-  FieldState,
-  FormState,
-  FormOptions,
-  FormHelpers,
-  FieldHelpers,
 } from './forms/validation.js'
 
 // Optimistic Updates & use() API

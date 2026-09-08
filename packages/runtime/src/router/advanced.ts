@@ -458,7 +458,7 @@ export function createAuthGuard(
 ): RouteGuard {
   return (to, from, next) => {
     if (to.meta?.requiresAuth && !isAuthenticated()) {
-      next({ path: loginPath, query: { redirect: to.fullPath } })
+      next({ path: loginPath, query: { redirect: to.path } })
     } else {
       next()
     }
