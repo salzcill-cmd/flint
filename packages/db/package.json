@@ -1,0 +1,65 @@
+{
+  "name": "@flint/db",
+  "version": "4.0.0",
+  "description": "Lightweight database integration for Flint - Powered by Drizzle ORM",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./sqlite": {
+      "types": "./dist/sqlite.d.ts",
+      "import": "./dist/sqlite.js"
+    },
+    "./pg": {
+      "types": "./dist/pg.d.ts",
+      "import": "./dist/pg.js"
+    },
+    "./mysql": {
+      "types": "./dist/mysql.d.ts",
+      "import": "./dist/mysql.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.30.0"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "^0.30.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^22.12.0",
+    "better-sqlite3": "^13.0.3",
+    "mysql2": "^3.24.4",
+    "postgres": "^3.4.9",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "flint",
+    "database",
+    "drizzle",
+    "orm",
+    "sqlite",
+    "postgresql",
+    "mysql"
+  ],
+  "license": "MIT"
+}
