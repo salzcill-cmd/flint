@@ -1,0 +1,18 @@
+{
+  "name": "flint-hello-world",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "flint": "^4.0.0"
+  },
+  "devDependencies": {
+    "@flint/vite-plugin": "^4.0.0",
+    "vite": "^6.0.0"
+  }
+}
