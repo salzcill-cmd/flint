@@ -26,12 +26,8 @@ describe('create-flint', () => {
     )
 
     expect(sourceCode).toContain('blank')
-    expect(sourceCode).toContain('counter')
-    expect(sourceCode).toContain('todo')
-    expect(sourceCode).toContain('reactive')
-    expect(sourceCode).toContain('dashboard')
-    expect(sourceCode).toContain('landing')
-    expect(sourceCode).toContain('auth')
+    expect(sourceCode).toContain('fullstack')
+    expect(sourceCode).toContain('api')
   })
 
   it('should have valid HTML template structure', () => {
@@ -99,7 +95,6 @@ describe('create-flint', () => {
       'utf-8'
     )
 
-    expect(sourceCode).toContain('renderTemplate')
     expect(sourceCode).toContain('writeFileWithTemplate')
     expect(sourceCode).toContain('<%= name %>')
   })
@@ -161,6 +156,29 @@ describe('create-flint', () => {
 
     expect(sourceCode).toContain('Next steps:')
     expect(sourceCode).toContain('cd ${name}')
-    expect(sourceCode).toContain('npm run dev')
+  })
+
+  it('should have package manager detection', () => {
+    const sourceCode = fs.readFileSync(
+      path.join(__dirname, '../src/index.ts'),
+      'utf-8'
+    )
+
+    expect(sourceCode).toContain('detectPackageManager')
+    expect(sourceCode).toContain('npm')
+    expect(sourceCode).toContain('pnpm')
+    expect(sourceCode).toContain('yarn')
+    expect(sourceCode).toContain('bun')
+  })
+
+  it('should have backend dependencies for fullstack template', () => {
+    const sourceCode = fs.readFileSync(
+      path.join(__dirname, '../src/index.ts'),
+      'utf-8'
+    )
+
+    expect(sourceCode).toContain("packageJson.dependencies['@flint/server']")
+    expect(sourceCode).toContain("packageJson.dependencies['@flint/db']")
+    expect(sourceCode).toContain("packageJson.dependencies['@flint/auth']")
   })
 })
