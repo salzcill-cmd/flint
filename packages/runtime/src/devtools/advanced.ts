@@ -1,8 +1,8 @@
 // Flint DevTools v2 — Advanced Debugging
 // State diff, time travel, performance insights
 
-import { state, computed } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

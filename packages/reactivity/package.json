@@ -1,5 +1,5 @@
 {
-  "name": "@flint/reactivity",
+  "name": "flint-reactivity",
   "version": "4.0.0",
   "description": "Flint reactivity — fine-grained signals with model, reactive, bind, derive",
   "type": "module",

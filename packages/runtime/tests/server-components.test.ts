@@ -2,7 +2,7 @@
 // Comprehensive tests for React 19-equivalent features
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { state, effect, batch, computed } from '@flint/reactivity'
+import { state, effect, batch, computed } from 'flint-reactivity'
 
 // ─── Server Components & Server Actions ─────────────────────────
 

@@ -9,7 +9,7 @@ import {
   createSelector,
   createRoot,
   onCleanup,
-} from '@flint/reactivity'
+} from 'flint-reactivity'
 
 // Helper to wait for effects to flush
 function flush() {

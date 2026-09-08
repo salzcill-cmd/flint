@@ -9,8 +9,8 @@ import {
   useStore,
   type StoreApi,
   type StateCreator,
-} from '@flint/store'
-import { state, effect } from '@flint/reactivity'
+} from 'flint-store'
+import { state, effect } from 'flint-reactivity'
 
 // ─── create() ──────────────────────────────────────────────────
 

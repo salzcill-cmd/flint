@@ -1,7 +1,7 @@
 // Flint Runtime — Ref System
 // Access DOM elements and component instances directly
 
-import { state, type Signal } from '@flint/reactivity'
+import { state, type Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

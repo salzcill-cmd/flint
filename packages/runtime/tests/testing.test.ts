@@ -16,7 +16,7 @@ import {
   mockLocation,
 } from '../src/testing/index.js'
 import { h } from '../src/renderer/index.js'
-import { state } from '@flint/reactivity'
+import { state } from 'flint-reactivity'
 
 describe('testRender', () => {
   let cleanup: (() => void) | null = null

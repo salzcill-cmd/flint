@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest'
 import { h, render, track } from '../src/renderer/index.js'
-import { state, computed, effect } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
 
 describe('h() — JSX Factory', () => {
   it('creates a DOM element', () => {

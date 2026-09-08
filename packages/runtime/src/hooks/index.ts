@@ -1,7 +1,7 @@
 // Flint Runtime — Missing Hooks
 // useTransition, useDeferredValue, useId, useImperativeHandle, forwardRef
 
-import { state, computed, effect, type Signal } from '@flint/reactivity'
+import { state, computed, effect, type Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

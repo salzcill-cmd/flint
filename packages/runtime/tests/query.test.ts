@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { QueryManager, MutationManager, createQueryManager, getQueryManager, useQuery, useMutation, invalidateQueries, getQueryData } from '../src/query/index.js'
-import { state } from '@flint/reactivity'
+import { state } from 'flint-reactivity'
 
 describe('Query Manager', () => {
   let queryManager: QueryManager

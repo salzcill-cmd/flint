@@ -1,6 +1,6 @@
 // Flint Store v4 — Zustand-compatible API with simplified createStore
 
-import { state, computed, effect, type Signal } from '@flint/reactivity'
+import { state, computed, effect, type Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

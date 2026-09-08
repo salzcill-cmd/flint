@@ -1,7 +1,7 @@
 // Flint Runtime — Error System v2
 // Error boundaries, error formatting, and error handling utilities
 
-import { state, effect, type Signal } from '@flint/reactivity'
+import { state, effect, type Signal } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 

@@ -1,5 +1,5 @@
 {
-  "name": "@flint/auth",
+  "name": "flint-auth",
   "version": "4.0.0",
   "description": "Lightweight JWT authentication for Flint",
   "type": "module",

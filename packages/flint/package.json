@@ -42,13 +42,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flint/runtime": "^4.0.0",
-    "@flint/reactivity": "^4.0.0",
-    "@flint/store": "^4.0.0"
+    "flint-runtime": "workspace:*",
+    "flint-reactivity": "workspace:*",
+    "flint-store": "workspace:*"
   },
   "peerDependencies": {
-    "@flint/runtime": "^4.0.0",
-    "@flint/reactivity": "^4.0.0"
+    "flint-runtime": "workspace:*",
+    "flint-reactivity": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

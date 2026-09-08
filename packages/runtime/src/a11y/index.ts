@@ -1,7 +1,7 @@
 // Flint Runtime — Accessibility (a11y) Primitives
 // Focus management, keyboard navigation, aria-live, reduced-motion
 
-import { state, computed, effect, type Signal } from '@flint/reactivity'
+import { state, computed, effect, type Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

@@ -1,8 +1,8 @@
 // Flint Runtime — Activity & KeepAlive Components
 // React 19 Activity / Vue KeepAlive equivalents
 
-import { state, effect, onCleanup } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, effect, onCleanup } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

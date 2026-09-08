@@ -3,7 +3,7 @@
 
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
-import { state, computed, effect, batch } from '@flint/reactivity'
+import { state, computed, effect, batch } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

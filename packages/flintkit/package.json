@@ -45,10 +45,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@flint/compiler": "^4.0.0",
-    "@flint/reactivity": "^4.0.0",
-    "@flint/runtime": "^4.0.0",
-    "@flint/vite-plugin": "^4.0.0"
+    "flint-compiler": "workspace:*",
+    "flint-reactivity": "workspace:*",
+    "flint-runtime": "workspace:*",
+    "flint-vite-plugin": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

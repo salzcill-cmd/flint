@@ -19,7 +19,7 @@ import {
   createInjectionKey,
   clearInjectionContext,
 } from '../src/inject/index.js'
-import { state, computed } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
 
 describe('Show', () => {
   it('renders children when condition is true', () => {

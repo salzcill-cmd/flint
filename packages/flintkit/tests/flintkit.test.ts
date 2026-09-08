@@ -54,8 +54,8 @@ describe('FlintKit', () => {
 
       expect(pkg.name).toBe('test-app')
       expect(pkg.dependencies).toHaveProperty('flintkit')
-      expect(pkg.dependencies).toHaveProperty('@flint/runtime')
-      expect(pkg.dependencies).toHaveProperty('@flint/reactivity')
+      expect(pkg.dependencies).toHaveProperty('flint-runtime')
+      expect(pkg.dependencies).toHaveProperty('flint-reactivity')
     })
 
     it('should use tsx extension for TypeScript', () => {

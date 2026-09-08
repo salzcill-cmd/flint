@@ -79,7 +79,7 @@ button:hover {
 }
 `,
     'vite.config.js': `import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 
 export default defineConfig({
   plugins: [flint()],
@@ -171,7 +171,7 @@ button {
 button:hover { background: #2563eb; }
 `,
     'vite.config.js': `import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 
 export default defineConfig({
   plugins: [flint()],
@@ -330,7 +330,7 @@ button:hover { background: #2563eb; }
 .remaining { text-align: center; margin-top: 1rem; opacity: 0.6; }
 `,
     'vite.config.js': `import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 
 export default defineConfig({
   plugins: [flint()],
@@ -470,7 +470,7 @@ export async function createProject(
       'flint': '^3.3.1',
     },
     devDependencies: {
-      '@flint/vite-plugin': '^3.3.1',
+      'flint-vite-plugin': '^3.3.1',
       'vite': '^6.0.0',
     },
   }

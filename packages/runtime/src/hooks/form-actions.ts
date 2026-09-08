@@ -1,7 +1,7 @@
 // Flint Runtime — Form Actions & Resource Preloading
 // React 19 Form Actions, preinit, preload, prefetchDNS, preconnect
 
-import { state, type Signal } from '@flint/reactivity'
+import { state, type Signal } from 'flint-reactivity'
 
 // ─── Form Actions ───────────────────────────────────────────────
 

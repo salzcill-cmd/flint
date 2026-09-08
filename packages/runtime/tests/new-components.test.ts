@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { state } from '@flint/reactivity'
+import { state } from 'flint-reactivity'
 import { h, render } from '../src/renderer/index.js'
 import {
   Show, For, ForEach, Index, Switch, Match, Portal, Suspense,

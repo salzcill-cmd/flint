@@ -1,7 +1,7 @@
 // Flint Runtime — Component System v4
 // Simplified lifecycle, view() decorator, and model() integration
 
-import { effect, type CleanupFn, type Signal } from '@flint/reactivity'
+import { effect, type CleanupFn, type Signal } from 'flint-reactivity'
 import { registerComponent, unregisterComponent, setCurrentComponentId, getCurrentComponentId as getParentComponentId } from '../inject/index.js'
 
 // ─── Types ──────────────────────────────────────────────────────

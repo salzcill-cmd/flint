@@ -2,7 +2,7 @@
 // Starts the development server
 
 import { createServer } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 import { validateProject, printValidationErrors } from './validate.js'
 
 export interface DevOptions {

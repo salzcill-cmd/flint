@@ -52,7 +52,7 @@ describe('create-flint', () => {
     // All templates should have vite config
     expect(sourceCode).toContain('vite.config.js')
     expect(sourceCode).toContain('import { defineConfig } from \'vite\'')
-    expect(sourceCode).toContain('import flint from \'@flint/vite-plugin\'')
+    expect(sourceCode).toContain('import flint from \'flint-vite-plugin\'')
   })
 
   it('should have package.json generation with correct version', () => {
@@ -62,7 +62,7 @@ describe('create-flint', () => {
     )
 
     expect(sourceCode).toContain("'flint': '^4.0.0'")
-    expect(sourceCode).toContain("'@flint/vite-plugin': '^4.0.0'")
+    expect(sourceCode).toContain("'flint-vite-plugin': '^4.0.0'")
     expect(sourceCode).toContain("'vite': '^6.0.0'")
   })
 
@@ -177,8 +177,8 @@ describe('create-flint', () => {
       'utf-8'
     )
 
-    expect(sourceCode).toContain("packageJson.dependencies['@flint/server']")
-    expect(sourceCode).toContain("packageJson.dependencies['@flint/db']")
-    expect(sourceCode).toContain("packageJson.dependencies['@flint/auth']")
+    expect(sourceCode).toContain("packageJson.dependencies['flint-server']")
+    expect(sourceCode).toContain("packageJson.dependencies['flint-db']")
+    expect(sourceCode).toContain("packageJson.dependencies['flint-auth']")
   })
 })

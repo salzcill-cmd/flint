@@ -1,8 +1,8 @@
 // Flint Runtime — Enterprise State Management (v5)
 // Production-ready state management with devtools, persistence, and middleware
 
-import { state, computed, effect, batch } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, effect, batch } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

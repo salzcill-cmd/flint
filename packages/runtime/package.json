@@ -1,5 +1,5 @@
 {
-  "name": "@flint/runtime",
+  "name": "flint-runtime",
   "version": "4.0.0",
   "description": "Flint runtime — view(), When, reactive, model, bind, derive + full framework",
   "type": "module",
@@ -126,13 +126,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@flint/reactivity": "^4.0.0"
+    "flint-reactivity": "workspace:*"
   },
   "peerDependencies": {
-    "@flint/reactivity": "^4.0.0"
+    "flint-reactivity": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
+    "flint-store": "workspace:*",
     "typescript": "^5.7.3"
   },
   "files": ["dist"],

@@ -36,13 +36,13 @@ describe('Flint Vite Plugin', () => {
   it('loads flint runtime module', () => {
     const plugin = flint() as any
     const result = plugin.load('\0flint:runtime')
-    expect(result).toContain('@flint/runtime')
+    expect(result).toContain('flint-runtime')
   })
 
   it('loads flint store module', () => {
     const plugin = flint() as any
     const result = plugin.load('\0flint:store')
-    expect(result).toContain('@flint/store')
+    expect(result).toContain('flint-store')
   })
 
   it('skips non-jsx files in transform', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "@flint/ts-presets",
+  "name": "flint-ts-presets",
   "version": "4.0.0",
   "description": "TypeScript configuration presets for Flint projects",
   "type": "module",

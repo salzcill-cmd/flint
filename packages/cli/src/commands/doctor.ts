@@ -31,7 +31,7 @@ export function doctor(): void {
 
       // Check for flint dependency
       const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-      if (deps.flint || deps['@flint/runtime']) {
+      if (deps.flint || deps['flint-runtime']) {
         results.push({ name: 'Flint', status: 'ok', message: 'Installed' })
       } else {
         results.push({ name: 'Flint', status: 'warning', message: 'Not found in dependencies' })

@@ -2,7 +2,7 @@
 // Production build with bundle reporting
 
 import { build } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 import { validateProject, printValidationErrors } from './validate.js'
 
 export interface BuildOptions {

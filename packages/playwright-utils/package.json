@@ -1,5 +1,5 @@
 {
-  "name": "@flint/playwright-utils",
+  "name": "flint-playwright-utils",
   "version": "4.0.0",
   "description": "Playwright utilities for Flint E2E testing",
   "type": "module",

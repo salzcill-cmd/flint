@@ -1,8 +1,8 @@
 // Flint Runtime — use() Hook v4
 // Simplified promise and context handling in render
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

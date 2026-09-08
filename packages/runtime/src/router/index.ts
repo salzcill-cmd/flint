@@ -1,8 +1,8 @@
 // Flint Runtime — Router v3
 // Enhanced router with lazy loading, guards, middleware, and navigation events
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 

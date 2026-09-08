@@ -1,8 +1,8 @@
 // Flint Runtime — Enterprise Form Validation (v5)
 // Production-ready form handling with schema validation
 
-import { state, computed, effect, batch } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect, batch } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

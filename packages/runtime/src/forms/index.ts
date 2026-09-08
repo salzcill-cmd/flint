@@ -1,8 +1,8 @@
 // Flint Runtime — Forms & Validation v4
 // Simplified form handling with useForm() and field()
 
-import { state, computed, batch } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, batch } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

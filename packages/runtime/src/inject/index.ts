@@ -1,7 +1,7 @@
 // Flint Runtime — Provide/Inject (Tree-Scoped)
 // Dependency injection for component trees with proper tree traversal
 
-import { type Signal } from '@flint/reactivity'
+import { type Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

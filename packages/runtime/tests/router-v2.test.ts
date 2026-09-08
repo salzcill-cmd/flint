@@ -12,7 +12,7 @@ import {
   Outlet,
 } from '../src/router/index.js'
 import { h, render } from '../src/renderer/index.js'
-import { state, computed } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
 
 // Mock window.history
 const mockHistory = {

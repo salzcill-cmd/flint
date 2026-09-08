@@ -1,5 +1,5 @@
 {
-  "name": "@flint/store",
+  "name": "flint-store",
   "version": "4.0.0",
   "description": "Flint Store — simplified createStore with reactive signals",
   "type": "module",
@@ -44,7 +44,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@flint/reactivity": "^4.0.0"
+    "flint-reactivity": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

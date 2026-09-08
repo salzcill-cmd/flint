@@ -1,7 +1,7 @@
 // Flint Vite Plugin v4 — Enhanced with auto-imports and better DX
 
 import type { Plugin, ViteDevServer, HmrContext } from 'vite'
-import { parse, transform } from '@flint/compiler'
+import { parse, transform } from 'flint-compiler'
 
 export interface FlintPluginOptions {
   /** Enable dev mode with extra error info */
@@ -168,10 +168,10 @@ export default function flint(options: FlintPluginOptions = {}): Plugin {
 
     load(id) {
       if (id === '\0flint:runtime') {
-        return 'export * from "@flint/runtime"'
+        return 'export * from "flint-runtime"'
       }
       if (id === '\0flint:store') {
-        return 'export * from "@flint/store"'
+        return 'export * from "flint-store"'
       }
       if (id === '\0flint:router') {
         return 'export * from "@flint/runtime/router"'

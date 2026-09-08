@@ -1,11 +1,11 @@
 // Flint — User-facing package
 // Re-exports everything from @flint/runtime for convenient imports
 
-export * from '@flint/runtime'
+export * from 'flint-runtime'
 
 // Re-export store
-export { create, useStore, immer, logger, persist, devtools } from '@flint/store'
-export type { StoreApi, StateCreator, Middleware } from '@flint/store'
+export { create, useStore, immer, logger, persist, devtools } from 'flint-store'
+export type { StoreApi, StateCreator, Middleware } from 'flint-store'
 
 // Re-export reactivity aliases
 export {
@@ -17,4 +17,4 @@ export {
   createResource,
   from,
   produce,
-} from '@flint/reactivity'
+} from 'flint-reactivity'

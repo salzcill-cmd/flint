@@ -11,8 +11,8 @@ export {
   jsxs,
   jsxDEV,
   Fragment,
-} from '@flint/runtime/jsx-runtime'
+} from 'flint-runtime/jsx-runtime'
 
 // Classic runtime aliases (jsx: "react" + jsxFactory: "h")
-export { h } from '@flint/runtime'
-export { Fragment as default } from '@flint/runtime/jsx-runtime'
+export { h } from 'flint-runtime'
+export { Fragment as default } from 'flint-runtime/jsx-runtime'

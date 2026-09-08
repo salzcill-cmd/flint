@@ -12,9 +12,9 @@ import {
   formatFlintError,
   ErrorMessages,
 } from '../src/index.js'
-import { state, effect } from '@flint/reactivity'
+import { state, effect } from 'flint-reactivity'
 import { h, render } from '../src/renderer/index.js'
-import { create as createStore } from '@flint/store'
+import { create as createStore } from 'flint-store'
 
 describe('component()', () => {
   it('wraps a function as a Flint component', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "@flint/db",
+  "name": "flint-db",
   "version": "4.0.0",
   "description": "Lightweight database integration for Flint - Powered by Drizzle ORM",
   "type": "module",

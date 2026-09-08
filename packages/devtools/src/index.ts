@@ -1,7 +1,7 @@
 // Flint DevTools — Client-side instrumentation
 // Attaches to Flint's reactive system for debugging
 
-import { effect, computed, state, type Signal } from '@flint/reactivity'
+import { effect, computed, state, type Signal } from 'flint-reactivity'
 
 export interface DevToolsOptions {
   /** Enable devtools in production */

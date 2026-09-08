@@ -2,7 +2,7 @@
 // Fine-grained reactive DOM updates with signal tracking
 // No Virtual DOM — direct surgical DOM mutations
 
-import { effect, batch, untrack, captureScope, type CleanupFn } from '@flint/reactivity'
+import { effect, batch, untrack, captureScope, type CleanupFn } from 'flint-reactivity'
 import { mountComponent, type ComponentInstance } from '../component/index.js'
 import { createFlintError } from '../errors/index.js'
 import { safeUrl, isUrlAttribute } from '../security/index.js'

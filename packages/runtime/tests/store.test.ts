@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { create as createStore, logger, persist } from '@flint/store'
-import { state, computed, effect } from '@flint/reactivity'
+import { create as createStore, logger, persist } from 'flint-store'
+import { state, computed, effect } from 'flint-reactivity'
 
 describe('Store', () => {
   describe('create', () => {

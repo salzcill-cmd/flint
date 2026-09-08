@@ -13,7 +13,7 @@
  *  7. flushSync
  */
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { state, computed, effect, batch, flushSync } from '@flint/reactivity'
+import { state, computed, effect, batch, flushSync } from 'flint-reactivity'
 import {
   safeJsonForScript,
   safeUrl,

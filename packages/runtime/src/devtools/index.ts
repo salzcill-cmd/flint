@@ -1,8 +1,8 @@
 // Flint Runtime — DevTools
 // Debugging tools, component inspector, state inspector, profiler
 
-import { state, computed } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 
 // ─── Helpers ────────────────────────────────────────────────────
 

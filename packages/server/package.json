@@ -1,5 +1,5 @@
 {
-  "name": "@flint/server",
+  "name": "flint-server",
   "version": "4.0.0",
   "description": "Lightweight HTTP server for Flint - Powered by Hono",
   "type": "module",

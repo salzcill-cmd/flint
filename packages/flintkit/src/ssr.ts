@@ -1,7 +1,7 @@
 // FlintKit — SSR Handler
 // Server-side rendering with streaming support
 
-import { renderToString } from '@flint/runtime'
+import { renderToString } from 'flint-runtime'
 import type { RouteConfig } from './router'
 
 export interface SSRHandlerOptions {

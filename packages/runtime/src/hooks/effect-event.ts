@@ -1,7 +1,7 @@
 // Flint Runtime — useEffectEvent Hook
 // React 19 useEffectEvent equivalent
 
-import { state, effect, untrack } from '@flint/reactivity'
+import { state, effect, untrack } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

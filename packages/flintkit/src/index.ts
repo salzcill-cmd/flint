@@ -72,8 +72,8 @@ export function generateProject(options: ScaffoldOptions): {
       },
       dependencies: {
         'flintkit': 'latest',
-        '@flint/runtime': 'latest',
-        '@flint/reactivity': 'latest',
+        'flint-runtime': 'latest',
+        'flint-reactivity': 'latest',
       },
       devDependencies: {
         'typescript': typescript ? '^5.8.3' : undefined,

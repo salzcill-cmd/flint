@@ -1,8 +1,8 @@
 // Flint Runtime — SEO Utilities
 // Meta tags, structured data, and SEO helpers
 
-import { state, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

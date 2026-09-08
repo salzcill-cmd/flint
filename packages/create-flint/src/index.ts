@@ -79,7 +79,7 @@ button:hover {
 }
 `,
     'vite.config.js': `import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 
 export default defineConfig({
   plugins: [flint()],
@@ -210,9 +210,9 @@ button:hover {
   font-size: 0.875rem;
 }
 `,
-    'server/index.js': `import { createServer, validate, z } from '@flint/server'
-import { createDatabase, sqliteTable, text, integer } from '@flint/db'
-import { createAuth } from '@flint/auth'
+    'server/index.js': `import { createServer, validate, z } from 'flint-server'
+import { createDatabase, sqliteTable, text, integer } from 'flint-db'
+import { createAuth } from 'flint-auth'
 
 // Setup database
 const db = await createDatabase({ driver: 'sqlite', path: 'app.db' })
@@ -300,7 +300,7 @@ app.listen()
 console.log('Server running on http://localhost:3000')
 `,
     'vite.config.js': `import { defineConfig } from 'vite'
-import flint from '@flint/vite-plugin'
+import flint from 'flint-vite-plugin'
 
 export default defineConfig({
   plugins: [flint()],
@@ -318,9 +318,9 @@ const API_TEMPLATE: Template = {
   name: 'api',
   description: 'REST API with validation, auth, and database',
   files: {
-    'src/index.js': `import { createServer, validate, z, rateLimit } from '@flint/server'
-import { createDatabase, sqliteTable, text, integer } from '@flint/db'
-import { createAuth } from '@flint/auth'
+    'src/index.js': `import { createServer, validate, z, rateLimit } from 'flint-server'
+import { createDatabase, sqliteTable, text, integer } from 'flint-db'
+import { createAuth } from 'flint-auth'
 
 // Setup
 const db = await createDatabase({ driver: 'sqlite', path: 'api.db' })
@@ -570,16 +570,16 @@ async function main() {
       'flint': '^4.0.0',
     },
     devDependencies: {
-      '@flint/vite-plugin': '^4.0.0',
+      'flint-vite-plugin': '^4.0.0',
       'vite': '^6.0.0',
     },
   }
 
   // Add backend dependencies for fullstack/api templates
   if (templateKey === 'fullstack' || templateKey === 'api') {
-    packageJson.dependencies['@flint/server'] = '^4.0.0'
-    packageJson.dependencies['@flint/db'] = '^4.0.0'
-    packageJson.dependencies['@flint/auth'] = '^4.0.0'
+    packageJson.dependencies['flint-server'] = '^4.0.0'
+    packageJson.dependencies['flint-db'] = '^4.0.0'
+    packageJson.dependencies['flint-auth'] = '^4.0.0'
   }
 
   fs.writeFileSync(

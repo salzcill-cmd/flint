@@ -1,5 +1,5 @@
 {
-  "name": "@flint/compiler",
+  "name": "flint-compiler",
   "version": "4.0.0",
   "description": "Flint compiler — JSX with auto-imports, tree-shaking and optimizations",
   "type": "module",

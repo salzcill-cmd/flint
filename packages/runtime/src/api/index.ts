@@ -1,7 +1,7 @@
 // Flint Runtime — API Helpers (v4.2)
 // Quick fetch, caching, and data loading utilities
 
-import { state, computed, effect, batch } from '@flint/reactivity'
+import { state, computed, effect, batch } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

@@ -1,8 +1,8 @@
 // Flint Runtime — Internationalization (i18n)
 // Multi-language support with lazy loading and pluralization
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

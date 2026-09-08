@@ -762,7 +762,7 @@ export {
   watchDebounced,
   watchThrottled,
   computedSet,
-} from '@flint/reactivity'
+} from 'flint-reactivity'
 export type {
   Signal,
   Computed,
@@ -774,7 +774,7 @@ export type {
   Ref,
   Writable,
   Readable,
-} from '@flint/reactivity'
+} from 'flint-reactivity'
 
 // Developer Experience
 export {

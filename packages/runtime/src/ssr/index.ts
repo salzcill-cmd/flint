@@ -1,8 +1,8 @@
 // Flint Runtime — Server-Side Rendering v2
 // Full implementation: renderToString, streaming SSR, proper hydration
 
-import { state, computed } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 import { createFlintError } from '../errors/index.js'
 import { safeJsonForScript, safeUrl, isUrlAttribute } from '../security/index.js'
 

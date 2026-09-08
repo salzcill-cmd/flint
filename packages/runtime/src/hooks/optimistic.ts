@@ -1,8 +1,8 @@
 // Flint Runtime — Optimistic Updates & use() API
 // React 19 useOptimistic, useActionState, useFormStatus, use() equivalents
 
-import { state, effect, computed } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, effect, computed } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -679,4 +679,4 @@ export function useEffect(effect: () => void | (() => void), deps?: any[]): void
 }
 
 // Re-export the effect from reactivity
-import { effect as effectFn } from '@flint/reactivity'
+import { effect as effectFn } from 'flint-reactivity'

@@ -1,8 +1,8 @@
 // Flint Runtime — Advanced DX Features v4.1
 // Developer experience improvements for faster, easier coding
 
-import { state, computed, effect, batch } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, effect, batch } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 

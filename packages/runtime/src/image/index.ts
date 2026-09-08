@@ -1,8 +1,8 @@
 // Flint Runtime — Image Component
 // Lazy loading, optimization, and responsive images
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 

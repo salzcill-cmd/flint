@@ -1,7 +1,7 @@
 // Flint Runtime — React 19+ Utilities
 // ref as prop, reactive(), shallowRef(), readonly(), mergeProps(), splitProps(), two-way binding
 
-import { state, computed, effect, type Signal } from '@flint/reactivity'
+import { state, computed, effect, type Signal } from 'flint-reactivity'
 
 // ─── ref as prop (React 19 style) ───────────────────────────────
 

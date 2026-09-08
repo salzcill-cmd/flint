@@ -1,8 +1,8 @@
 // Flint Runtime — Error Boundaries & Lazy Loading
 // Catch errors gracefully and load components on demand
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 

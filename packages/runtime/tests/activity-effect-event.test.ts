@@ -2,7 +2,7 @@
 // Tests for React 19 Activity and useEffectEvent equivalents
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { state, effect } from '@flint/reactivity'
+import { state, effect } from 'flint-reactivity'
 
 // ─── Activity & KeepAlive ───────────────────────────────────────
 

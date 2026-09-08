@@ -1,8 +1,8 @@
 // Flint Router v3 — Code Splitting & Lazy Routes
 // Automatic route-based code splitting with dynamic imports
 
-import { state, computed } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 import { Suspense } from '../components/index.js'

@@ -1,8 +1,8 @@
 // Flint Runtime — Visual Debug Tools (v5)
 // Real-time visual debugging that surpasses React DevTools
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal, Computed } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal, Computed } from 'flint-reactivity'
 
 // ─── Signal Inspector ───────────────────────────────────────────
 

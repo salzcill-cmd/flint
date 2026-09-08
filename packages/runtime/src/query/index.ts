@@ -1,8 +1,8 @@
 // Flint Runtime — Query/Data Fetching
 // Like TanStack Query for server state management
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 
 // ─── Types ──────────────────────────────────────────────────────
 

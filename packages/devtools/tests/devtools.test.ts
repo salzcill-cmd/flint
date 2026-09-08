@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { state } from '@flint/reactivity'
+import { state } from 'flint-reactivity'
 import {
   initDevTools,
   trackSignal,

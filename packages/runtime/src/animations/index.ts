@@ -1,8 +1,8 @@
 // Flint Runtime v2 — Animations & Transitions
 // Built-in animation system with CSS and JS animations
 
-import { state, computed, effect } from '@flint/reactivity'
-import type { Signal } from '@flint/reactivity'
+import { state, computed, effect } from 'flint-reactivity'
+import type { Signal } from 'flint-reactivity'
 import { h } from '../renderer/index.js'
 import type { Child } from '../renderer/index.js'
 
