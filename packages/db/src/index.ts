@@ -124,3 +124,16 @@ export {
   varchar as mysqlVarchar,
   text as mysqlText,
 } from 'drizzle-orm/mysql-core'
+
+// ─── Migration Commands ─────────────────────────────────────────
+
+export {
+  generateMigration,
+  migrate,
+  pushSchema,
+  studio,
+  migrateStatus,
+  seed,
+  generateDrizzleConfig,
+} from './migrate.js'
+export type { MigrationConfig, SeedOptions } from './migrate.js'

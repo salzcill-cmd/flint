@@ -192,8 +192,70 @@ export function createServer(config?: ServerConfig): FlintServer {
 
 // ─── Built-in Middleware ────────────────────────────────────────
 
-export { cors, logger, compress }
+export { cors, compress }
 export { HTTPException }
+
+// ─── Rate Limiting ──────────────────────────────────────────────
+
+export { 
+  rateLimit, 
+  strictRateLimit, 
+  standardRateLimit, 
+  lenientRateLimit, 
+  apiRateLimit, 
+  authRateLimit,
+  resetRateLimit,
+  getRateLimitInfo,
+  clearAllRateLimits,
+} from './middleware/rate-limit.js'
+export type { RateLimitConfig } from './middleware/rate-limit.js'
+
+// ─── Validation ─────────────────────────────────────────────────
+
+export {
+  validate,
+  createSchema,
+  validateData,
+  emailSchema,
+  passwordSchema,
+  phoneSchema,
+  urlSchema,
+  paginationSchema,
+  searchSchema,
+  z,
+} from './middleware/validation.js'
+export type { ValidationSchema, ValidationError, ValidationResult } from './middleware/validation.js'
+
+// ─── File Upload ────────────────────────────────────────────────
+
+export {
+  upload,
+  moveFile,
+  deleteFile,
+  getFileExtension,
+  getMimeType,
+  isImage,
+  isDocument,
+} from './middleware/upload.js'
+export type { UploadConfig, UploadedFile, UploadResult } from './middleware/upload.js'
+
+// ─── WebSocket ──────────────────────────────────────────────────
+
+export {
+  createWebSocket,
+  WebSocket,
+  WebSocketServer,
+} from './websocket.js'
+export type { WebSocketConfig, WSConnection, WSHandler, WSConnectHandler, WSDisconnectHandler } from './websocket.js'
+
+// ─── Structured Logging ─────────────────────────────────────────
+
+export {
+  FlintLogger,
+  requestLogger,
+  createChildLogger,
+} from './middleware/logger.js'
+export type { LogLevel, LogConfig, LogEntry } from './middleware/logger.js'
 
 // ─── Re-export Hono types ──────────────────────────────────────
 

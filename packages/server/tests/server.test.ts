@@ -110,11 +110,6 @@ describe('Middleware', () => {
     expect(typeof cors).toBe('function')
   })
 
-  it('should export logger', async () => {
-    const { logger } = await import('../src/index.js')
-    expect(typeof logger).toBe('function')
-  })
-
   it('should export compress', async () => {
     const { compress } = await import('../src/index.js')
     expect(typeof compress).toBe('function')
@@ -123,6 +118,31 @@ describe('Middleware', () => {
   it('should export HTTPException', async () => {
     const { HTTPException } = await import('../src/index.js')
     expect(typeof HTTPException).toBe('function')
+  })
+
+  it('should export rate limit', async () => {
+    const { rateLimit } = await import('../src/index.js')
+    expect(typeof rateLimit).toBe('function')
+  })
+
+  it('should export validate', async () => {
+    const { validate } = await import('../src/index.js')
+    expect(typeof validate).toBe('function')
+  })
+
+  it('should export upload', async () => {
+    const { upload } = await import('../src/index.js')
+    expect(typeof upload).toBe('function')
+  })
+
+  it('should export createWebSocket', async () => {
+    const { createWebSocket } = await import('../src/index.js')
+    expect(typeof createWebSocket).toBe('function')
+  })
+
+  it('should export FlintLogger', async () => {
+    const { FlintLogger } = await import('../src/index.js')
+    expect(typeof FlintLogger).toBe('function')
   })
 })
 
