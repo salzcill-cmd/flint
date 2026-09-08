@@ -178,7 +178,7 @@ describe('create-flint', () => {
     )
 
     expect(sourceCode).toContain("packageJson.dependencies['flint-server']")
-    expect(sourceCode).toContain("packageJson.dependencies['flint-db']")
+    expect(sourceCode).toContain("packageJson.dependencies['flint-drizzle']")
     expect(sourceCode).toContain("packageJson.dependencies['flint-auth']")
   })
 })

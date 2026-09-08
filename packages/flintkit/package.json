@@ -1,5 +1,5 @@
 {
-  "name": "flintkit",
+  "name": "@valoweb/flintkit",
   "version": "4.0.0",
   "description": "FlintKit — Metaframework for Flint with file-based routing, SSR, and full-stack features",
   "type": "module",

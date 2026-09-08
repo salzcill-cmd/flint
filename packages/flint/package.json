@@ -1,5 +1,5 @@
 {
-  "name": "flint",
+  "name": "@valoweb/flint",
   "version": "4.0.0",
   "description": "Flint — Write less. Ship faster. Build beautifully. v4 with model(), reactive, auto-imports",
   "type": "module",

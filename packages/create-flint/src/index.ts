@@ -211,7 +211,7 @@ button:hover {
 }
 `,
     'server/index.js': `import { createServer, validate, z } from 'flint-server'
-import { createDatabase, sqliteTable, text, integer } from 'flint-db'
+import { createDatabase, sqliteTable, text, integer } from 'flint-drizzle'
 import { createAuth } from 'flint-auth'
 
 // Setup database
@@ -319,7 +319,7 @@ const API_TEMPLATE: Template = {
   description: 'REST API with validation, auth, and database',
   files: {
     'src/index.js': `import { createServer, validate, z, rateLimit } from 'flint-server'
-import { createDatabase, sqliteTable, text, integer } from 'flint-db'
+import { createDatabase, sqliteTable, text, integer } from 'flint-drizzle'
 import { createAuth } from 'flint-auth'
 
 // Setup
@@ -578,7 +578,7 @@ async function main() {
   // Add backend dependencies for fullstack/api templates
   if (templateKey === 'fullstack' || templateKey === 'api') {
     packageJson.dependencies['flint-server'] = '^4.0.0'
-    packageJson.dependencies['flint-db'] = '^4.0.0'
+    packageJson.dependencies['flint-drizzle'] = '^4.0.0'
     packageJson.dependencies['flint-auth'] = '^4.0.0'
   }
 

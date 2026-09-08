@@ -1,5 +1,5 @@
 {
-  "name": "flint-cli",
+  "name": "@valoweb/flint-cli",
   "version": "4.0.0",
   "description": "Flint CLI — create, dev, build, and test Flint projects",
   "type": "module",
