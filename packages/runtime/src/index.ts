@@ -838,6 +838,61 @@ export {
   enableConsoleLog,
 } from './debug/index.js'
 
+// Enterprise Store (v5)
+export {
+  createStore,
+  getStore,
+  getAllStores,
+  destroyAllStores,
+  getStoreHistory,
+  createLoggerMiddleware,
+  createPersistMiddleware,
+  createValidationMiddleware,
+  createDebounceMiddleware,
+} from './store/index.js'
+export type {
+  StoreConfig,
+  StorePlugin,
+  PersistConfig,
+  Store,
+} from './store/index.js'
+
+// Advanced Router (v5)
+export {
+  createAdvancedRouter,
+  createAuthGuard,
+  createRoleGuard,
+  createNavigationLogger,
+  lazyRoute,
+  createNestedRoutes,
+} from './router/advanced.js'
+export type {
+  Route as AdvancedRoute,
+  RouteGuard,
+  RouterOptions,
+  Router,
+  Location as RouterLocation,
+} from './router/advanced.js'
+
+// Enterprise Form Validation (v5)
+export {
+  rules,
+  createSchema,
+  validateFieldValue,
+  fieldProps,
+  selectProps,
+  textareaProps,
+} from './forms/validation.js'
+export type {
+  FormSchema,
+  ValidationRule,
+  FieldState,
+  FormState,
+  FormOptions,
+  FormHelpers,
+  FieldHelpers,
+} from './forms/validation.js'
+
 // Optimistic Updates & use() API
 export {
   useOptimistic,
