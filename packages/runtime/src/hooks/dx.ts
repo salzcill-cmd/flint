@@ -23,24 +23,37 @@ export function $ref<T = HTMLElement>(): { current: T | null } {
 // ─── $reactive() — Quick Reactive Object ────────────────────────
 
 /**
- * Quick reactive object creation (shorthand for reactive()).
+ * Quick reactive object creation with automatic dependency tracking.
  *
  * @example
  * const user = $reactive({ name: 'John', age: 30 })
  * user.name = 'Jane' // triggers update
  */
 export function $reactive<T extends Record<string, any>>(obj: T): T {
+  const signals: Record<string, Signal<any>> = {}
+  const keys = Object.keys(obj) as Array<keyof T>
+
+  for (const key of keys) {
+    signals[key as string] = state(obj[key])
+  }
+
   return new Proxy(obj, {
-    get(target, prop) {
-      const value = target[prop as keyof T]
+    get(_, prop) {
+      const key = prop as string
+      if (signals[key]) return signals[key]()
+      const value = (obj as any)[prop]
       if (typeof value === 'function') {
-        return value.bind(target)
+        return value.bind(obj)
       }
       return value
     },
-    set(target, prop, value) {
-      target[prop as keyof T] = value
-      return true
+    set(_, prop, value) {
+      const key = prop as string
+      if (signals[key]) {
+        signals[key].set(value)
+        return true
+      }
+      return false
     },
   })
 }
@@ -102,19 +115,22 @@ export function $store<T extends Record<string, any>>(config: T): any {
     })
   }
 
-  // Create actions
+  // Create actions with proper batched mutations
   const boundActions: Record<string, Function> = {}
   for (const [key, action] of Object.entries(actions)) {
     boundActions[key] = (...args: any[]) => {
-      const context = {}
-      for (const [k, s] of Object.entries(signals)) {
-        Object.defineProperty(context, k, {
-          get: () => s(),
-          set: (v) => s.set(v),
-          enumerable: true,
-        })
-      }
-      return action.call(context, ...args)
+      return batch(() => {
+        const context: Record<string, any> = {}
+        for (const [k, s] of Object.entries(signals)) {
+          Object.defineProperty(context, k, {
+            get: () => s(),
+            set: (v) => { s.set(v) },
+            enumerable: true,
+            configurable: true,
+          })
+        }
+        return action.call(context, ...args)
+      })
     }
   }
 
@@ -447,14 +463,37 @@ export function memo<P extends Record<string, any>>(
   render: (props: P) => Child,
   areEqual?: (prev: P, next: P) => boolean
 ): (props: P) => Child {
-  const cache = new Map<string, Child>()
+  let prevProps: P | null = null
+  let cached: Child = null
+  let dirty = true
 
   return (props: P) => {
-    const key = JSON.stringify(props)
-    if (!cache.has(key)) {
-      cache.set(key, render(props))
+    if (prevProps !== null && areEqual) {
+      if (!areEqual(prevProps, props)) dirty = true
+    } else if (prevProps !== null) {
+      // Shallow compare by key
+      const prevKeys = Object.keys(prevProps)
+      const nextKeys = Object.keys(props)
+      if (prevKeys.length !== nextKeys.length) {
+        dirty = true
+      } else {
+        for (const key of nextKeys) {
+          if ((prevProps as any)[key] !== (props as any)[key]) {
+            dirty = true
+            break
+          }
+        }
+      }
+    } else {
+      dirty = true
     }
-    return cache.get(key)!
+
+    if (dirty) {
+      cached = render(props)
+      prevProps = props
+      dirty = false
+    }
+    return cached
   }
 }
 

@@ -1106,3 +1106,89 @@ export function Tooltip(props: {
     }, props.content) : null
   )
 }
+
+// ─── VirtualList — High-Performance Virtual Scrolling ────────────
+
+/**
+ * Virtual list for rendering thousands of items efficiently.
+ * Only renders visible items + buffer, recycling DOM nodes.
+ *
+ * @example
+ * <VirtualList
+ *   items={bigArray}
+ *   height={400}
+ *   itemHeight={50}
+ *   renderItem={(item, index) => <div>{item.name}</div>}
+ * />
+ */
+export function VirtualList<T>(props: {
+  items: T[]
+  height: number
+  itemHeight: number
+  renderItem: (item: T, index: number) => Child
+  class?: string
+  style?: Record<string, any>
+  buffer?: number
+  onScroll?: (scrollTop: number) => void
+}): Child {
+  const { items, height, itemHeight, renderItem, buffer = 3 } = props
+  const scrollTop = state(0)
+  const totalHeight = items.length * itemHeight
+
+  const startIndex = computed(() => {
+    const start = Math.max(0, Math.floor(scrollTop() / itemHeight) - buffer)
+    return start
+  })
+
+  const endIndex = computed(() => {
+    const visibleCount = Math.ceil(height / itemHeight)
+    return Math.min(items.length, startIndex() + visibleCount + buffer * 2)
+  })
+
+  const visibleItems = computed(() => {
+    const start = startIndex()
+    const end = endIndex()
+    return items.slice(start, end).map((item, i) => ({
+      item,
+      index: start + i,
+      top: (start + i) * itemHeight,
+    }))
+  })
+
+  const onScroll = (e: Event) => {
+    const el = e.target as HTMLElement
+    scrollTop.set(el.scrollTop)
+    props.onScroll?.(el.scrollTop)
+  }
+
+  return h('div', {
+    class: props.class,
+    style: {
+      height: `${height}px`,
+      overflow: 'auto',
+      position: 'relative',
+      ...props.style,
+    },
+    onScroll,
+  },
+    h('div', {
+      style: {
+        height: `${totalHeight}px`,
+        position: 'relative',
+      },
+    },
+      visibleItems().map(({ item, index, top }) =>
+        h('div', {
+          key: index,
+          style: {
+            position: 'absolute',
+            top: `${top}px`,
+            left: 0,
+            right: 0,
+            height: `${itemHeight}px`,
+          },
+        }, renderItem(item, index))
+      )
+    )
+  )
+}

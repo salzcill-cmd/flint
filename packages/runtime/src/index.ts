@@ -93,6 +93,7 @@ export {
   Skeleton,
   Avatar,
   Tooltip,
+  VirtualList,
 } from './components/ui.js'
 
 // Lazy Loading & Error Boundaries
