@@ -539,6 +539,46 @@ Ini adalah alias untuk fungsi `state()`, `effect()`, dan `computed()` Flint. Pak
 | `clamp(val, min, max)` | Membatasi angka |
 | `lerp(a, b, t)` | Interpolasi linear |
 
+## UI Components Bawaan
+
+| Component | Apa yang Dilakukan |
+|-----------|-------------------|
+| `<Toggle bind={state} label="..." />` | Switch toggle |
+| `<Checkbox bind={state} label="..." />` | Checkbox |
+| `<Radio group={state} value="..." />` | Radio button |
+| `<Select bind={state} options={[...]} />` | Dropdown select |
+| `<Textarea bind={state} rows={4} />` | Textarea |
+| `<Progress value={75} />` | Progress bar |
+| `<Skeleton width="200px" />` | Loading skeleton |
+| `<Avatar name="John Doe" />` | User avatar |
+| `<Tooltip content="Tips">...</Tooltip>` | Hover tooltip |
+| `<Badge status="success">Aktif</Badge>` | Status badge |
+| `<Alert type="info" title="Info">...</Alert>` | Alert banner |
+| `<Card>...</Card>` | Content card |
+
+## Quick DX Helpers
+
+| Fungsi | Apa yang Dilakukan |
+|--------|-------------------|
+| `$form(values, validators, submit)` | Formulir sederhana |
+| `$load(url)` | Data loading dengan state |
+| `$modal()` | State modal sederhana |
+| `$toast()` | Notifikasi toast |
+| `$storage(key, default)` | localStorage reaktif |
+| `$debounce(fn, ms)` | Debounce sederhana |
+| `$throttle(fn, ms)` | Throttle sederhana |
+| `$time.format(date)` | Format waktu |
+
+## Debug Tools
+
+| Fungsi | Apa yang Dilakukan |
+|--------|-------------------|
+| `debug.inspector()` | Toggle signal inspector |
+| `debug.monitor()` | Tampilkan performance monitor |
+| `debug.tree()` | Tampilkan component tree |
+| `debug.borders()` | Tampilkan debug borders |
+| `debug.help()` | Bantuan debug |
+
 ---
 
 ## Struktur Proyek

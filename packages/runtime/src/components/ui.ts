@@ -608,3 +608,501 @@ export function EmptyState(props: {
     props.action ?? null
   )
 }
+
+// ─── Toggle — Switch Toggle ────────────────────────────────────
+
+/**
+ * Switch toggle component.
+ *
+ * @example
+ * const enabled = state(false)
+ * <Toggle bind={enabled} label="Enable notifications" />
+ */
+export function Toggle(props: {
+  bind?: { (): boolean; set: (v: boolean) => void }
+  label?: string
+  disabled?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const value = props.bind ? props.bind() : false
+
+  return h('label', {
+    class: props.class,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      opacity: props.disabled ? 0.5 : 1,
+      ...props.style,
+    },
+    onClick: () => {
+      if (!props.disabled && props.bind) {
+        props.bind.set(!value)
+      }
+    },
+  },
+    h('div', {
+      style: {
+        width: '44px',
+        height: '24px',
+        borderRadius: '12px',
+        background: value ? '#667eea' : '#d1d5db',
+        position: 'relative',
+        transition: 'background 0.2s',
+      },
+    },
+      h('div', {
+        style: {
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          background: 'white',
+          position: 'absolute',
+          top: '2px',
+          left: value ? '22px' : '2px',
+          transition: 'left 0.2s',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        },
+      })
+    ),
+    props.label ? h('span', { style: { fontSize: '0.875rem' } }, props.label) : null
+  )
+}
+
+// ─── Checkbox — Checkbox Input ─────────────────────────────────
+
+/**
+ * Checkbox component.
+ *
+ * @example
+ * const agreed = state(false)
+ * <Checkbox bind={agreed} label="I agree to the terms" />
+ */
+export function Checkbox(props: {
+  bind?: { (): boolean; set: (v: boolean) => void }
+  label?: string
+  disabled?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const value = props.bind ? props.bind() : false
+
+  return h('label', {
+    class: props.class,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      opacity: props.disabled ? 0.5 : 1,
+      ...props.style,
+    },
+    onClick: () => {
+      if (!props.disabled && props.bind) {
+        props.bind.set(!value)
+      }
+    },
+  },
+    h('div', {
+      style: {
+        width: '18px',
+        height: '18px',
+        borderRadius: '4px',
+        border: `2px solid ${value ? '#667eea' : '#d1d5db'}`,
+        background: value ? '#667eea' : 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.2s',
+      },
+    },
+      value ? h('span', { style: { color: 'white', fontSize: '12px' } }, '✓') : null
+    ),
+    props.label ? h('span', { style: { fontSize: '0.875rem' } }, props.label) : null
+  )
+}
+
+// ─── Radio — Radio Input ───────────────────────────────────────
+
+/**
+ * Radio button component.
+ *
+ * @example
+ * const selected = state('option1')
+ * <Radio group={selected} value="option1" label="Option 1" />
+ * <Radio group={selected} value="option2" label="Option 2" />
+ */
+export function Radio(props: {
+  group?: { (): string; set: (v: string) => void }
+  value: string
+  label?: string
+  disabled?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const selected = props.group ? props.group() : ''
+
+  return h('label', {
+    class: props.class,
+    style: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      opacity: props.disabled ? 0.5 : 1,
+      ...props.style,
+    },
+    onClick: () => {
+      if (!props.disabled && props.group) {
+        props.group.set(props.value)
+      }
+    },
+  },
+    h('div', {
+      style: {
+        width: '18px',
+        height: '18px',
+        borderRadius: '50%',
+        border: `2px solid ${selected === props.value ? '#667eea' : '#d1d5db'}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.2s',
+      },
+    },
+      selected === props.value ? h('div', {
+        style: {
+          width: '10px',
+          height: '10px',
+          borderRadius: '50%',
+          background: '#667eea',
+        },
+      }) : null
+    ),
+    props.label ? h('span', { style: { fontSize: '0.875rem' } }, props.label) : null
+  )
+}
+
+// ─── Select — Dropdown Select ──────────────────────────────────
+
+/**
+ * Select dropdown component.
+ *
+ * @example
+ * const color = state('red')
+ * <Select bind={color} options={['red', 'green', 'blue']} />
+ * <Select bind={color} options={[{ value: 'red', label: 'Merah' }]} />
+ */
+export function Select(props: {
+  bind?: { (): string; set: (v: string) => void }
+  options: (string | { value: string; label: string })[]
+  placeholder?: string
+  disabled?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const value = props.bind ? props.bind() : ''
+
+  return h('select', {
+    value,
+    disabled: props.disabled,
+    class: props.class,
+    style: {
+      padding: '0.5rem 0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '0.375rem',
+      fontSize: '0.875rem',
+      width: '100%',
+      background: 'white',
+      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      ...props.style,
+    },
+    onChange: (e: Event) => {
+      const target = e.target as HTMLSelectElement
+      if (props.bind) {
+        props.bind.set(target.value)
+      }
+    },
+  },
+    props.placeholder
+      ? h('option', { value: '' }, props.placeholder)
+      : null,
+    ...props.options.map(opt => {
+      const value = typeof opt === 'string' ? opt : opt.value
+      const label = typeof opt === 'string' ? opt : opt.label
+      return h('option', { value }, label)
+    })
+  )
+}
+
+// ─── Textarea — Multi-line Input ───────────────────────────────
+
+/**
+ * Textarea component.
+ *
+ * @example
+ * const bio = state('')
+ * <Textarea bind={bio} placeholder="Tell us about yourself" rows={4} />
+ */
+export function Textarea(props: {
+  bind?: { (): string; set: (v: string) => void }
+  placeholder?: string
+  rows?: number
+  disabled?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  return h('textarea', {
+    placeholder: props.placeholder,
+    rows: props.rows ?? 3,
+    disabled: props.disabled,
+    class: props.class,
+    style: {
+      padding: '0.5rem 0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '0.375rem',
+      fontSize: '0.875rem',
+      width: '100%',
+      resize: 'vertical',
+      cursor: props.disabled ? 'not-allowed' : 'auto',
+      ...props.style,
+    },
+    value: props.bind ? props.bind() : '',
+    onInput: (e: Event) => {
+      const target = e.target as HTMLTextAreaElement
+      if (props.bind) {
+        props.bind.set(target.value)
+      }
+    },
+  })
+}
+
+// ─── Progress — Progress Bar ───────────────────────────────────
+
+/**
+ * Progress bar component.
+ *
+ * @example
+ * <Progress value={75} />
+ * <Progress value={uploadProgress()} color="#4ade80" />
+ */
+export function Progress(props: {
+  value: number
+  max?: number
+  color?: string
+  height?: string
+  showLabel?: boolean
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const percent = Math.min(100, Math.max(0, (props.value / (props.max ?? 100)) * 100))
+
+  return h('div', {
+    class: props.class,
+    style: {
+      width: '100%',
+      ...props.style,
+    },
+  },
+    h('div', {
+      style: {
+        width: '100%',
+        height: props.height ?? '8px',
+        background: '#e5e7eb',
+        borderRadius: '4px',
+        overflow: 'hidden',
+      },
+    },
+      h('div', {
+        style: {
+          width: `${percent}%`,
+          height: '100%',
+          background: props.color ?? '#667eea',
+          borderRadius: '4px',
+          transition: 'width 0.3s ease',
+        },
+      })
+    ),
+    props.showLabel ? h('div', {
+      style: {
+        marginTop: '4px',
+        fontSize: '0.75rem',
+        color: '#6b7280',
+        textAlign: 'right',
+      },
+    }, `${Math.round(percent)}%`) : null
+  )
+}
+
+// ─── Skeleton — Loading Skeleton ───────────────────────────────
+
+/**
+ * Loading skeleton placeholder.
+ *
+ * @example
+ * <Skeleton width="200px" height="20px" />
+ * <Skeleton variant="circle" width="48px" height="48px" />
+ * <Skeleton variant="text" lines={3} />
+ */
+export function Skeleton(props: {
+  width?: string
+  height?: string
+  variant?: 'rect' | 'circle' | 'text'
+  lines?: number
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  if (props.variant === 'text' && props.lines) {
+    return h('div', {
+      class: props.class,
+      style: { ...props.style },
+    },
+      ...Array.from({ length: props.lines }, (_, i) =>
+        h('div', {
+          style: {
+            height: '1em',
+            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+            backgroundSize: '200% 100%',
+            animation: 'flint-skeleton 1.5s infinite',
+            borderRadius: '4px',
+            marginBottom: '0.5rem',
+            width: i === props.lines! - 1 ? '70%' : '100%',
+          },
+        })
+      )
+    )
+  }
+
+  return h('div', {
+    class: props.class,
+    style: {
+      width: props.width ?? '100%',
+      height: props.height ?? '20px',
+      background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'flint-skeleton 1.5s infinite',
+      borderRadius: props.variant === 'circle' ? '50%' : '4px',
+      ...props.style,
+    },
+  })
+}
+
+// ─── Avatar — User Avatar ──────────────────────────────────────
+
+/**
+ * User avatar component.
+ *
+ * @example
+ * <Avatar src="/user.jpg" name="John Doe" size="md" />
+ * <Avatar name="JD" size="sm" color="#667eea" />
+ */
+export function Avatar(props: {
+  src?: string
+  name?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  color?: string
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const sizeMap = {
+    xs: '24px',
+    sm: '32px',
+    md: '40px',
+    lg: '48px',
+    xl: '64px',
+  }
+
+  const size = sizeMap[props.size ?? 'md']
+  const initials = props.name
+    ? props.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : '?'
+
+  if (props.src) {
+    return h('img', {
+      src: props.src,
+      alt: props.name ?? 'Avatar',
+      class: props.class,
+      style: {
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        objectFit: 'cover',
+        ...props.style,
+      },
+    })
+  }
+
+  return h('div', {
+    class: props.class,
+    style: {
+      width: size,
+      height: size,
+      borderRadius: '50%',
+      background: props.color ?? '#667eea',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: `calc(${size} * 0.4)`,
+      fontWeight: '500',
+      ...props.style,
+    },
+  }, initials)
+}
+
+// ─── Tooltip — Hover Tooltip ───────────────────────────────────
+
+/**
+ * Tooltip component.
+ *
+ * @example
+ * <Tooltip content="This is a tooltip">
+ *   <button>Hover me</button>
+ * </Tooltip>
+ */
+export function Tooltip(props: {
+  content: string
+  children: Child
+  position?: 'top' | 'bottom' | 'left' | 'right'
+  class?: string
+  style?: Record<string, any>
+}): Child {
+  const show = state(false)
+
+  const positionStyles: Record<string, Record<string, string>> = {
+    top: { bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '8px' },
+    bottom: { top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px' },
+    left: { right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: '8px' },
+    right: { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '8px' },
+  }
+
+  return h('div', {
+    class: props.class,
+    style: {
+      position: 'relative',
+      display: 'inline-block',
+      ...props.style,
+    },
+    onMouseEnter: () => show.set(true),
+    onMouseLeave: () => show.set(false),
+  },
+    props.children,
+    show() ? h('div', {
+      style: {
+        position: 'absolute',
+        padding: '6px 12px',
+        background: '#1f2937',
+        color: 'white',
+        fontSize: '0.75rem',
+        borderRadius: '6px',
+        whiteSpace: 'nowrap',
+        zIndex: 1000,
+        pointerEvents: 'none',
+        animation: 'flint-tooltip 0.15s ease',
+        ...positionStyles[props.position ?? 'top'],
+      },
+    }, props.content) : null
+  )
+}

@@ -458,6 +458,396 @@ export function memo<P extends Record<string, any>>(
   }
 }
 
+// ─── $form() — Simplified Form Handling ─────────────────────────
+
+/**
+ * Simplified form handling with built-in validation and submission.
+ *
+ * @example
+ * const form = $form({
+ *   email: '',
+ *   password: '',
+ * }, {
+ *   email: (v) => v.includes('@') ? null : 'Email tidak valid',
+ *   password: (v) => v.length >= 6 ? null : 'Password minimal 6 karakter',
+ * }, async (values) => {
+ *   await login(values)
+ * })
+ *
+ * <form onsubmit={form.submit}>
+ *   <input value={form.values.email} oninput={form.set('email')} />
+ *   <span>{form.errors.email}</span>
+ *   <button disabled={form.isSubmitting}>Login</button>
+ * </form>
+ */
+export function $form<T extends Record<string, any>>(
+  initialValues: T,
+  validators?: Partial<Record<keyof T, (value: any) => string | null>>,
+  onSubmit?: (values: T) => void | Promise<void>
+): {
+  values: T
+  errors: Partial<Record<keyof T, string>>
+  isSubmitting: boolean
+  isValid: boolean
+  submit: (e: Event) => void
+  set: (field: keyof T) => (e: Event) => void
+  reset: () => void
+} {
+  const values = $reactive({ ...initialValues })
+  const errors = $reactive<Partial<Record<keyof T, string>>>({})
+  const isSubmitting = state(false)
+
+  const isValid = computed(() => {
+    if (!validators) return true
+    for (const [field, validator] of Object.entries(validators)) {
+      const error = validator(values[field])
+      if (error) return false
+    }
+    return true
+  })
+
+  const validate = () => {
+    if (!validators) return true
+    let valid = true
+    for (const [field, validator] of Object.entries(validators)) {
+      const error = validator(values[field])
+      errors[field] = error
+      if (error) valid = false
+    }
+    return valid
+  }
+
+  const submit = async (e: Event) => {
+    e.preventDefault()
+    if (!validate()) return
+    isSubmitting.set(true)
+    try {
+      await onSubmit?.(values)
+    } finally {
+      isSubmitting.set(false)
+    }
+  }
+
+  const set = (field: keyof T) => (e: Event) => {
+    const target = e.target as HTMLInputElement
+    values[field] = target.value
+    if (validators?.[field]) {
+      errors[field] = validators[field](target.value)
+    }
+  }
+
+  const reset = () => {
+    for (const [key, value] of Object.entries(initialValues)) {
+      values[key] = value
+    }
+    for (const key of Object.keys(errors)) {
+      delete errors[key]
+    }
+    isSubmitting.set(false)
+  }
+
+  return {
+    values,
+    errors,
+    isSubmitting,
+    isValid,
+    submit,
+    set,
+    reset,
+  }
+}
+
+// ─── $load() — Simplified Data Loading ──────────────────────────
+
+/**
+ * Simplified data loading with loading and error states.
+ *
+ * @example
+ * const users = $load('/api/users')
+ *
+ * if (users.loading()) return <Spinner />
+ * if (users.error()) return <p>Error: {users.error().message}</p>
+ * return <ul>{users.data().map(u => <li>{u.name}</li>)}</ul>
+ */
+export function $load<T>(
+  url: string | (() => string),
+  options?: {
+    method?: string
+    headers?: Record<string, string>
+    body?: any
+    immediate?: boolean
+  }
+): {
+  data: () => T | null
+  error: () => Error | null
+  loading: () => boolean
+  refetch: () => void
+} {
+  const data = state<T | null>(null)
+  const error = state<Error | null>(null)
+  const loading = state(false)
+
+  const fetcher = async () => {
+    loading.set(true)
+    error.set(null)
+    try {
+      const actualUrl = typeof url === 'function' ? url() : url
+      const res = await fetch(actualUrl, {
+        method: options?.method ?? 'GET',
+        headers: options?.headers,
+        body: options?.body ? JSON.stringify(options.body) : undefined,
+      })
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      data.set(await res.json())
+    } catch (err) {
+      error.set(err instanceof Error ? err : new Error(String(err)))
+    } finally {
+      loading.set(false)
+    }
+  }
+
+  if (options?.immediate !== false) {
+    fetcher()
+  }
+
+  return {
+    data,
+    error,
+    loading,
+    refetch: fetcher,
+  }
+}
+
+// ─── $modal() — Simplified Modal State ──────────────────────────
+
+/**
+ * Simplified modal state management.
+ *
+ * @example
+ * const modal = $modal()
+ *
+ * <button onclick={modal.open}>Buka</button>
+ * {modal.isOpen() && (
+ *   <div class="modal">
+ *     <p>Isi modal</p>
+ *     <button onclick={modal.close}>Tutup</button>
+ *   </div>
+ * )}
+ */
+export function $modal(initialState = false): {
+  isOpen: () => boolean
+  open: () => void
+  close: () => void
+  toggle: () => void
+} {
+  const isOpen = state(initialState)
+
+  return {
+    isOpen,
+    open: () => isOpen.set(true),
+    close: () => isOpen.set(false),
+    toggle: () => isOpen.set(v => !v),
+  }
+}
+
+// ─── $toast() — Simplified Notifications ────────────────────────
+
+/**
+ * Simplified toast notifications.
+ *
+ * @example
+ * const toast = $toast()
+ *
+ * toast.success('Berhasil!')
+ * toast.error('Gagal!')
+ * toast.info('Informasi')
+ */
+export function $toast(): {
+  show: (message: string, type?: 'success' | 'error' | 'info') => void
+  success: (message: string) => void
+  error: (message: string) => void
+  info: (message: string) => void
+} {
+  const show = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    // Create toast element
+    const toast = document.createElement('div')
+    toast.className = `flint-toast flint-toast-${type}`
+    toast.textContent = message
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: white;
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      z-index: 10000;
+      animation: flint-toast-in 0.3s ease;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+    `
+    document.body.appendChild(toast)
+
+    // Auto remove
+    setTimeout(() => {
+      toast.style.animation = 'flint-toast-out 0.3s ease'
+      setTimeout(() => toast.remove(), 300)
+    }, 3000)
+  }
+
+  return {
+    show,
+    success: (msg) => show(msg, 'success'),
+    error: (msg) => show(msg, 'error'),
+    info: (msg) => show(msg, 'info'),
+  }
+}
+
+// ─── $storage() — Simplified localStorage ───────────────────────
+
+/**
+ * Simplified localStorage with reactivity.
+ *
+ * @example
+ * const theme = $storage('theme', 'light')
+ *
+ * theme() // 'light'
+ * theme.set('dark') // saves to localStorage
+ */
+export function $storage<T>(
+  key: string,
+  defaultValue: T
+): {
+  (): T
+  set: (value: T) => void
+  remove: () => void
+} {
+  let stored: T
+  try {
+    const item = localStorage.getItem(key)
+    stored = item ? JSON.parse(item) : defaultValue
+  } catch {
+    stored = defaultValue
+  }
+
+  const signal = state(stored)
+
+  const getter = () => signal()
+  const setter = (value: T) => {
+    signal.set(value)
+    try {
+      localStorage.setItem(key, JSON.stringify(value))
+    } catch {
+      // localStorage full or unavailable
+    }
+  }
+  const remover = () => {
+    signal.set(defaultValue)
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // ignore
+    }
+  }
+
+  // Copy function properties
+  Object.assign(getter, { set: setter, remove: remover })
+
+  return getter as any
+}
+
+// ─── $debounce() — Simplified Debounce ──────────────────────────
+
+/**
+ * Simplified debounce function.
+ *
+ * @example
+ * const search = $debounce((query) => {
+ *   fetchResults(query)
+ * }, 300)
+ *
+ * <input oninput={(e) => search(e.target.value)} />
+ */
+export function $debounce<T extends (...args: any[]) => any>(
+  fn: T,
+  ms: number
+): T {
+  let timer: ReturnType<typeof setTimeout>
+  return ((...args: any[]) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => fn(...args), ms)
+  }) as T
+}
+
+// ─── $throttle() — Simplified Throttle ──────────────────────────
+
+/**
+ * Simplified throttle function.
+ *
+ * @example
+ * const handleScroll = $throttle((e) => {
+ *   console.log('Scroll position:', e.target.scrollTop)
+ * }, 100)
+ *
+ * <div onscroll={handleScroll}>...</div>
+ */
+export function $throttle<T extends (...args: any[]) => any>(
+  fn: T,
+  ms: number
+): T {
+  let lastCall = 0
+  return ((...args: any[]) => {
+    const now = Date.now()
+    if (now - lastCall >= ms) {
+      lastCall = now
+      fn(...args)
+    }
+  }) as T
+}
+
+// ─── $time() — Simplified Time Formatting ───────────────────────
+
+/**
+ * Simplified time formatting.
+ *
+ * @example
+ * $time.format(new Date()) // '2 menit yang lalu'
+ * $time.distance(new Date('2024-01-01')) // '3 bulan yang lalu'
+ */
+export const $time = {
+  format(date: Date): string {
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const seconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+
+    if (seconds < 60) return 'baru saja'
+    if (minutes < 60) return `${minutes} menit yang lalu`
+    if (hours < 24) return `${hours} jam yang lalu`
+    if (days < 30) return `${days} hari yang lalu`
+    return date.toLocaleDateString('id-ID')
+  },
+
+  distance(from: Date, to: Date = new Date()): string {
+    const diff = to.getTime() - from.getTime()
+    const seconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+
+    if (days > 30) return `${Math.floor(days / 30)} bulan`
+    if (hours > 24) return `${days} hari`
+    if (minutes > 60) return `${hours} jam`
+    return `${minutes} menit`
+  },
+
+  now(): string {
+    return new Date().toLocaleTimeString('id-ID')
+  },
+}
+
 // ─── Debug Helpers ──────────────────────────────────────────────
 
 /**

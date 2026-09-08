@@ -16,136 +16,136 @@ export const ERROR_CODES: Record<string, FlintErrorCode> = {
   // Component Errors
   COMPONENT_NOT_FUNCTION: {
     code: 'FLINT_COMPONENT_NOT_FUNCTION',
-    message: 'Component must be a function that returns JSX.',
-    suggestion: 'Make sure your component is a function that returns JSX:\n\n// Wrong\nclass MyComponent extends Component {}\n\n// Correct\nfunction MyComponent() {\n  return <div>Hello</div>\n}',
+    message: 'Component harus berupa fungsi yang mengembalikan JSX.',
+    suggestion: 'Pastikan component kamu adalah fungsi yang mengembalikan JSX:\n\n// Salah\nclass MyComponent extends Component {}\n\n// Benar\nfunction MyComponent() {\n  return <div>Halo</div>\n}',
     docs: 'https://flint.dev/docs/components',
   },
 
   COMPONENT_MISSING_RETURN: {
     code: 'FLINT_COMPONENT_MISSING_RETURN',
-    message: 'Component must return something. Did you forget a return statement?',
-    suggestion: 'Add a return statement to your component:\n\nfunction MyComponent() {\n  return <div>Hello</div>\n}',
+    message: 'Component harus mengembalikan sesuatu. Lupa pernyataan return?',
+    suggestion: 'Tambahkan pernyataan return ke component kamu:\n\nfunction MyComponent() {\n  return <div>Halo</div>\n}',
     docs: 'https://flint.dev/docs/components',
   },
 
   // Signal/State Errors
   SIGNAL_READ_ONLY: {
     code: 'FLINT_SIGNAL_READ_ONLY',
-    message: 'Cannot set a read-only signal. Did you mean to use state() instead of computed()?',
-    suggestion: 'Use state() for writable signals, computed() for read-only:\n\nconst count = state(0)  // Writable\nconst doubled = computed(() => count() * 2)  // Read-only\ncount.set(5)  // OK\ndoubled.set(10)  // Error!',
+    message: 'Tidak bisa mengubah signal read-only. Mungkin maksud kamu pakai state() alih-alih computed()?',
+    suggestion: 'Gunakan state() untuk signal yang bisa ditulis, computed() untuk read-only:\n\nconst count = state(0)  // Bisa ditulis\nconst doubled = computed(() => count() * 2)  // Read-only\ncount.set(5)  // OK\ndoubled.set(10)  // Error!',
     docs: 'https://flint.dev/docs/reactivity',
   },
 
   SIGNAL_OUTSIDE_EFFECT: {
     code: 'FLINT_SIGNAL_OUTSIDE_EFFECT',
-    message: 'Signal accessed outside of effect/tracking context.',
-    suggestion: 'If you want to track a signal, use effect() or computed():\n\neffect(() => {\n  console.log(count())  // Tracked\n})\n\nOr in a component:\nfunction MyComponent() {\n  return <div>{count()}</div>  // Tracked in render\n}',
+    message: 'Signal diakses di luar context effect/tracking.',
+    suggestion: 'Jika kamu ingin melacak signal, gunakan effect() atau computed():\n\neffect(() => {\n  console.log(count())  // Dilacak\n})\n\nAtau di component:\nfunction MyComponent() {\n  return <div>{count()}</div>  // Dilacak saat render\n}',
     docs: 'https://flint.dev/docs/reactivity',
   },
 
   // Hook Errors
   HOOK_OUTSIDE_COMPONENT: {
     code: 'FLINT_HOOK_OUTSIDE_COMPONENT',
-    message: 'Hook called outside of a component.',
-    suggestion: 'Hooks can only be called inside component functions:\n\nfunction MyComponent() {\n  const name = state("hello")  // OK\n  return <div>{name()}</div>\n}\n\n// Wrong\nconst name = state("hello")  // Outside component',
+    message: 'Hook dipanggil di luar component.',
+    suggestion: 'Hook hanya bisa dipanggil di dalam fungsi component:\n\nfunction MyComponent() {\n  const name = state("halo")  // OK\n  return <div>{name()}</div>\n}\n\n// Salah\nconst name = state("halo")  // Di luar component',
     docs: 'https://flint.dev/docs/hooks',
   },
 
   HOOK_ORDER_VIOLATION: {
     code: 'FLINT_HOOK_ORDER_VIOLATION',
-    message: 'Hooks must be called in the same order on every render.',
-    suggestion: 'Do not call hooks inside conditions or loops:\n\n// Wrong\nif (condition) {\n  const name = state("")  // Different order!\n}\n\n// Correct\nconst name = state("")  // Always called\nif (condition) {\n  // Use name here\n}',
+    message: 'Hook harus dipanggil dalam urutan yang sama setiap render.',
+    suggestion: 'Jangan panggil hook di dalam kondisi atau loop:\n\n// Salah\nif (kondisi) {\n  const name = state("")  // Urutan berbeda!\n}\n\n// Benar\nconst name = state("")  // Selalu dipanggil\nif (kondisi) {\n  // Gunakan name di sini\n}',
     docs: 'https://flint.dev/docs/hooks',
   },
 
   // JSX Errors
   JSX_INVALID_CHILD: {
     code: 'FLINT_JSX_INVALID_CHILD',
-    message: 'Invalid JSX child. Children must be strings, numbers, elements, or arrays.',
-    suggestion: 'Make sure your JSX children are valid:\n\n// Wrong\n<div>{undefined}</div>\n<div>{null}</div>\n\n// Correct\n<div>{undefined ?? ""}</div>\n<div>{null ?? ""}</div>\n<div>{someValue()}</div>',
+    message: 'Anak JSX tidak valid. Anak harus berupa string, number, element, atau array.',
+    suggestion: 'Pastikan anak JSX kamu valid:\n\n// Salah\n<div>{undefined}</div>\n<div>{null}</div>\n\n// Benar\n<div>{undefined ?? ""}</div>\n<div>{null ?? ""}</div>\n<div>{someValue()}</div>',
     docs: 'https://flint.dev/docs/jsx',
   },
 
   JSX_MISSING_KEY: {
     code: 'FLINT_JSX_MISSING_KEY',
-    message: 'Array elements must have a unique "key" prop.',
-    suggestion: 'Add a unique key to each element in a list:\n\n// Wrong\n{items.map(item => <div>{item.name}</div>)}\n\n// Correct\n{items.map(item => <div key={item.id}>{item.name}</div>)}',
+    message: 'Element array harus memiliki prop "key" yang unik.',
+    suggestion: 'Tambahkan key unik ke setiap element dalam list:\n\n// Salah\n{items.map(item => <div>{item.name}</div>)}\n\n// Benar\n{items.map(item => <div key={item.id}>{item.name}</div>)}',
     docs: 'https://flint.dev/docs/lists',
   },
 
   // Form Errors
   FORM_MISSING_INITIAL_VALUES: {
     code: 'FLINT_FORM_MISSING_INITIAL_VALUES',
-    message: 'createForm requires an initialValues object.',
-    suggestion: 'Provide initial values for your form:\n\nconst form = createForm({\n  initialValues: {\n    name: "",\n    email: ""\n  },\n  onSubmit: async (values) => {\n    console.log(values)\n  }\n})',
+    message: 'createForm membutuhkan object initialValues.',
+    suggestion: 'Berikan nilai awal untuk form kamu:\n\nconst form = createForm({\n  initialValues: {\n    name: "",\n    email: ""\n  },\n  onSubmit: async (values) => {\n    console.log(values)\n  }\n})',
     docs: 'https://flint.dev/docs/forms',
   },
 
   FORM_FIELD_NOT_FOUND: {
     code: 'FLINT_FORM_FIELD_NOT_FOUND',
-    message: 'Field not found in form. Did you misspell the field name?',
-    suggestion: 'Make sure the field name matches your initialValues:\n\nconst form = createForm({\n  initialValues: { email: "" }\n})\n\nform.field("email")  // Correct\nform.field("emial")  // Wrong!',
+    message: 'Field tidak ditemukan di form. Mungkin salah eja nama field?',
+    suggestion: 'Pastikan nama field cocok dengan initialValues kamu:\n\nconst form = createForm({\n  initialValues: { email: "" }\n})\n\nform.field("email")  // Benar\nform.field("emial")  // Salah!',
     docs: 'https://flint.dev/docs/forms',
   },
 
   // Router Errors
   ROUTE_NOT_FOUND: {
     code: 'FLINT_ROUTE_NOT_FOUND',
-    message: 'Route not found. Did you forget to add this route?',
-    suggestion: 'Add the route to your router configuration:\n\nconst router = createRouter({\n  routes: [\n    { path: "/", component: Home },\n    { path: "/about", component: About },  // Add missing routes\n  ]\n})',
+    message: 'Route tidak ditemukan. Lupa menambahkan route ini?',
+    suggestion: 'Tambahkan route ke konfigurasi router kamu:\n\nconst router = createRouter({\n  routes: [\n    { path: "/", component: Home },\n    { path: "/tentang", component: About },  // Tambahkan route yang missing\n  ]\n})',
     docs: 'https://flint.dev/docs/router',
   },
 
   // Store Errors
   STORE_MISSING_STATE: {
     code: 'FLINT_STORE_MISSING_STATE',
-    message: 'Store must have a state property.',
-    suggestion: 'Add a state property to your store:\n\nconst useStore = createStore({\n  state: {\n    count: 0\n  },\n  actions: {\n    increment() {\n      this.count++\n    }\n  }\n})',
+    message: 'Store harus memiliki property state.',
+    suggestion: 'Tambahkan property state ke store kamu:\n\nconst useStore = createStore({\n  state: {\n    count: 0\n  },\n  actions: {\n    increment() {\n      this.count++\n    }\n  }\n})',
     docs: 'https://flint.dev/docs/store',
   },
 
   STORE_MISSING_REDUCER: {
     code: 'FLINT_STORE_MISSING_REDUCER',
-    message: 'Store reducer must be a function.',
-    suggestion: 'Make sure your reducer is a function:\n\nconst useStore = createStore({\n  state: { count: 0 },\n  reducers: {\n    increment: (state) => ({ count: state.count + 1 })  // Correct\n  }\n})',
+    message: 'Store reducer harus berupa fungsi.',
+    suggestion: 'Pastikan reducer kamu adalah fungsi:\n\nconst useStore = createStore({\n  state: { count: 0 },\n  reducers: {\n    increment: (state) => ({ count: state.count + 1 })  // Benar\n  }\n})',
     docs: 'https://flint.dev/docs/store',
   },
 
   // Context Errors
   CONTEXT_MISSING_PROVIDER: {
     code: 'FLINT_CONTEXT_MISSING_PROVIDER',
-    message: 'useContext() called without a provider. Did you forget to wrap your app?',
-    suggestion: 'Wrap your app with the context provider:\n\nconst ThemeContext = createContext("light")\n\nfunction App() {\n  return (\n    <ThemeContext.Provider value="dark">\n      <MyComponent />\n    </ThemeContext.Provider>\n  )\n}',
+    message: 'useContext() dipanggil tanpa provider. Lupa membungkus app?',
+    suggestion: 'Bungkus app kamu dengan context provider:\n\nconst ThemeContext = createContext("light")\n\nfunction App() {\n  return (\n    <ThemeContext.Provider value="dark">\n      <MyComponent />\n    </ThemeContext.Provider>\n  )\n}',
     docs: 'https://flint.dev/docs/context',
   },
 
   // Prop Errors
   PROP_TYPE_MISMATCH: {
     code: 'FLINT_PROP_TYPE_MISMATCH',
-    message: 'Invalid prop type. Check the expected type for this prop.',
-    suggestion: 'Make sure you pass the correct type:\n\n// Wrong\n<Input type={123} />\n\n// Correct\n<Input type="text" />',
+    message: 'Tipe prop tidak valid. Periksa tipe yang diharapkan untuk prop ini.',
+    suggestion: 'Pastikan kamu memberikan tipe yang benar:\n\n// Salah\n<Input type={123} />\n\n// Benar\n<Input type="text" />',
     docs: 'https://flint.dev/docs/props',
   },
 
   PROP_MISSING_REQUIRED: {
     code: 'FLINT_PROP_MISSING_REQUIRED',
-    message: 'Missing required prop.',
-    suggestion: 'Pass all required props:\n\n// Wrong\n<Input />\n\n// Correct\n<Input name="email" value={email()} />',
+    message: 'Prop yang diperlukan tidak ada.',
+    suggestion: 'Berikan semua prop yang diperlukan:\n\n// Salah\n<Input />\n\n// Benar\n<Input name="email" value={email()} />',
     docs: 'https://flint.dev/docs/props',
   },
 
   // General Errors
   NOT_IMPLEMENTED: {
     code: 'FLINT_NOT_IMPLEMENTED',
-    message: 'This feature is not implemented yet.',
-    suggestion: 'Check the Flint roadmap or contribute this feature!\nhttps://flint.dev/roadmap',
+    message: 'Fitur ini belum diimplementasikan.',
+    suggestion: 'Cek roadmap Flint atau berkontribusi untuk fitur ini!\nhttps://flint.dev/roadmap',
     docs: 'https://flint.dev/docs',
   },
 
   INVALID_CONFIGURATION: {
     code: 'FLINT_INVALID_CONFIGURATION',
-    message: 'Invalid configuration. Check your settings.',
-    suggestion: 'Review the configuration options:\nhttps://flint.dev/docs/configuration',
+    message: 'Konfigurasi tidak valid. Periksa pengaturan kamu.',
+    suggestion: 'Tinjau opsi konfigurasi:\nhttps://flint.dev/docs/configuration',
     docs: 'https://flint.dev/docs/configuration',
   },
 }
@@ -299,13 +299,13 @@ export const QUICK_HELP = `
 
 📦 Component:
   function MyComponent() {
-    return <div>Hello</div>
+    return <div>Halo</div>
   }
 
 📊 State:
   const count = state(0)
-  count()      // Read
-  count.set(1) // Write
+  count()      // Baca
+  count.set(1) // Tulis
 
 ⚡ Computed:
   const doubled = computed(() => count() * 2)
@@ -332,6 +332,63 @@ export const QUICK_HELP = `
   $map()       // List render
   $await()     // Async render
   $log()       // Debug log
+
+📝 Form:
+  const form = $form({ email: '' }, {
+    email: (v) => v.includes('@') ? null : 'Email tidak valid'
+  }, async (v) => { await login(v) })
+  form.values.email     // Baca value
+  form.set('email')     // Set value
+  form.submit           // Submit handler
+
+🌐 Load:
+  const users = $load('/api/users')
+  users.data()          // Data
+  users.loading()       // Loading state
+  users.error()         // Error
+  users.refetch()       // Refetch
+
+🪟 Modal:
+  const modal = $modal()
+  modal.open            // Buka
+  modal.close           // Tutup
+  modal.toggle          // Toggle
+  modal.isOpen()        // Cek state
+
+🔔 Toast:
+  const toast = $toast()
+  toast.success('Berhasil!')
+  toast.error('Gagal!')
+
+💾 Storage:
+  const theme = $storage('theme', 'light')
+  theme()               // Baca
+  theme.set('dark')     // Tulis + simpan
+
+⏱️ Time:
+  $time.format(date)    // '2 menit yang lalu'
+  $time.now()           // '14:30:00'
+
+🎨 UI Components:
+  <Toggle bind={enabled} label="Aktif" />
+  <Checkbox bind={agreed} label="Saya setuju" />
+  <Radio group={selected} value="a" label="Pilihan A" />
+  <Select bind={color} options={['merah', 'hijau']} />
+  <Progress value={75} />
+  <Skeleton width="200px" />
+  <Avatar name="John Doe" />
+  <Tooltip content="Tips">
+    <button>Hover saya</button>
+  </Tooltip>
+  <Badge status="success">Aktif</Badge>
+  <Alert type="info" title="Info">Pesan</Alert>
+
+🔧 Debug Tools:
+  debug.inspector()    // Toggle signal inspector
+  debug.monitor()      // Tampilkan performance monitor
+  debug.tree()         // Tampilkan component tree
+  debug.borders()      // Tampilkan debug borders
+  debug.help()         // Bantuan
 `
 
 // ─── Dev Mode Helpers ───────────────────────────────────────────

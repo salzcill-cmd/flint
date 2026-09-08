@@ -73,6 +73,9 @@ export {
   Input,
   Button,
   Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
   Tabs,
   Modal,
   Accordion,
@@ -83,6 +86,16 @@ export {
   Stack,
   Grid,
   EmptyState,
+  // New superior components
+  Toggle,
+  Checkbox,
+  Radio,
+  Select,
+  Textarea,
+  Progress,
+  Skeleton,
+  Avatar,
+  Tooltip,
 } from './components/ui.js'
 
 // Lazy Loading & Error Boundaries
@@ -269,6 +282,15 @@ export {
   $inspect,
   $perf,
   hc,
+  // New beginner-friendly helpers
+  $form,
+  $load,
+  $modal,
+  $toast,
+  $storage,
+  $debounce,
+  $throttle,
+  $time,
 } from './hooks/dx.js'
 
 // DevTools
@@ -797,6 +819,24 @@ export type {
   ServerActionHandler,
   ServerActionMiddleware,
 } from './ssr/server-components.js'
+
+// Visual Debug Tools (v5)
+export {
+  showInspector,
+  hideInspector,
+  toggleInspector,
+  showMonitor,
+  showComponentTree,
+  showDebugBorders,
+  hideDebugBorders,
+  logMutations,
+  debug,
+  registerSignal,
+  getRegisteredSignals,
+  clearSignalRegistry,
+  recordRender,
+  enableConsoleLog,
+} from './debug/index.js'
 
 // Optimistic Updates & use() API
 export {

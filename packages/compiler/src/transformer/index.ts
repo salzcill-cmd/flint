@@ -603,6 +603,13 @@ const FLINT_SYMBOLS = [
   'preload', 'preinit', 'prefetchDNS', 'preconnect',
   'escapeHtml', 'sanitizeInput', 'safeUrl',
   'createServerAction', 'createServerComponent',
+  // Beginner-friendly DX helpers
+  '$form', '$load', '$modal', '$toast', '$storage',
+  '$debounce', '$throttle', '$time', '$ref', '$reactive',
+  '$store', '$computed', '$effect', '$watch', '$event',
+  '$class', '$style', '$if', '$map', '$await', '$immerStore',
+  '$log', '$inspect', '$perf', 'component', 'memo',
+  'hc',
 ]
 
 function detectUsedSymbols(code: string): string[] {
