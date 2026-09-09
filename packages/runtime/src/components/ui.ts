@@ -1404,7 +1404,140 @@ export function FormWizard(props: {
           cursor: 'pointer',
         },
         onClick: next,
-      }, currentStep() < props.steps.length - 1 ? 'Next →' : 'Finish ✓')
+      },     currentStep() < props.steps.length - 1 ? 'Next →' : 'Finish ✓')
     )
+  )
+}
+
+// ─── FileUpload — Drag & Drop File Upload ───────────────────────
+
+/**
+ * Drag-and-drop file upload with preview and progress.
+ *
+ * @example
+ * <FileUpload
+ *   accept="image/*"
+ *   multiple
+ *   onUpload={async (files) => {
+ *     const formData = new FormData()
+ *     files.forEach(f => formData.append('files', f))
+ *     await fetch('/api/upload', { method: 'POST', body: formData })
+ *   }}
+ * />
+ */
+export function FileUpload(props: {
+  accept?: string
+  multiple?: boolean
+  maxFiles?: number
+  maxSize?: number
+  class?: string
+  onUpload?: (files: File[]) => void | Promise<void>
+  onFilesSelected?: (files: File[]) => void
+}): Child {
+  const { accept, multiple = false, maxFiles = 10, maxSize = 10 * 1024 * 1024 } = props
+  const isDragging = state(false)
+  const uploadedFiles = state<File[]>([])
+  const isUploading = state(false)
+
+  const handleFiles = async (fileList: FileList | null) => {
+    if (!fileList) return
+    let files = Array.from(fileList)
+
+    if (!multiple) files = files.slice(0, 1)
+    if (files.length > maxFiles) files = files.slice(0, maxFiles)
+
+    // Filter by size
+    files = files.filter(f => {
+      if (f.size > maxSize) {
+        console.warn(`[Flint] File "${f.name}" exceeds max size (${maxSize / 1024 / 1024}MB)`)
+        return false
+      }
+      return true
+    })
+
+    uploadedFiles.set(files)
+    props.onFilesSelected?.(files)
+
+    if (props.onUpload) {
+      isUploading.set(true)
+      try {
+        await props.onUpload(files)
+      } finally {
+        isUploading.set(false)
+      }
+    }
+  }
+
+  const onDragOver = (e: Event) => {
+    e.preventDefault()
+    isDragging.set(true)
+  }
+
+  const onDragLeave = () => isDragging.set(false)
+
+  const onDrop = (e: Event) => {
+    e.preventDefault()
+    isDragging.set(false)
+    handleFiles((e as DragEvent).dataTransfer?.files ?? null)
+  }
+
+  const onInputChange = (e: Event) => {
+    handleFiles((e.target as HTMLInputElement).files)
+  }
+
+  return h('div', {
+    class: props.class,
+    style: {
+      border: `2px dashed ${isDragging() ? '#3b82f6' : '#d1d5db'}`,
+      borderRadius: '12px',
+      padding: '32px',
+      textAlign: 'center',
+      cursor: 'pointer',
+      backgroundColor: isDragging() ? '#eff6ff' : '#fafafa',
+      transition: 'all 0.2s',
+    },
+    onDragOver,
+    onDragLeave,
+    onDrop,
+    onClick: () => {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = accept || ''
+      input.multiple = multiple
+      input.onchange = onInputChange
+      input.click()
+    },
+  },
+    isUploading()
+      ? h('div', { style: { color: '#3b82f6', fontWeight: '500' } }, 'Uploading...')
+      : h('div', {},
+          h('div', { style: { fontSize: '2rem', marginBottom: '8px' } }, '📁'),
+          h('div', { style: { fontWeight: '500', marginBottom: '4px' } }, 'Drop files here or click to browse'),
+          h('div', { style: { fontSize: '0.875rem', color: '#6b7280' } },
+            accept ? `Accepted: ${accept}` : 'All files',
+            maxSize ? ` • Max: ${Math.round(maxSize / 1024 / 1024)}MB` : ''
+          )
+        ),
+    uploadedFiles().length > 0
+      ? h('div', { style: { marginTop: '16px', textAlign: 'left' } },
+          ...uploadedFiles().map((f, i) =>
+            h('div', {
+              key: i,
+              style: {
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '8px 12px',
+                backgroundColor: '#f3f4f6',
+                borderRadius: '8px',
+                marginBottom: '4px',
+                fontSize: '0.875rem',
+              },
+            },
+              h('span', {}, f.name),
+              h('span', { style: { color: '#6b7280' } }, `${(f.size / 1024).toFixed(1)}KB`)
+            )
+          )
+        )
+      : null
   )
 }

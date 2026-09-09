@@ -181,6 +181,97 @@ export function $store<T extends Record<string, any>>(config: T): any {
   )
 }
 
+// ─── $model() — Simplest State Management ───────────────────────
+
+/**
+ * The simplest way to create reactive state. One function, one object.
+ * Infers computed from getters, actions from methods.
+ *
+ * @example
+ * // Simple counter
+ * const counter = $model({
+ *   count: 0,
+ *   get doubled() { return this.count * 2 },
+ *   increment() { this.count++ },
+ *   decrement() { this.count-- },
+ * })
+ *
+ * counter.count      // 0
+ * counter.doubled    // 0
+ * counter.increment()
+ * counter.count      // 1
+ * counter.doubled    // 2
+ *
+ * // In JSX:
+ * <button onClick={counter.increment}>Count: {counter.count}</button>
+ */
+export function $model<T extends Record<string, any>>(config: T): any {
+  const stateObj: Record<string, any> = {}
+  const computedGetters: Record<string, () => any> = {}
+  const actions: Record<string, Function> = {}
+
+  for (const [key, value] of Object.entries(config)) {
+    const desc = Object.getOwnPropertyDescriptor(config, key)
+    if (desc?.get) {
+      computedGetters[key] = desc.get
+    } else if (typeof value === 'function') {
+      actions[key] = value
+    } else {
+      stateObj[key] = value
+    }
+  }
+
+  const signals: Record<string, Signal<any>> = {}
+  for (const [key, value] of Object.entries(stateObj)) {
+    signals[key] = state(value)
+  }
+
+  const computedSignals: Record<string, any> = {}
+  for (const [key, getter] of Object.entries(computedGetters)) {
+    computedSignals[key] = computed(() => {
+      const ctx: Record<string, any> = {}
+      for (const [k, s] of Object.entries(signals)) {
+        Object.defineProperty(ctx, k, { get: () => s(), configurable: true })
+      }
+      return getter.call(ctx)
+    })
+  }
+
+  const boundActions: Record<string, Function> = {}
+  for (const [key, action] of Object.entries(actions)) {
+    boundActions[key] = (...args: any[]) => {
+      return batch(() => {
+        const ctx: Record<string, any> = {}
+        for (const [k, s] of Object.entries(signals)) {
+          Object.defineProperty(ctx, k, {
+            get: () => s(),
+            set: (v) => { s.set(v) },
+            enumerable: true,
+            configurable: true,
+          })
+        }
+        return action.call(ctx, ...args)
+      })
+    }
+  }
+
+  return new Proxy({} as any, {
+    get(_, prop: string) {
+      if (signals[prop]) return signals[prop]()
+      if (computedSignals[prop]) return computedSignals[prop]()
+      if (boundActions[prop]) return boundActions[prop]
+      return undefined
+    },
+    set(_, prop: string, value) {
+      if (signals[prop]) {
+        signals[prop].set(value)
+        return true
+      }
+      return false
+    },
+  })
+}
+
 // ─── $computed() — Quick Computed ────────────────────────────────
 
 /**

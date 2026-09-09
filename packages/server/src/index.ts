@@ -340,6 +340,15 @@ export {
 } from './queue.js'
 export type { JobConfig, Job, JobHandler } from './queue.js'
 
+// ─── Caching ────────────────────────────────────────────────────
+
+export {
+  MemoryCache,
+  cacheMiddleware,
+  createCache,
+} from './cache.js'
+export type { CacheConfig } from './cache.js'
+
 // ─── Re-export Hono types ──────────────────────────────────────
 
 export type { Hono } from 'hono'

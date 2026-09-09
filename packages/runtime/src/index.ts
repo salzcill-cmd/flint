@@ -96,6 +96,7 @@ export {
   VirtualList,
   DataTable,
   FormWizard,
+  FileUpload,
 } from './components/ui.js'
 
 // Lazy Loading & Error Boundaries
@@ -269,6 +270,7 @@ export {
   $refCallback,
   $reactive,
   $store,
+  $model,
   $computed,
   $effect,
   $watch,

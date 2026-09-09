@@ -11,6 +11,9 @@ import { infoProject } from './commands/info.js'
 import { generate, generateHelp } from './commands/generate.js'
 import { preview, previewHelp } from './commands/preview.js'
 import { doctor, doctorHelp } from './commands/doctor.js'
+import { startPlayground } from './commands/playground.js'
+import { runMigrate } from './commands/migrate.js'
+import { runSeed } from './commands/seed.js'
 
 const program = new Command()
 
@@ -162,6 +165,45 @@ program
   .action(async () => {
     try {
       await infoProject()
+    } catch (err) {
+      console.error(`\n✖ Error: ${err instanceof Error ? err.message : String(err)}\n`)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('playground')
+  .description('Open interactive Flint playground in browser')
+  .option('-p, --port <port>', 'Port number', '3333')
+  .action(async (options: { port: string }) => {
+    try {
+      await startPlayground({ port: parseInt(options.port, 10) })
+    } catch (err) {
+      console.error(`\n✖ Error: ${err instanceof Error ? err.message : String(err)}\n`)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('migrate')
+  .description('Run database migrations')
+  .option('--status', 'Show migration status')
+  .action(async (options: { status: boolean }) => {
+    try {
+      await runMigrate(options)
+    } catch (err) {
+      console.error(`\n✖ Error: ${err instanceof Error ? err.message : String(err)}\n`)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('seed')
+  .description('Run database seed file')
+  .option('-f, --file <file>', 'Seed file name', 'seed.ts')
+  .action(async (options: { file: string }) => {
+    try {
+      await runSeed({ file: options.file })
     } catch (err) {
       console.error(`\n✖ Error: ${err instanceof Error ? err.message : String(err)}\n`)
       process.exit(1)
