@@ -264,6 +264,7 @@ export type { UseResult, UseContextResult } from './hooks/use.js'
 // Advanced DX Features (v4.1)
 export {
   $ref,
+  $refCallback,
   $reactive,
   $store,
   $computed,

@@ -607,7 +607,7 @@ const FLINT_SYMBOLS = [
   '$api', '$http', '$query', '$mutation', '$fetch', '$submit',
   // Beginner-friendly DX helpers
   '$form', '$load', '$modal', '$toast', '$storage',
-  '$debounce', '$throttle', '$time', '$ref', '$reactive',
+  '$debounce', '$throttle', '$time', '$ref', '$refCallback', '$reactive',
   '$store', '$computed', '$effect', '$watch', '$event',
   '$class', '$style', '$if', '$map', '$await', '$immerStore',
   '$log', '$inspect', '$perf', 'component', 'memo',

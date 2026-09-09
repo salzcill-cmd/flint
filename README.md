@@ -109,6 +109,52 @@ Run `npm run dev` and open your browser.
 
 ---
 
+## What's New in v5
+
+### Bilingual Error Messages
+English by default, Indonesian auto-detected. Switch with `setLanguage('id')`.
+
+### Fixed Critical Bugs
+- `$reactive()` now tracks dependencies via signals (was a plain proxy before)
+- `memo()` uses shallow comparison (was `JSON.stringify`)
+- `$store()` actions use `batch()` for proper re-render triggers
+
+### VirtualList Component
+Render 10,000+ items with only visible DOM nodes:
+
+```jsx
+<VirtualList
+  items={bigArray}
+  height={400}
+  itemHeight={50}
+  renderItem={(item) => <div>{item.name}</div>}
+/>
+```
+
+### $refCallback
+Ref with lifecycle hooks:
+
+```jsx
+const input = $refCallback(
+  (el) => el.focus(),     // on mount
+  (el) => el.blur()       // on unmount
+)
+<input ref={input} />
+```
+
+### Auto-Import Expansion
+These symbols now auto-import without writing import statements:
+`$api`, `$http`, `$query`, `$mutation`, `$fetch`, `$submit`,
+`$refCallback`, `createI18n`, `formatNumber`, `sanitizeInput`, `generateCSP`
+
+### Full-Stack Backend
+- `flint-server` — Hono-based HTTP server
+- `flint-auth` — JWT authentication
+- `flint-drizzle` — Drizzle ORM (SQLite, PostgreSQL, MySQL)
+- Rate limiting, Zod validation, WebSocket, file upload, session management
+
+---
+
 ## Core Concepts
 
 ### Signals

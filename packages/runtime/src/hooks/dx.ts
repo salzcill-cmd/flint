@@ -9,15 +9,41 @@ import type { Child } from '../renderer/index.js'
 // ─── $ref() — Quick Template Ref ────────────────────────────────
 
 /**
- * Quick template ref creation.
+ * Quick template ref creation with auto-populate on mount.
  *
  * @example
  * const input = $ref()
  * <input ref={input} />
- * // input.current is the DOM element
+ * // input.current is automatically set to the DOM element
  */
 export function $ref<T = HTMLElement>(): { current: T | null } {
   return { current: null }
+}
+
+/**
+ * Create a ref callback that auto-assigns on mount and clears on unmount.
+ * Use when you need lifecycle integration.
+ *
+ * @example
+ * const input = $refCallback<HTMLInputElement>((el) => {
+ *   el.focus()  // Called when element mounts
+ * })
+ * <input ref={input} />
+ */
+export function $refCallback<T = HTMLElement>(
+  onMount?: (el: T) => void,
+  onUnmount?: (el: T) => void
+): (el: T | null) => void {
+  let currentEl: T | null = null
+  return (el: T | null) => {
+    if (el && currentEl !== el) {
+      currentEl = el
+      onMount?.(el)
+    } else if (!el && currentEl) {
+      onUnmount?.(currentEl as T)
+      currentEl = null
+    }
+  }
 }
 
 // ─── $reactive() — Quick Reactive Object ────────────────────────

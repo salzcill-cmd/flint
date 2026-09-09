@@ -107,6 +107,52 @@ Jalankan `npm run dev` dan buka browser kamu.
 
 ---
 
+## Yang Baru di v5
+
+### Pesan Error Bilingual
+English secara default, Indonesia auto-detect. Ganti dengan `setLanguage('id')`.
+
+### Fix Bug Kritis
+- `$reactive()` sekarang track dependencies via signals (dulu cuma plain proxy)
+- `memo()` pakai shallow comparison (dulu pakai `JSON.stringify`)
+- `$store()` actions pakai `batch()` biar mutations trigger re-render
+
+### Komponen VirtualList
+Render 10.000+ item hanya dengan DOM nodes yang visible:
+
+```jsx
+<VirtualList
+  items={bigArray}
+  height={400}
+  itemHeight={50}
+  renderItem={(item) => <div>{item.name}</div>}
+/>
+```
+
+### $refCallback
+Ref dengan lifecycle hooks:
+
+```jsx
+const input = $refCallback(
+  (el) => el.focus(),     // saat mount
+  (el) => el.blur()       // saat unmount
+)
+<input ref={input} />
+```
+
+### Auto-Import Lebih Lengkap
+Simbol ini sekarang auto-import tanpa perlu tulis import:
+`$api`, `$http`, `$query`, `$mutation`, `$fetch`, `$submit`,
+`$refCallback`, `createI18n`, `formatNumber`, `sanitizeInput`, `generateCSP`
+
+### Backend Full-Stack
+- `flint-server` — HTTP server berbasis Hono
+- `flint-auth` — Autentikasi JWT
+- `flint-drizzle` — Drizzle ORM (SQLite, PostgreSQL, MySQL)
+- Rate limiting, validasi Zod, WebSocket, upload file, session management
+
+---
+
 ## Konsep Inti
 
 ### Signals
