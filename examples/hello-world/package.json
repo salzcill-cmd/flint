@@ -9,10 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "flint": "^4.0.0"
+    "@valoweb/flint": "workspace:*"
   },
   "devDependencies": {
-    "@flint/vite-plugin": "^4.0.0",
+    "flint-vite-plugin": "workspace:*",
     "vite": "^6.0.0"
   }
 }

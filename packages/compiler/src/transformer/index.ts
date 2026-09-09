@@ -416,9 +416,116 @@ function generate(node: ASTNode | null | undefined, code: string): string {
       return generateJSXElement(node as JSXElement, code)
     case 'JSXFragment':
       return generateJSXFragment(node as JSXFragment, code)
+    case 'TemplateLiteral':
+      return generateTemplateLiteral(node, code)
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression':
+      return generateFunction(node, code)
+    case 'CallExpression':
+      return generateCallExpression(node, code)
+    case 'MemberExpression':
+      return generateMemberExpression(node, code)
+    case 'ConditionalExpression':
+      return `${generate(node.test, code)} ? ${generate(node.consequent, code)} : ${generate(node.alternate, code)}`
+    case 'BinaryExpression':
+    case 'LogicalExpression':
+      return `${generate(node.left, code)} ${node.operator} ${generate(node.right, code)}`
+    case 'UnaryExpression':
+      return `${node.operator}${generate(node.argument, code)}`
+    case 'UpdateExpression':
+      return `${generate(node.argument, code)}${node.operator}`
+    case 'AssignmentExpression':
+      return `${generate(node.left, code)} ${node.operator} ${generate(node.right, code)}`
+    case 'ObjectExpression':
+      return generateObjectExpression(node, code)
+    case 'ArrayExpression':
+      return `[${(node.elements || []).map((e: any) => e ? generate(e, code) : '').join(', ')}]`
+    case 'SpreadElement':
+      return `...${generate(node.argument, code)}`
+    case 'Identifier':
+      return node.name
+    case 'Literal':
+      return node.raw || JSON.stringify(node.value)
+    case 'ThisExpression':
+      return 'this'
+    case 'NewExpression':
+      return `new ${generate(node.callee, code)}(${(node.arguments || []).map((a: any) => generate(a, code)).join(', ')})`
+    case 'SequenceExpression':
+      return (node.expressions || []).map((e: any) => generate(e, code)).join(', ')
+    case 'ParenthesizedExpression':
+      return `(${generate(node.expression, code)})`
     default:
       return code.slice(node.start ?? 0, node.end ?? code.length)
   }
+}
+
+function generateFunction(node: ASTNode, code: string): string {
+  const keyword = node.type === 'ArrowFunctionExpression' ? '' : 'function'
+  const params = (node.params || []).map((p: any) => generate(p, code)).join(', ')
+  const body = node.body.type === 'BlockStatement'
+    ? `{${generate(node.body, code).slice(1, -1)}}`
+    : generate(node.body, code)
+  if (node.type === 'ArrowFunctionExpression') {
+    const needsParens = node.params.length !== 1 || node.body.type !== 'BlockStatement'
+    return `${needsParens ? `(${params})` : params} => ${body}`
+  }
+  return `${keyword}(${params}) ${body}`
+}
+
+function generateCallExpression(node: ASTNode, code: string): string {
+  const callee = generate(node.callee, code)
+  const args = (node.arguments || []).map((a: any) => generate(a, code)).join(', ')
+  return `${callee}(${args})`
+}
+
+function generateMemberExpression(node: ASTNode, code: string): string {
+  const obj = generate(node.object, code)
+  const prop = node.computed
+    ? `[${generate(node.property, code)}]`
+    : `.${node.property.name}`
+  return `${obj}${prop}`
+}
+
+function generateObjectExpression(node: ASTNode, code: string): string {
+  const props = (node.properties || []).map((p: any) => {
+    if (p.type === 'SpreadElement') {
+      return `...${generate(p.argument, code)}`
+    }
+    const key = p.computed ? `[${generate(p.key, code)}]` : (p.key.name || JSON.stringify(p.key.value))
+    const value = generate(p.value, code)
+    if (p.shorthand) return key
+    if (p.method) return `${key}(${(p.value.params || []).map((pp: any) => generate(pp, code)).join(', ')}) ${generate(p.value.body, code)}`
+    return `${key}: ${value}`
+  }).join(', ')
+  return `{${props}}`
+}
+
+/**
+ * Generate a template literal, properly handling HTML-like content
+ * that could break esbuild parsing (e.g., `<div>Hello</div>` in backticks).
+ */
+function generateTemplateLiteral(node: ASTNode, code: string): string {
+  if (!node.quasis || !node.expressions) {
+    return code.slice(node.start ?? 0, node.end ?? code.length)
+  }
+
+  const quasis = node.quasis as ASTNode[]
+  const expressions = node.expressions as ASTNode[]
+
+  let result = '`'
+  for (let i = 0; i < quasis.length; i++) {
+    const quasi = quasis[i]
+    // Get the raw content between backticks, escaping any unescaped backticks
+    let raw = code.slice(quasi.start ?? 0, quasi.end ?? code.length)
+    // Ensure the quasi is properly quoted (it should already be from the source)
+    result += raw
+
+    if (i < expressions.length) {
+      result += '${' + generate(expressions[i], code) + '}'
+    }
+  }
+  result += '`'
+  return result
 }
 
 function isLikelyReactive(exprNode: ASTNode | null | undefined, code: string): boolean {
@@ -564,12 +671,8 @@ function generateJSXChildren(children: ASTNode[], code: string): string {
       }
     } else if (child.type === 'JSXExpressionContainer') {
       if (child.expression.type !== 'JSXEmptyExpression') {
-        const expr = generate(child.expression, code)
-        if (isLikelyReactive(child.expression, code)) {
-          parts.push(`track(() => ${expr})`)
-        } else {
-          parts.push(expr)
-        }
+        const expr = generateChildExpression(child.expression, code)
+        parts.push(expr)
       }
     } else if (child.type === 'JSXElement' || child.type === 'JSXFragment') {
       parts.push(generate(child, code))
@@ -579,6 +682,48 @@ function generateJSXChildren(children: ASTNode[], code: string): string {
   if (parts.length === 0) return ''
   if (parts.length === 1) return parts[0]
   return `[${parts.join(', ')}]`
+}
+
+/**
+ * Generate an expression that appears as a child in JSX.
+ * Handles reactive tracking, .map() callbacks, template literals, etc.
+ */
+function generateChildExpression(expr: ASTNode, code: string): string {
+  const exprStr = generate(expr, code)
+
+  // Handle .map() and other array method callbacks properly
+  if (expr.type === 'CallExpression') {
+    const callee = expr.callee
+    // Detect .map() calls — these need special handling for the callback
+    if (callee.type === 'MemberExpression' && callee.property?.name === 'map') {
+      // Generate the full .map() expression and wrap in track() if reactive
+      if (isLikelyReactive(expr, code)) {
+        return `track(() => ${exprStr})`
+      }
+      return exprStr
+    }
+    // Other call expressions (function calls)
+    if (isLikelyReactive(expr, code)) {
+      return `track(() => ${exprStr})`
+    }
+    return exprStr
+  }
+
+  // Handle arrow functions (e.g., .map(f => <div>...</div>))
+  if (expr.type === 'ArrowFunctionExpression' || expr.type === 'FunctionExpression') {
+    return exprStr
+  }
+
+  // Handle template literals — escape HTML-like content
+  if (expr.type === 'TemplateLiteral') {
+    return exprStr
+  }
+
+  // Default: wrap reactive expressions in track()
+  if (isLikelyReactive(expr, code)) {
+    return `track(() => ${exprStr})`
+  }
+  return exprStr
 }
 
 // ─── Auto-Import Detection ──────────────────────────────────────
@@ -668,21 +813,36 @@ export function transform(ast: ASTNode, code: string, options: TransformOptions 
   }
 
   // Second pass: transform JSX in-place
+  // CRITICAL: Only add replacements for ROOT-level JSXElements.
+  // Children are already handled by parent's generateJSXChildren() via generate().
+  // Adding replacements for nested JSX causes duplicates when applied in reverse order.
   let transformedCode = code
   const replacements: { start: number; end: number; replacement: string }[] = []
+
+  // Track depth inside JSXElements to skip nested JSX
+  let jsxDepth = 0
 
   walk(ast, null, {
     enter(node, parent) {
       if (node.type === 'JSXElement' || node.type === 'JSXFragment') {
-        const replacement = generate(node, code)
-        replacements.push({
-          start: node.start,
-          end: node.end,
-          replacement,
-        })
+        jsxDepth++
+        // Only process the outermost JSXElement (depth === 1)
+        // Children at depth > 1 are already handled by generateJSXChildren
+        if (jsxDepth === 1) {
+          const replacement = generate(node, code)
+          replacements.push({
+            start: node.start,
+            end: node.end,
+            replacement,
+          })
+        }
       }
     },
-    leave() {},
+    leave(node) {
+      if (node.type === 'JSXElement' || node.type === 'JSXFragment') {
+        jsxDepth--
+      }
+    },
   })
 
   // Apply replacements in reverse order to maintain positions

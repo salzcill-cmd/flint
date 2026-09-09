@@ -21,6 +21,45 @@ importers:
         specifier: ^3.1.0
         version: 3.2.7(@types/node@22.20.1)(happy-dom@20.12.2)
 
+  examples/hello-world:
+    dependencies:
+      '@valoweb/flint':
+        specifier: workspace:*
+        version: link:../../packages/flint
+    devDependencies:
+      flint-vite-plugin:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@22.20.1)
+
+  examples/landing-page:
+    dependencies:
+      '@valoweb/flint':
+        specifier: workspace:*
+        version: link:../../packages/flint
+    devDependencies:
+      flint-vite-plugin:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@22.20.1)
+
+  examples/todo-app:
+    dependencies:
+      '@valoweb/flint':
+        specifier: workspace:*
+        version: link:../../packages/flint
+    devDependencies:
+      flint-vite-plugin:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@22.20.1)
+
   packages/auth:
     dependencies:
       bcryptjs:
