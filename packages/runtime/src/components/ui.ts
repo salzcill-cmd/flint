@@ -1192,3 +1192,219 @@ export function VirtualList<T>(props: {
     )
   )
 }
+
+// ─── DataTable — Enterprise Data Table ──────────────────────────
+
+/**
+ * Sortable, filterable data table with pagination.
+ *
+ * @example
+ * <DataTable
+ *   columns={[
+ *     { key: 'name', label: 'Name', sortable: true },
+ *     { key: 'email', label: 'Email' },
+ *     { key: 'role', label: 'Role', sortable: true },
+ *   ]}
+ *   data={users}
+ *   pageSize={10}
+ *   onSort={(key, dir) => console.log(key, dir)}
+ * />
+ */
+export function DataTable<T extends Record<string, any>>(props: {
+  columns: Array<{
+    key: string
+    label: string
+    sortable?: boolean
+    render?: (value: any, row: T) => Child
+  }>
+  data: T[]
+  pageSize?: number
+  class?: string
+  onSort?: (key: string, direction: 'asc' | 'desc') => void
+}): Child {
+  const { columns, pageSize = 10 } = props
+  const sortKey = state<string | null>(null)
+  const sortDir = state<'asc' | 'desc'>('asc')
+  const page = state(0)
+
+  const sorted = computed(() => {
+    if (!sortKey()) return props.data
+    return [...props.data].sort((a, b) => {
+      const aVal = a[sortKey()!]
+      const bVal = b[sortKey()!]
+      const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+      return sortDir() === 'asc' ? cmp : -cmp
+    })
+  })
+
+  const totalPages = computed(() => Math.ceil(sorted().length / pageSize))
+  const paged = computed(() => {
+    const start = page() * pageSize
+    return sorted().slice(start, start + pageSize)
+  })
+
+  const toggleSort = (key: string) => {
+    if (sortKey() === key) {
+      sortDir.set(sortDir() === 'asc' ? 'desc' : 'asc')
+    } else {
+      sortKey.set(key)
+      sortDir.set('asc')
+    }
+    props.onSort?.(key, sortDir())
+  }
+
+  return h('div', { class: props.class, style: { overflow: 'auto' } },
+    h('table', { style: { width: '100%', borderCollapse: 'collapse' } },
+      h('thead', {},
+        h('tr', {},
+          ...columns.map(col =>
+            h('th', {
+              style: {
+                padding: '12px 16px',
+                textAlign: 'left',
+                fontWeight: '600',
+                borderBottom: '2px solid #e5e7eb',
+                cursor: col.sortable ? 'pointer' : 'default',
+                userSelect: 'none',
+              },
+              onClick: col.sortable ? () => toggleSort(col.key) : undefined,
+            },
+              col.label,
+              sortKey() === col.key ? (sortDir() === 'asc' ? ' ↑' : ' ↓') : ''
+            )
+          )
+        )
+      ),
+      h('tbody', {},
+        ...paged().map((row, i) =>
+          h('tr', {
+            key: i,
+            style: {
+              borderBottom: '1px solid #f3f4f6',
+              ':hover': { backgroundColor: '#f9fafb' },
+            },
+          },
+            ...columns.map(col =>
+              h('td', {
+                style: { padding: '12px 16px' },
+              },
+                col.render ? col.render(row[col.key], row) : (row[col.key] ?? '')
+              )
+            )
+          )
+        )
+      )
+    ),
+    totalPages() > 1 ? h('div', {
+      style: { display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '16px' },
+    },
+      h('button', {
+        style: { padding: '6px 12px', border: '1px solid #d1d5db', borderRadius: '6px', cursor: page() > 0 ? 'pointer' : 'not-allowed', opacity: page() > 0 ? 1 : 0.5 },
+        onClick: () => page() > 0 && page.set(page() - 1),
+      }, '← Prev'),
+      h('span', { style: { padding: '6px 12px', color: '#6b7280' } }, `${page() + 1} / ${totalPages()}`),
+      h('button', {
+        style: { padding: '6px 12px', border: '1px solid #d1d5db', borderRadius: '6px', cursor: page() < totalPages() - 1 ? 'pointer' : 'not-allowed', opacity: page() < totalPages() - 1 ? 1 : 0.5 },
+        onClick: () => page() < totalPages() - 1 && page.set(page() + 1),
+      }, 'Next →')
+    ) : null
+  )
+}
+
+// ─── FormWizard — Multi-Step Form ───────────────────────────────
+
+/**
+ * Multi-step form with progress indicator.
+ *
+ * @example
+ * <FormWizard steps={['Personal', 'Address', 'Confirm']}>
+ *   <FormWizard.Step>
+ *     <Input label="Name" />
+ *   </FormWizard.Step>
+ *   <FormWizard.Step>
+ *     <Input label="Address" />
+ *   </FormWizard.Step>
+ *   <FormWizard.Step>
+ *     <p>Review your info</p>
+ *   </FormWizard.Step>
+ * </FormWizard>
+ */
+export function FormWizard(props: {
+  steps: string[]
+  children: Child[]
+  class?: string
+  onComplete?: () => void
+}): Child {
+  const currentStep = state(0)
+
+  const next = () => {
+    if (currentStep() < props.steps.length - 1) {
+      currentStep.set(currentStep() + 1)
+    } else {
+      props.onComplete?.()
+    }
+  }
+
+  const prev = () => {
+    if (currentStep() > 0) {
+      currentStep.set(currentStep() - 1)
+    }
+  }
+
+  return h('div', { class: props.class },
+    // Progress bar
+    h('div', { style: { display: 'flex', marginBottom: '24px', gap: '8px' } },
+      ...props.steps.map((step, i) =>
+        h('div', {
+          style: {
+            flex: '1',
+            height: '4px',
+            borderRadius: '2px',
+            backgroundColor: i <= currentStep() ? '#3b82f6' : '#e5e7eb',
+            transition: 'background-color 0.3s',
+          },
+        })
+      )
+    ),
+    // Step labels
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', marginBottom: '24px' } },
+      ...props.steps.map((step, i) =>
+        h('div', {
+          style: {
+            fontSize: '0.875rem',
+            color: i <= currentStep() ? '#3b82f6' : '#9ca3af',
+            fontWeight: i === currentStep() ? '600' : 'normal',
+          },
+        }, `${i + 1}. ${step}`)
+      )
+    ),
+    // Current step content
+    h('div', { style: { minHeight: '200px' } },
+      (props.children as any[])[currentStep()]
+    ),
+    // Navigation
+    h('div', { style: { display: 'flex', justifyContent: 'space-between', marginTop: '24px' } },
+      h('button', {
+        style: {
+          padding: '8px 16px',
+          border: '1px solid #d1d5db',
+          borderRadius: '6px',
+          cursor: currentStep() > 0 ? 'pointer' : 'not-allowed',
+          opacity: currentStep() > 0 ? 1 : 0.5,
+        },
+        onClick: prev,
+      }, '← Back'),
+      h('button', {
+        style: {
+          padding: '8px 16px',
+          backgroundColor: '#3b82f6',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+        },
+        onClick: next,
+      }, currentStep() < props.steps.length - 1 ? 'Next →' : 'Finish ✓')
+    )
+  )
+}

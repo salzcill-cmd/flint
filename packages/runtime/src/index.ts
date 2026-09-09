@@ -94,6 +94,8 @@ export {
   Avatar,
   Tooltip,
   VirtualList,
+  DataTable,
+  FormWizard,
 } from './components/ui.js'
 
 // Lazy Loading & Error Boundaries

@@ -120,6 +120,17 @@ export class FlintServer {
     return new RouteGroup(this.hono, prefix)
   }
 
+  /**
+   * Create versioned API routes
+   *
+   * @example
+   * app.version('v1').get('/users', handler)
+   * app.version('v2').get('/users', handler)
+   */
+  version(v: string): RouteGroup {
+    return new RouteGroup(this.hono, `/api/${v}`)
+  }
+
   // ─── Middleware ────────────────────────────────────────────────
 
   use(middleware: any): this {
